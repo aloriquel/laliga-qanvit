@@ -39,9 +39,10 @@ export default function PlayPage() {
       if (!user) {
         const email = window.prompt("Introduce tu email para acceder:");
         if (!email) { setLoading(false); return; }
-        const { error: authError } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+        const redirectTo = `${window.location.origin}/auth/callback?next=/play`;
+        const { error: authError } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: redirectTo } });
         if (authError) throw authError;
-        setError("Te hemos enviado un enlace mágico. Vuelve aquí después de verificar tu email.");
+        setError("Te hemos enviado un enlace mágico. Haz clic en él y volverás aquí autenticado.");
         setLoading(false);
         return;
       }
