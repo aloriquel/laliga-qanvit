@@ -1,0 +1,59 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* shadcn mapped to Qanvit brand */
+    --background: #f1e8f4;            /* brand-lavender */
+    --foreground: #1a1230;            /* ink-primary */
+    --card: #ffffff;                  /* surface-card */
+    --card-foreground: #1a1230;
+    --popover: #ffffff;
+    --popover-foreground: #1a1230;
+    --primary: #22183a;               /* brand-navy */
+    --primary-foreground: #ffffff;
+    --secondary: #f4a9aa;             /* brand-salmon */
+    --secondary-foreground: #22183a;
+    --muted: #f1e8f4;
+    --muted-foreground: #6b5b8a;      /* ink-secondary */
+    --accent: #f1e8f4;
+    --accent-foreground: #22183a;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #e5d8ea;                /* border-soft */
+    --input: #e5d8ea;
+    --ring: #f4a9aa;                  /* brand-salmon for focus rings */
+    --radius: 0.75rem;
+
+    /* Font variables (set by next/font in layout.tsx) */
+    --font-sora: "Sora", sans-serif;
+    --font-open-sans: "Open Sans", sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+  }
+
+  html {
+    @apply font-body;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sora;
+  }
+}
+
+/* Utility: container with brand max-width */
+@layer utilities {
+  .container-brand {
+    @apply mx-auto w-full max-w-[1280px] px-[clamp(16px,4vw,48px)];
+  }
+}
