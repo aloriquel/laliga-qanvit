@@ -16,7 +16,13 @@
       "Bash(pkill -f \"next dev\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001)",
-      "Bash(npm i *)"
+      "Bash(npm i *)",
+      "Bash(git -C c:/Users/1t12d/github/laliga-qanvit status)",
+      "Bash(git -C c:/Users/1t12d/github/laliga-qanvit log --oneline -3)",
+      "Bash(git -C c:/Users/1t12d/github/laliga-qanvit status --short)",
+      "Bash(git -C c:/Users/1t12d/github/laliga-qanvit show --stat HEAD)",
+      "Bash(git -C c:/Users/1t12d/github/laliga-qanvit push origin master)",
+      "Bash(git -C c:/Users/1t12d/github/laliga-qanvit log --oneline origin/master -3)"
     ]
   }
 }
