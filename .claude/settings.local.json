@@ -9,7 +9,8 @@
       "Bash(npx shadcn@latest add card input label select dialog dropdown-menu table tabs toast badge avatar separator sheet tooltip progress --yes)",
       "Bash(npx shadcn@latest add card input label select dialog dropdown-menu table tabs badge avatar separator sheet tooltip progress sonner --yes)",
       "Bash(node -e \"const p = require\\('./node_modules/@supabase/supabase-js/package.json'\\); console.log\\(p.version\\)\")",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(node -e \"const p = require\\('./node_modules/@supabase/postgrest-js/package.json'\\); console.log\\(p.version\\)\")"
     ]
   }
 }
