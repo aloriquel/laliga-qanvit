@@ -53,7 +53,7 @@ export default async function LeaderboardPage() {
     // Supabase not configured (local dev without .env.local)
   }
 
-  const hasData = standings && standings.length > 0;
+  const hasData = standings != null && standings.length > 0;
 
   return (
     <div className="bg-brand-lavender min-h-screen py-16">
@@ -87,7 +87,7 @@ export default async function LeaderboardPage() {
               </p>
             </div>
           ) : (
-            standings.map((row) => (
+            standings!.map((row) => (
               <div
                 key={row.startup_id}
                 className="px-6 py-4 grid grid-cols-[3rem_1fr_auto_auto_auto] gap-4 items-center border-t border-border-soft hover:bg-brand-lavender/30 transition-colors"

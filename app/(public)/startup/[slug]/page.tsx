@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import type { Database } from "@/lib/supabase/types";
 import { Badge } from "@/components/ui/badge";
 
 type Props = { params: { slug: string } };
+type StartupRow = Database["public"]["Tables"]["startups"]["Row"];
 
 export const revalidate = 60;
 
@@ -46,23 +48,38 @@ const VERTICAL_LABELS: Record<string, string> = {
 };
 
 export default async function StartupPublicPage({ params }: Props) {
-  const supabase = createClient();
+  let startup: StartupRow | null = null;
+  let standing: {
+    rank_national: number;
+    rank_division: number;
+    rank_division_vertical: number;
+  } | null = null;
 
-  const { data: startup } = await supabase
-    .from("startups")
-    .select("*")
-    .eq("slug", params.slug)
-    .eq("is_public", true)
-    .single();
+  try {
+    const supabase = createClient();
+
+    const { data: startupData } = await supabase
+      .from("startups")
+      .select("*")
+      .eq("slug", params.slug)
+      .eq("is_public", true)
+      .single();
+
+    startup = startupData;
+
+    if (startup) {
+      const { data: standingData } = await supabase
+        .from("league_standings")
+        .select("rank_national, rank_division, rank_division_vertical")
+        .eq("startup_id", startup.id)
+        .single();
+      standing = standingData;
+    }
+  } catch {
+    // Supabase not configured or startup not found
+  }
 
   if (!startup) notFound();
-
-  // Fetch position from league_standings
-  const { data: standing } = await supabase
-    .from("league_standings")
-    .select("rank_national, rank_division, rank_division_vertical")
-    .eq("startup_id", startup.id)
-    .single();
 
   const division = startup.current_division
     ? DIVISION_LABELS[startup.current_division]
