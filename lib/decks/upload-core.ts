@@ -65,7 +65,8 @@ export async function validateAndUploadDeck(input: UploadInput): Promise<UploadR
     .upload(storagePath, buffer, { contentType: "application/pdf", upsert: false });
 
   if (uploadError) {
-    return { ok: false, error: "Failed to upload file", status: 500 };
+    console.error("Storage upload error:", uploadError);
+    return { ok: false, error: `Failed to upload file: ${uploadError.message}`, status: 500 };
   }
 
   const { error: insertError } = await serviceClient.from("decks").insert({
