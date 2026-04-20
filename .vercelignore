@@ -1,0 +1,12 @@
+.env.local
+.env.*.local
+supabase/
+docs/
+scripts/
+*.test.ts
+*.spec.ts
+__tests__/
+vitest.config.*
+CLAUDE.md
+FIRST_PROMPT.md
+RUNBOOK.md

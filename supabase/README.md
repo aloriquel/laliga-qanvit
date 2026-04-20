@@ -117,4 +117,34 @@ npx supabase functions logs alert-dispatcher
 
 Crear manualmente en el dashboard o vía script:
 - `decks` → privado (decks PDF)
+- `exports` → privado (JSONs generados por dataset-exporter, TTL 30 días)
 - `public-assets` → público (logos startup, imágenes OG)
+
+## Edge Functions (Prompt #6)
+
+| Función | Trigger | Descripción |
+|---|---|---|
+| `evaluator-pipeline` | DB trigger (deck insert) | Pipeline completo: extract → chunk → embed → classify → evaluate → persist |
+| `alert-dispatcher` | DB trigger (startup_alerts insert, immediate) | Emails de alerta a startups |
+| `ecosystem-alert-dispatcher` | DB trigger (ecosystem_alerts insert) | Notificaciones a orgs del ecosistema |
+| `dataset-exporter` | HTTP (admin API route) | Exporta dataset a JSON en bucket `exports` |
+| `challenge-progress-updater` | pg_cron diario 00:15 | Actualiza `challenge_progress` con ranking actual |
+| `ecosystem-digest-sender` | pg_cron diario 08:00 + lunes | Digest diario/semanal a miembros del ecosistema |
+| `exports-file-cleanup` | pg_cron diario 03:30 | Elimina archivos expirados del bucket `exports` |
+
+### Deploy funciones nuevas (Prompt #6)
+
+```bash
+npx supabase functions deploy challenge-progress-updater --project-ref ongwrbdypbusnwlclqjg --no-verify-jwt
+npx supabase functions deploy ecosystem-digest-sender --project-ref ongwrbdypbusnwlclqjg --no-verify-jwt
+npx supabase functions deploy exports-file-cleanup --project-ref ongwrbdypbusnwlclqjg --no-verify-jwt
+```
+
+### Configurar app.settings para pg_cron (tras aplicar migration 0018)
+
+```sql
+ALTER DATABASE postgres SET "app.settings.challenge_progress_updater_url" = 'https://ongwrbdypbusnwlclqjg.functions.supabase.co/challenge-progress-updater';
+ALTER DATABASE postgres SET "app.settings.ecosystem_digest_url" = 'https://ongwrbdypbusnwlclqjg.functions.supabase.co/ecosystem-digest-sender';
+ALTER DATABASE postgres SET "app.settings.exports_cleanup_url" = 'https://ongwrbdypbusnwlclqjg.functions.supabase.co/exports-file-cleanup';
+SELECT pg_reload_conf();
+```

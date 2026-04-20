@@ -1,0 +1,162 @@
+{
+  "common": {
+    "brand": "La Liga Qanvit",
+    "tagline": "La liga de startups de España.",
+    "cta_startup": "Ficha tu startup",
+    "cta_ecosystem": "Soy un parque / cluster / asociación",
+    "leaderboard": "Leaderboard",
+    "dashboard": "Mi panel",
+    "sign_in": "Entrar",
+    "sign_out": "Salir",
+    "loading": "Cargando…",
+    "error": "Ha ocurrido un error",
+    "retry": "Intentar de nuevo",
+    "back": "Volver",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "view": "Ver",
+    "download": "Descargar",
+    "share": "Compartir",
+    "copied": "¡Copiado!"
+  },
+  "nav": {
+    "liga": "La Liga",
+    "como_funciona": "Cómo funciona",
+    "ecosistema": "Ecosistema",
+    "admin": "Admin"
+  },
+  "landing": {
+    "hero_title": "La liga de startups de España.",
+    "hero_subtitle": "Sube tu deck. Recibe feedback. Entra en la clasificación.",
+    "hero_cta": "Ficha tu startup",
+    "how_it_works_title": "Cómo funciona",
+    "step1_title": "Sube tu deck",
+    "step1_desc": "PDF hasta 20 MB. Nuestro sistema lo lee por completo.",
+    "step2_title": "Recibe feedback",
+    "step2_desc": "Análisis experto automatizado en menos de 60 segundos.",
+    "step3_title": "Entra en la clasificación",
+    "step3_desc": "Posición nacional, División y Vertical. Público o privado, tú decides.",
+    "for_ecosystem_title": "Para el ecosistema",
+    "for_ecosystem_desc": "Parques, clusters y asociaciones: descubrid las mejores startups de vuestro vertical.",
+    "for_ecosystem_cta": "Solicitar acceso"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "subtitle": "Clasificación nacional de startups españolas",
+    "empty": "{ la liga está empezando } · Sé la primera en tu vertical.",
+    "filter_division": "División",
+    "filter_vertical": "Vertical",
+    "filter_all": "Todas",
+    "rank": "#",
+    "startup": "Startup",
+    "score": "Score",
+    "division": "División",
+    "vertical": "Vertical"
+  },
+  "startup_profile": {
+    "score": "Score",
+    "rank_national": "Nacional",
+    "rank_division": "En su División",
+    "division": "División",
+    "vertical": "Vertical",
+    "founded": "Fundada",
+    "website": "Web",
+    "share_card": "Compartir carta",
+    "private_profile": "Este perfil es privado",
+    "evaluation_summary": "Evaluación"
+  },
+  "play": {
+    "title": "Ficha tu startup",
+    "subtitle": "Sube el deck de tu startup y recibe feedback experto automatizado.",
+    "upload_label": "Deck en PDF",
+    "upload_hint": "Máximo 20 MB. Formatos aceptados: PDF.",
+    "startup_name_label": "Nombre de la startup",
+    "startup_name_placeholder": "Ej. Acme Robotics",
+    "website_label": "Web (opcional)",
+    "website_placeholder": "https://",
+    "submit": "Subir deck",
+    "evaluating_title": "Estamos leyendo tu deck.",
+    "evaluating_subtitle": "Unos 40 segundos. No cierres esta página.",
+    "result_title": "Tu posición en La Liga",
+    "result_cta_dashboard": "Ver mi panel completo",
+    "result_cta_share": "Compartir mi carta"
+  },
+  "dashboard": {
+    "title": "Mi panel",
+    "tab_evaluaciones": "Evaluaciones",
+    "tab_visibilidad": "Visibilidad",
+    "tab_configuracion": "Configuración",
+    "no_evaluation": "Aún no tienes ninguna evaluación.",
+    "upload_deck": "Subir deck"
+  },
+  "divisions": {
+    "ideation": "Ideation",
+    "seed": "Seed",
+    "growth": "Growth",
+    "elite": "Elite"
+  },
+  "verticals": {
+    "deeptech_ai": "Deeptech & AI",
+    "robotics_automation": "Robotics & Automation",
+    "mobility": "Mobility",
+    "energy_cleantech": "Energy & Cleantech",
+    "agrifood": "AgriFood",
+    "healthtech_medtech": "HealthTech & MedTech",
+    "industrial_manufacturing": "Industrial & Manufacturing",
+    "space_aerospace": "Space & Aerospace",
+    "materials_chemistry": "Materials & Chemistry",
+    "cybersecurity": "Cybersecurity"
+  },
+  "ecosystem": {
+    "apply_title": "Solicitar acceso al ecosistema",
+    "apply_subtitle": "Para parques tecnológicos, clusters, aceleradoras y asociaciones.",
+    "dashboard_title": "Dashboard ecosistema",
+    "points": "Puntos",
+    "tier": "Tier",
+    "challenges": "Retos",
+    "alerts": "Alertas",
+    "referral": "Referral",
+    "config": "Configuración"
+  },
+  "legal": {
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "cookies": "Cookies",
+    "legal_notice": "Aviso legal",
+    "dpa": "DPA",
+    "faq_gdpr": "FAQ GDPR",
+    "transparency": "Transparencia",
+    "last_updated": "Última actualización"
+  },
+  "cookie_banner": {
+    "message": "Usamos cookies técnicas (necesarias) y analíticas (opt-in). Puedes personalizar tu elección.",
+    "accept_all": "Aceptar todas",
+    "reject_all": "Solo necesarias",
+    "customize": "Personalizar",
+    "save_preferences": "Guardar preferencias",
+    "analytics_label": "Cookies analíticas (PostHog)",
+    "analytics_desc": "Nos ayudan a entender cómo se usa la plataforma para mejorarla."
+  },
+  "footer": {
+    "rights": "Todos los derechos reservados.",
+    "language": "Idioma"
+  },
+  "errors": {
+    "not_found_title": "{ esto no existe }",
+    "not_found_desc": "La página que buscas no existe o ha sido movida.",
+    "not_found_cta": "Volver al leaderboard",
+    "generic_title": "Algo ha salido mal",
+    "generic_desc": "Hemos recibido el error. Inténtalo de nuevo en unos minutos."
+  },
+  "como_funciona": {
+    "title": "Cómo funciona La Liga Qanvit",
+    "subtitle": "De deck a clasificación nacional en menos de 60 segundos.",
+    "section_startup_title": "Para startups",
+    "section_ecosystem_title": "Para el ecosistema",
+    "section_data_title": "Cómo usamos los datos",
+    "faq_title": "Preguntas frecuentes"
+  }
+}

@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { LocaleSwitcher } from "./LocaleSwitcher";
 
-export function Footer() {
+export function Footer({ locale = "es" }: { locale?: string }) {
   const year = new Date().getFullYear();
 
   return (
@@ -23,16 +24,22 @@ export function Footer() {
           </span>
         </div>
 
-        {/* Legal links */}
-        <nav className="flex items-center gap-4" aria-label="Legal">
+        {/* Legal links + locale switcher */}
+        <nav className="flex items-center gap-4 flex-wrap justify-center" aria-label="Legal">
+          <Link href="/como-funciona" className="hover:text-white transition-colors">
+            Cómo funciona
+          </Link>
           <Link href="/legal/privacidad" className="hover:text-white transition-colors">
             Privacidad
           </Link>
           <Link href="/legal/terminos" className="hover:text-white transition-colors">
             Términos
           </Link>
-          <Link href="/legal/gdpr" className="hover:text-white transition-colors">
-            Consentimiento GDPR
+          <Link href="/legal/cookies" className="hover:text-white transition-colors">
+            Cookies
+          </Link>
+          <Link href="/legal/transparencia" className="hover:text-white transition-colors">
+            Transparencia
           </Link>
           <Link
             href="https://www.qanvit.com"
@@ -42,6 +49,7 @@ export function Footer() {
           >
             qanvit.com
           </Link>
+          <LocaleSwitcher currentLocale={locale} />
         </nav>
       </div>
     </footer>

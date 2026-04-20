@@ -131,12 +131,47 @@ laliga-qanvit/
 
 ---
 
-## Roadmap de prompts
+## Variables de entorno
+
+```bash
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Anthropic
+ANTHROPIC_API_KEY=
+
+# Embeddings
+OPENAI_API_KEY=
+
+# Email (Resend)
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=liga@qanvit.com
+
+# Analytics (opcional en dev, requerido en prod)
+NEXT_PUBLIC_POSTHOG_KEY=
+NEXT_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com
+
+# Error tracking (opcional en dev, requerido en prod)
+NEXT_PUBLIC_SENTRY_DSN=
+SENTRY_ORG=
+SENTRY_PROJECT=
+
+# App
+NEXT_PUBLIC_APP_URL=https://laliga.qanvit.com
+
+# Edge functions (para pg_cron jobs)
+EVALUATOR_FN_SECRET=
+```
+
+## Prompts implementados
 
 | Prompt | Qué implementa |
 |---|---|
-| **#1 (este)** | Scaffolding completo: Next.js + Tailwind + shadcn + Supabase schema + rutas stub + Claude SDK |
-| **#2** | Pipeline de evaluación: extracción PDF + embeddings + llamadas a Claude + edge function |
-| **#3** | Dashboard startup autenticada con data real |
-| **#4** | Dashboard ecosistema con data real + sistema de puntos |
-| **#5** | Panel admin + moderación + métricas |
+| **#1** | Scaffolding: Next.js + Tailwind + shadcn + Supabase schema + Claude SDK |
+| **#2** | Pipeline evaluación: extracción PDF + embeddings + Claude + edge function |
+| **#3** | Dashboard startup con data real |
+| **#4** | Dashboard ecosistema + puntos + gamificación |
+| **#5** | Panel admin + métricas + export + audit log |
+| **#6 (este)** | pg_cron, i18n ES/EN, SEO, legal pages GDPR, Sentry, PostHog, deploy Vercel |
