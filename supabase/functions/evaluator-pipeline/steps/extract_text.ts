@@ -1,5 +1,4 @@
-// @ts-ignore — pdfjs-dist v2 has no canvas dependency, works in Deno edge
-import * as pdfjsLib from "https://esm.sh/pdfjs-dist@2.16.105/build/pdf.js";
+import Anthropic from "https://esm.sh/@anthropic-ai/sdk@0.32.1";
 
 export type ExtractResult = {
   text: string;
@@ -7,28 +6,42 @@ export type ExtractResult = {
   language: string;
 };
 
+const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") ?? "" });
+
 export async function extractText(pdfBuffer: Uint8Array): Promise<ExtractResult> {
-  // @ts-ignore
-  const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer });
-  const pdf = await loadingTask.promise;
-  const totalPages: number = pdf.numPages;
+  // Convert to base64 — btoa works on latin-1 byte strings
+  const binary = Array.from(pdfBuffer).map((b) => String.fromCharCode(b)).join("");
+  const base64Pdf = btoa(binary);
 
-  const pageTexts: string[] = [];
-  for (let i = 1; i <= totalPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const pageText = content.items
-      // @ts-ignore
-      .filter((item) => "str" in item)
-      // @ts-ignore
-      .map((item) => item.str)
-      .join(" ");
-    pageTexts.push(pageText);
-  }
+  const response = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 8192,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "document",
+            source: { type: "base64", media_type: "application/pdf", data: base64Pdf },
+          } as Anthropic.DocumentBlockParam,
+          {
+            type: "text",
+            text: `Extract ALL the text content from this PDF. Return only the raw text, preserving paragraph breaks with newlines. On the first line write PAGES:<number> with the total page count, then a blank line, then the text.`,
+          },
+        ],
+      },
+    ],
+  });
 
-  const text = pageTexts.join("\n");
+  const raw = response.content[0].type === "text" ? response.content[0].text : "";
 
-  if (!text || text.trim().length === 0) {
+  // Parse page count from first line
+  const firstLine = raw.split("\n")[0] ?? "";
+  const pageMatch = firstLine.match(/PAGES:(\d+)/);
+  const page_count = pageMatch ? parseInt(pageMatch[1]) : 10;
+  const text = raw.replace(/^PAGES:\d+\s*\n/, "").trim();
+
+  if (!text || text.length < 50) {
     throw new Error("PDF extraction returned empty text. The deck may be scanned without OCR.");
   }
 
@@ -38,5 +51,5 @@ export async function extractText(pdfBuffer: Uint8Array): Promise<ExtractResult>
   const enCount = (text.match(englishMarkers) ?? []).length;
   const language = spCount > enCount ? "es" : "en";
 
-  return { text, page_count: totalPages, language };
+  return { text, page_count, language };
 }
