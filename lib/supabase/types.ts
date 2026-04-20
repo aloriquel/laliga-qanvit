@@ -62,6 +62,9 @@ export type Database = {
           current_score: number | null;
           consent_public_profile: boolean;
           consent_internal_use: boolean;
+          show_public_timeline: boolean;
+          notification_email_enabled: boolean;
+          notification_frequency: string;
           created_at: string;
           updated_at: string;
         };
@@ -85,6 +88,9 @@ export type Database = {
           current_score?: number | null;
           consent_public_profile?: boolean;
           consent_internal_use?: boolean;
+          show_public_timeline?: boolean;
+          notification_email_enabled?: boolean;
+          notification_frequency?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -106,6 +112,9 @@ export type Database = {
           current_score?: number | null;
           consent_public_profile?: boolean;
           consent_internal_use?: boolean;
+          show_public_timeline?: boolean;
+          notification_email_enabled?: boolean;
+          notification_frequency?: string;
           updated_at?: string;
         };
         Relationships: [];
@@ -358,6 +367,54 @@ export type Database = {
         Update: Record<string, never>;
         Relationships: [];
       };
+      startup_ecosystem_views: {
+        Row: {
+          id: string;
+          startup_id: string;
+          org_id: string;
+          views_count: number;
+          first_viewed_at: string;
+          last_viewed_at: string;
+        };
+        Insert: {
+          id?: string;
+          startup_id: string;
+          org_id: string;
+          views_count?: number;
+          first_viewed_at?: string;
+          last_viewed_at?: string;
+        };
+        Update: {
+          views_count?: number;
+          last_viewed_at?: string;
+        };
+        Relationships: [];
+      };
+      startup_alerts: {
+        Row: {
+          id: string;
+          startup_id: string;
+          alert_type: Database["public"]["Enums"]["alert_type"];
+          payload: Json;
+          is_read: boolean;
+          email_sent: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          startup_id: string;
+          alert_type: Database["public"]["Enums"]["alert_type"];
+          payload?: Json;
+          is_read?: boolean;
+          email_sent?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          is_read?: boolean;
+          email_sent?: boolean;
+        };
+        Relationships: [];
+      };
       evaluation_appeals: {
         Row: {
           id: string;
@@ -434,7 +491,12 @@ export type Database = {
         Relationships: [];
       };
     };
-    Functions: Record<string, never>;
+    Functions: {
+      track_ecosystem_view: {
+        Args: { p_startup_id: string; p_org_id: string };
+        Returns: void;
+      };
+    };
     Enums: {
       user_role: "startup" | "ecosystem" | "admin";
       deck_status: "pending" | "processing" | "evaluated" | "error" | "archived";
@@ -463,6 +525,13 @@ export type Database = {
         | "vertical_proposed_accepted"
         | "admin_grant"
         | "admin_revoke";
+      alert_type:
+        | "moved_up_division"
+        | "moved_down_division"
+        | "new_top3_vertical"
+        | "new_top10_vertical"
+        | "new_top10_division"
+        | "position_milestone";
     };
     CompositeTypes: Record<string, never>;
   };

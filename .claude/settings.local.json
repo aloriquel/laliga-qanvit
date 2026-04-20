@@ -23,7 +23,9 @@
       "Bash(git -C c:/Users/1t12d/github/laliga-qanvit show --stat HEAD)",
       "Bash(git -C c:/Users/1t12d/github/laliga-qanvit push origin master)",
       "Bash(git -C c:/Users/1t12d/github/laliga-qanvit log --oneline origin/master -3)",
-      "Bash(npx supabase *)"
+      "Bash(npx supabase *)",
+      "Bash(npm test *)",
+      "Bash(git add *)"
     ]
   }
 }

@@ -3,33 +3,15 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/lib/supabase/types";
+import ClassificationCard from "@/components/league/ClassificationCard";
+import ShareButton from "./ShareButton";
 
 type Props = { params: { deck_id: string } };
 
 type EvaluationRow = Database["public"]["Tables"]["evaluations"]["Row"];
 type StartupRow = Database["public"]["Tables"]["startups"]["Row"];
 
-export const revalidate = 0; // Always fresh — the user just landed here
-
-const DIVISION_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
-  ideation: { label: "Ideation", emoji: "🥚", color: "bg-league-ideation text-ink-primary" },
-  seed:     { label: "Seed",     emoji: "🌱", color: "bg-league-seed text-ink-primary" },
-  growth:   { label: "Growth",   emoji: "🚀", color: "bg-league-growth text-brand-navy" },
-  elite:    { label: "Elite",    emoji: "👑", color: "bg-league-elite text-ink-primary" },
-};
-
-const VERTICAL_LABELS: Record<string, string> = {
-  deeptech_ai: "Deeptech & AI",
-  robotics_automation: "Robotics & Automation",
-  mobility: "Mobility",
-  energy_cleantech: "Energy & Cleantech",
-  agrifood: "AgriFood",
-  healthtech_medtech: "HealthTech & MedTech",
-  industrial_manufacturing: "Industrial & Manufacturing",
-  space_aerospace: "Space & Aerospace",
-  materials_chemistry: "Materials & Chemistry",
-  cybersecurity: "Cybersecurity",
-};
+export const revalidate = 0;
 
 const DIMENSION_LABELS: Record<string, string> = {
   problem: "Problem Severity",
@@ -55,7 +37,6 @@ export default async function ResultadoPage({ params }: Props) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Find the latest evaluation for this deck
   const { data: evaluation } = await supabase
     .from("evaluations")
     .select("*")
@@ -66,7 +47,6 @@ export default async function ResultadoPage({ params }: Props) {
 
   if (!evaluation) notFound();
 
-  // Verify ownership (startup owner can see, admin can see)
   const { data: startup } = await supabase
     .from("startups")
     .select("*")
@@ -76,7 +56,6 @@ export default async function ResultadoPage({ params }: Props) {
   if (!startup) notFound();
 
   if (user?.id !== startup.owner_id) {
-    // Check if admin
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -85,15 +64,12 @@ export default async function ResultadoPage({ params }: Props) {
     if (!profile || profile.role !== "admin") notFound();
   }
 
-  // Standings
   const { data: standing } = await supabase
     .from("league_standings")
     .select("rank_national, rank_division, rank_division_vertical")
     .eq("startup_id", startup.id)
     .maybeSingle();
 
-  const division = DIVISION_LABELS[evaluation.assigned_division];
-  const vertical = VERTICAL_LABELS[evaluation.assigned_vertical] ?? evaluation.assigned_vertical;
   const feedback = evaluation.feedback as FeedbackPayload;
   const nextActions = evaluation.next_actions as string[] | null;
   const dimensions = Object.keys(DIMENSION_LABELS) as Array<keyof typeof DIMENSION_LABELS>;
@@ -102,44 +78,32 @@ export default async function ResultadoPage({ params }: Props) {
     <div className="bg-brand-lavender min-h-screen py-16">
       <div className="container-brand max-w-3xl">
 
-        {/* ── Header card ── */}
-        <div className="bg-brand-navy rounded-hero p-10 mb-6 text-center">
-          <p className="font-sora text-brand-salmon text-xs font-semibold tracking-widest uppercase mb-4">
-            { "{ La Liga Qanvit }" }
-          </p>
-          <h1 className="font-sora font-bold text-white text-3xl md:text-4xl mb-2">
-            {startup.name}
-          </h1>
-          <p className="font-body text-white/60 mb-8">
-            {division?.emoji} {division?.label} · {vertical}
-          </p>
+        {/* ── Classification card hero ── */}
+        <div className="flex justify-center mb-6">
+          <ClassificationCard
+            startup={startup}
+            ranking={standing}
+            size="lg"
+          />
+        </div>
 
-          {/* Score */}
-          <div className="inline-block">
-            <p className="font-mono text-brand-salmon font-bold leading-none"
-               style={{ fontSize: "clamp(4rem, 12vw, 7rem)" }}>
-              {Number(evaluation.score_total).toFixed(0)}
-            </p>
-            <p className="font-body text-white/40 text-xs uppercase tracking-widest mt-1">Score</p>
-          </div>
-
-          {/* Standings */}
-          {standing && (
-            <div className="grid grid-cols-3 gap-4 mt-8 border-t border-white/10 pt-8">
-              <div>
-                <p className="font-sora font-bold text-white text-2xl">#{standing.rank_division_vertical}</p>
-                <p className="font-body text-white/40 text-xs mt-0.5">en {division?.label} {vertical}</p>
-              </div>
-              <div>
-                <p className="font-sora font-bold text-white text-2xl">#{standing.rank_division}</p>
-                <p className="font-body text-white/40 text-xs mt-0.5">en {division?.label}</p>
-              </div>
-              <div>
-                <p className="font-sora font-bold text-white text-2xl">#{standing.rank_national}</p>
-                <p className="font-body text-white/40 text-xs mt-0.5">nacional</p>
-              </div>
-            </div>
+        {/* ── Share + Dashboard CTAs ── */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-8">
+          <ShareButton startup={startup} ranking={standing} />
+          {user?.id === startup.owner_id && (
+            <Link
+              href="/dashboard"
+              className="flex-1 text-center border border-border-soft rounded-xl px-6 py-3 font-body text-sm text-ink-secondary hover:bg-white transition-colors"
+            >
+              Ver mi dashboard
+            </Link>
           )}
+          <Link
+            href="/liga"
+            className="flex-1 text-center border border-border-soft rounded-xl px-6 py-3 font-body text-sm text-ink-secondary hover:bg-white transition-colors"
+          >
+            Ver leaderboard
+          </Link>
         </div>
 
         {/* ── Summary ── */}
@@ -190,9 +154,7 @@ export default async function ResultadoPage({ params }: Props) {
                       />
                     </div>
                   </div>
-                  <span className={cn("font-mono font-bold text-xl tabular-nums flex-shrink-0", scoreColor)}>
-                    {pct}
-                  </span>
+                  <span className={cn("font-mono font-bold text-xl tabular-nums flex-shrink-0", scoreColor)}>{pct}</span>
                   <span className="text-ink-secondary text-xs group-open:rotate-90 transition-transform">▶</span>
                 </summary>
 
@@ -237,7 +199,6 @@ export default async function ResultadoPage({ params }: Props) {
           })}
         </div>
 
-        {/* ── CTAs ── */}
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
             href={`/startup/${startup.slug}`}
@@ -245,15 +206,8 @@ export default async function ResultadoPage({ params }: Props) {
           >
             Ver perfil público
           </Link>
-          <Link
-            href="/liga"
-            className="flex-1 text-center border border-border-soft rounded-xl px-6 py-3 font-body text-sm text-ink-secondary hover:bg-white transition-colors"
-          >
-            Ver el leaderboard
-          </Link>
         </div>
 
-        {/* Model metadata (subtle) */}
         <p className="text-center font-mono text-xs text-ink-secondary/40 mt-8">
           evaluado con {evaluation.evaluator_model} · prompt {evaluation.prompt_version} · rubric {evaluation.rubric_version}
         </p>

@@ -30,6 +30,9 @@ npx supabase db push
 | `0005_rls.sql` | Row Level Security policies para todas las tablas |
 | `0006_triggers.sql` | handle_new_user, set_updated_at, sync_startup_current_eval |
 | `0007_evaluator_trigger.sql` | trigger_evaluator_pipeline vía pg_net → edge function |
+| `0008_dashboard_features.sql` | alert_type enum, nuevos campos en startups, startup_ecosystem_views, startup_alerts, RLS, track_ecosystem_view() |
+| `0009_alerts_trigger.sql` | generate_startup_alerts + league_division_order, trigger trz_generate_alerts |
+| `0010_alert_dispatcher_trigger.sql` | notify_alert_dispatcher, trigger trg_alert_dispatcher |
 
 ## Seed manual (admin bootstrap)
 
@@ -62,6 +65,37 @@ select pg_reload_conf();
 
 El secret debe coincidir con `EVALUATOR_FN_SECRET` en `.env.local`.
 
+## Configurar alert-dispatcher (Prompt #3)
+
+```sql
+-- LOCAL:
+alter database postgres
+  set app.settings.alert_dispatcher_url = 'http://host.docker.internal:54321/functions/v1/alert-dispatcher';
+select pg_reload_conf();
+
+-- PRODUCCIÓN:
+alter database postgres
+  set app.settings.alert_dispatcher_url = 'https://<project>.supabase.co/functions/v1/alert-dispatcher';
+select pg_reload_conf();
+```
+
+Reutiliza `app.settings.evaluator_secret` como bearer token del dispatcher.
+
+## Generar alertas de prueba manualmente
+
+```sql
+-- Insertar alerta de prueba directamente (sirve el trigger del dispatcher):
+insert into startup_alerts (startup_id, alert_type, payload)
+values (
+  '<uuid-de-startup>',
+  'new_top3_vertical',
+  '{"vertical":"robotics_automation","division":"seed","new_rank":1}'::jsonb
+);
+
+-- Ver alertas de una startup:
+select * from startup_alerts where startup_id = '<uuid>' order by created_at desc;
+```
+
 ## Servir la edge function localmente
 
 ```bash
@@ -71,8 +105,12 @@ npx supabase start
 # Terminal 2: Servir la edge function con las envs
 npx supabase functions serve evaluator-pipeline --env-file .env.local
 
+# Servir alert-dispatcher también
+npx supabase functions serve alert-dispatcher --env-file .env.local
+
 # Ver logs en tiempo real
 npx supabase functions logs evaluator-pipeline
+npx supabase functions logs alert-dispatcher
 ```
 
 ## Buckets de Storage
