@@ -1,8 +1,8 @@
 .env.local
 .env.*.local
-supabase/
-docs/
-scripts/
+/supabase/
+/docs/
+/scripts/
 *.test.ts
 *.spec.ts
 __tests__/
