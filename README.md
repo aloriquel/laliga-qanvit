@@ -8,7 +8,7 @@
 
 ## ¿Qué es?
 
-La Liga Qanvit es una gran base de datos gamificada de startups españolas organizada como una liga deportiva: cada startup se auto-clasifica en una **División** (fase de madurez) y una **Vertical** (categoría sectorial), compitiendo por posiciones en el ranking nacional.
+La Liga Qanvit es una base de datos gamificada de startups españolas organizada como una liga deportiva: cada startup se clasifica en una **División** (fase de madurez) y una **Vertical** (categoría sectorial), compitiendo por posiciones en el ranking nacional.
 
 **Tres actores, tres valores:**
 
@@ -18,28 +18,88 @@ La Liga Qanvit es una gran base de datos gamificada de startups españolas organ
 | **Ecosistema** (parques, clusters, asociaciones) | Descubre talento | Gamificación del acceso a datos, filtros, alertas |
 | **Qanvit** | Opera la liga | Dataset vectorizado + flywheel de innovación abierta |
 
-## Estructura de la liga
+---
 
-**4 Divisiones** (por fase de madurez — asignadas por el evaluador LLM):
-- 🥚 **Ideation** — pre-producto, idea, MVP temprano
-- 🌱 **Seed** — producto en mercado, primeros clientes, tracción inicial
-- 🚀 **Growth** — modelo validado, escalando comercialmente
-- 👑 **Elite** — líder de su vertical, crecimiento sostenido
+## Levantar el entorno local
 
-**10 Verticales** (categorías temáticas):
-Deeptech & AI · Robotics & Automation · Mobility · Energy & Cleantech · AgriFood · HealthTech & MedTech · Industrial & Manufacturing · Space & Aerospace · Materials & Chemistry · Cybersecurity
+### Pre-requisitos
 
-Cada startup ocupa **una combinación única** (p.ej. *Seed Robotics*, *Growth Mobility*) y tiene ranking dentro de esa combinación + ranking nacional cruzado.
+- Node.js 18+
+- Docker (para Supabase local)
+- [Supabase CLI](https://supabase.com/docs/guides/cli) instalado globalmente
 
-## Stack
+### Pasos
 
-- **Frontend**: Next.js 14 (App Router) + TypeScript + Tailwind + shadcn/ui
-- **Backend**: Next.js Route Handlers + Supabase Edge Functions
-- **Base de datos**: Supabase (Postgres + pgvector)
-- **Auth**: Supabase Auth (magic link + OAuth)
-- **Storage**: Supabase Storage (decks en bucket privado)
-- **Evaluador**: Claude API (`claude-opus-4-7` para evaluación profunda, `claude-haiku-4-5` para clasificación rápida)
-- **Deploy**: Vercel (frontend) + Supabase (data plane)
+```bash
+# 1. Instalar dependencias
+npm install
+
+# 2. Copiar variables de entorno y rellenar manualmente
+cp .env.example .env.local
+
+# 3. Levantar Supabase local (requiere Docker)
+npx supabase start
+
+# 4. Aplicar todas las migrations (crea el schema completo)
+npx supabase db reset
+
+# 5. Generar los types TypeScript desde el schema local
+npx supabase gen types typescript --local > lib/supabase/types.ts
+
+# 6. Arrancar el servidor de desarrollo
+npm run dev
+```
+
+Abre [http://localhost:3000](http://localhost:3000) en el navegador.
+
+### Comandos útiles
+
+```bash
+npm run dev        # servidor de desarrollo con hot reload
+npm run build      # build de producción
+npm run lint       # ESLint
+
+npx supabase start           # levantar Supabase local
+npx supabase stop            # parar Supabase local
+npx supabase db reset        # resetear DB y aplicar migrations
+npx supabase db diff         # ver cambios sin migration
+npx supabase gen types typescript --local > lib/supabase/types.ts
+```
+
+---
+
+## Estructura del proyecto
+
+```
+laliga-qanvit/
+├── app/                      # Next.js 14 App Router
+│   ├── (public)/             # Landing, leaderboard, perfiles (SSG + ISR)
+│   ├── (startup)/            # Dashboard startup autenticada (SSR)
+│   ├── (ecosystem)/          # Dashboard parques/clusters (SSR)
+│   ├── (admin)/              # Panel Qanvit (SSR)
+│   ├── api/                  # Route handlers
+│   ├── play/                 # Flujo onboarding startup
+│   └── layout.tsx
+├── components/
+│   ├── ui/                   # shadcn/ui primitivos
+│   ├── league/               # Componentes de liga (standings, cards)
+│   └── branding/             # Header, Footer, isotipo { }
+├── lib/
+│   ├── supabase/             # Clientes server/client + types
+│   ├── claude/               # Wrappers del SDK de Anthropic
+│   ├── evaluator/            # Schemas Zod + pesos por fase
+│   ├── embeddings/           # Chunking + embeddings (prompt #2)
+│   └── league/               # Lógica de divisiones/ranking
+├── supabase/
+│   ├── migrations/           # SQL migrations versionadas (0001-0006)
+│   ├── functions/            # Edge functions (evaluator-pipeline — prompt #2)
+│   └── README.md             # Comandos Supabase
+├── docs/                     # Documentación viva del producto
+├── .env.example              # Variables de entorno (plantilla)
+└── CLAUDE.md                 # Contexto maestro para Claude Code
+```
+
+---
 
 ## Documentación
 
@@ -49,15 +109,31 @@ Cada startup ocupa **una combinación única** (p.ej. *Seed Robotics*, *Growth M
 | [`docs/PRD.md`](./docs/PRD.md) | Product Requirements Document |
 | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Arquitectura técnica |
 | [`docs/DATA_MODEL.md`](./docs/DATA_MODEL.md) | Schema Supabase + RLS |
-| [`docs/EVALUATOR_RUBRIC.md`](./docs/EVALUATOR_RUBRIC.md) | Rubric de evaluación (core del producto) |
+| [`docs/EVALUATOR_RUBRIC.md`](./docs/EVALUATOR_RUBRIC.md) | Rubric de evaluación |
 | [`docs/LEAGUE_STRUCTURE.md`](./docs/LEAGUE_STRUCTURE.md) | Divisiones, verticales, ranking |
-| [`docs/GAMIFICATION.md`](./docs/GAMIFICATION.md) | Sistema de puntos del ecosistema |
+| [`docs/GAMIFICATION.md`](./docs/GAMIFICATION.md) | Sistema de puntos ecosistema |
 | [`docs/BRAND.md`](./docs/BRAND.md) | Brand guidelines Qanvit |
-| [`FIRST_PROMPT.md`](./FIRST_PROMPT.md) | Primer prompt para Claude Code |
 
-## Empezar
+---
 
-1. Abre este repo en VS Code.
-2. Abre Claude Code (`⌘+Esc` o sidebar).
-3. Copia el contenido de [`FIRST_PROMPT.md`](./FIRST_PROMPT.md) al chat de Claude Code.
-4. Deja que Claude Code scaffold el proyecto siguiendo los docs.
+## Stack
+
+- **Frontend**: Next.js 14 (App Router) + TypeScript strict + Tailwind CSS + shadcn/ui
+- **Backend**: Next.js Route Handlers + Supabase Edge Functions
+- **Base de datos**: Supabase (Postgres 15 + pgvector + RLS)
+- **Auth**: Supabase Auth (magic link + Google OAuth)
+- **Storage**: Supabase Storage (bucket privado `decks`)
+- **LLM**: Claude API (`claude-opus-4-7` evaluación, `claude-haiku-4-5-20251001` clasificación)
+- **Deploy**: Vercel (frontend) + Supabase (data plane)
+
+---
+
+## Roadmap de prompts
+
+| Prompt | Qué implementa |
+|---|---|
+| **#1 (este)** | Scaffolding completo: Next.js + Tailwind + shadcn + Supabase schema + rutas stub + Claude SDK |
+| **#2** | Pipeline de evaluación: extracción PDF + embeddings + llamadas a Claude + edge function |
+| **#3** | Dashboard startup autenticada con data real |
+| **#4** | Dashboard ecosistema con data real + sistema de puntos |
+| **#5** | Panel admin + moderación + métricas |

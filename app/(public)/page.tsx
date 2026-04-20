@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight, Upload, Star, Trophy } from "lucide-react";
 
 const HOW_IT_WORKS = [
@@ -42,26 +43,25 @@ export default function LandingPage() {
             Sube tu deck. Recibe feedback. Entra en la clasificación.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 pt-2">
-            <Button
-              asChild
-              size="lg"
-              className="bg-brand-salmon text-brand-navy hover:bg-brand-salmon/90 font-semibold rounded-xl text-base px-8 py-4 h-auto"
+            <Link
+              href="/play"
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "bg-brand-salmon text-brand-navy hover:bg-brand-salmon/90 font-semibold rounded-xl text-base px-8 py-4 h-auto"
+              )}
             >
-              <Link href="/play">
-                Ficha tu startup
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="ghost"
-              className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl text-base px-8 py-4 h-auto border border-white/20"
+              Ficha tu startup
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+            <Link
+              href="/ecosistema/aplicar"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "lg" }),
+                "text-white/80 hover:text-white hover:bg-white/10 rounded-xl text-base px-8 py-4 h-auto border border-white/20"
+              )}
             >
-              <Link href="/ecosistema/aplicar">
-                Soy un parque, cluster o asociación
-              </Link>
-            </Button>
+              Soy un parque, cluster o asociación
+            </Link>
           </div>
         </div>
       </section>
@@ -108,15 +108,19 @@ export default function LandingPage() {
             <h2 className="font-sora font-bold text-4xl text-brand-navy">
               Leaderboard en vivo
             </h2>
-            <Button asChild variant="ghost" className="text-ink-secondary">
-              <Link href="/liga">
-                Ver todo
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
+            <Link
+              href="/liga"
+              className={cn(
+                buttonVariants({ variant: "ghost" }),
+                "text-ink-secondary"
+              )}
+            >
+              Ver todo
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
           </div>
 
-          {/* Skeleton — sustituir por datos reales en prompt #3 */}
+          {/* Skeleton — replaced by real data in prompt #3 */}
           <div className="border border-border-soft rounded-card overflow-hidden shadow-card">
             <div className="bg-brand-navy/5 px-6 py-3 grid grid-cols-[2rem_1fr_auto_auto] gap-4 text-xs font-semibold text-ink-secondary uppercase tracking-wider">
               <span>#</span>

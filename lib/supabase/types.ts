@@ -354,9 +354,7 @@ export type Database = {
           resolution_notes?: string | null;
           resolved_at?: string | null;
         };
-      };
-    };
-    Views: {
+      // Views treated as read-only tables (Supabase CLI pattern)
       league_standings: {
         Row: {
           startup_id: string;
@@ -371,6 +369,8 @@ export type Database = {
           rank_division: number;
           rank_division_vertical: number;
         };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
       };
       ecosystem_totals: {
         Row: {
@@ -380,6 +380,8 @@ export type Database = {
           total_points: number;
           tier: Database["public"]["Enums"]["ecosystem_tier"];
         };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
       };
       public_evaluations: {
         Row: {
@@ -391,8 +393,11 @@ export type Database = {
           summary: string | null;
           created_at: string;
         };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
       };
     };
+    Views: Record<string, never>;
     Enums: {
       user_role: "startup" | "ecosystem" | "admin";
       deck_status: "pending" | "processing" | "evaluated" | "error" | "archived";

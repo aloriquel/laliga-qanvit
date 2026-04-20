@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 
 const NAV_LINKS = [
   { href: "/liga", label: "Liga" },
@@ -45,12 +46,15 @@ export function Header() {
         </nav>
 
         {/* CTA */}
-        <Button
-          asChild
-          className="bg-brand-salmon text-brand-navy hover:bg-brand-salmon/90 font-semibold rounded-xl px-5 py-2.5 text-sm"
+        <Link
+          href="/play"
+          className={cn(
+            buttonVariants({ variant: "default" }),
+            "bg-brand-salmon text-brand-navy hover:bg-brand-salmon/90 font-semibold rounded-xl px-5 py-2.5 text-sm"
+          )}
         >
-          <Link href="/play">Ficha tu startup</Link>
-        </Button>
+          Ficha tu startup
+        </Link>
       </div>
     </header>
   );
