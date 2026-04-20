@@ -1,4 +1,4 @@
-import { extractText as unpdfExtract } from "https://esm.sh/unpdf@0.12.0";
+import { extractText as unpdfExtract, getDocumentProxy } from "https://esm.sh/unpdf@0.12.0";
 
 export type ExtractResult = {
   text: string;
@@ -7,7 +7,8 @@ export type ExtractResult = {
 };
 
 export async function extractText(pdfBuffer: Uint8Array): Promise<ExtractResult> {
-  const { text, totalPages } = await unpdfExtract(pdfBuffer);
+  const pdf = await getDocumentProxy(pdfBuffer);
+  const { text, totalPages } = await unpdfExtract(pdf, { mergePages: true });
 
   if (!text || text.trim().length === 0) {
     throw new Error("PDF extraction returned empty text. The deck may be scanned without OCR.");
