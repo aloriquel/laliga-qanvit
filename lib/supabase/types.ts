@@ -1,5 +1,5 @@
-// Auto-generated after running: npx supabase gen types typescript --local > lib/supabase/types.ts
-// This is a placeholder until migrations are applied locally.
+// Placeholder until: npx supabase gen types typescript --local > lib/supabase/types.ts
+// Mirrors the exact structure the Supabase SDK expects (GenericSchema).
 
 export type Json =
   | string
@@ -39,6 +39,7 @@ export type Database = {
           avatar_url?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       startups: {
         Row: {
@@ -107,6 +108,7 @@ export type Database = {
           consent_internal_use?: boolean;
           updated_at?: string;
         };
+        Relationships: [];
       };
       decks: {
         Row: {
@@ -148,6 +150,36 @@ export type Database = {
           processed_at?: string | null;
           error_message?: string | null;
         };
+        Relationships: [];
+      };
+      deck_chunks: {
+        Row: {
+          id: string;
+          deck_id: string;
+          chunk_index: number;
+          content: string;
+          token_count: number | null;
+          embedding: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          deck_id: string;
+          chunk_index: number;
+          content: string;
+          token_count?: number | null;
+          embedding?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          content?: string;
+          token_count?: number | null;
+          embedding?: string | null;
+          metadata?: Json;
+        };
+        Relationships: [];
       };
       evaluations: {
         Row: {
@@ -207,6 +239,7 @@ export type Database = {
           created_at?: string;
         };
         Update: Record<string, never>;
+        Relationships: [];
       };
       ecosystem_organizations: {
         Row: {
@@ -253,6 +286,7 @@ export type Database = {
           verified_by?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       ecosystem_points_log: {
         Row: {
@@ -280,6 +314,7 @@ export type Database = {
           created_at?: string;
         };
         Update: Record<string, never>;
+        Relationships: [];
       };
       feedback_validations: {
         Row: {
@@ -299,6 +334,7 @@ export type Database = {
           created_at?: string;
         };
         Update: Record<string, never>;
+        Relationships: [];
       };
       deck_access_log: {
         Row: {
@@ -320,6 +356,7 @@ export type Database = {
           accessed_at?: string;
         };
         Update: Record<string, never>;
+        Relationships: [];
       };
       evaluation_appeals: {
         Row: {
@@ -354,6 +391,7 @@ export type Database = {
           resolution_notes?: string | null;
           resolved_at?: string | null;
         };
+        Relationships: [];
       };
     };
     Views: {
@@ -396,6 +434,7 @@ export type Database = {
         Relationships: [];
       };
     };
+    Functions: Record<string, never>;
     Enums: {
       user_role: "startup" | "ecosystem" | "admin";
       deck_status: "pending" | "processing" | "evaluated" | "error" | "archived";
@@ -425,5 +464,6 @@ export type Database = {
         | "admin_grant"
         | "admin_revoke";
     };
+    CompositeTypes: Record<string, never>;
   };
 };

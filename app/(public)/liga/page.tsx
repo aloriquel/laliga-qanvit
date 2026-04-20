@@ -29,13 +29,29 @@ const VERTICAL_LABELS: Record<string, string> = {
 };
 
 export default async function LeaderboardPage() {
-  const supabase = createClient();
+  let standings: Array<{
+    startup_id: string;
+    name: string;
+    slug: string;
+    one_liner: string | null;
+    logo_url: string | null;
+    current_division: string | null;
+    current_vertical: string | null;
+    current_score: number | null;
+    rank_national: number;
+  }> | null = null;
 
-  const { data: standings } = await supabase
-    .from("league_standings")
-    .select("*")
-    .order("rank_national", { ascending: true })
-    .limit(50);
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("league_standings")
+      .select("*")
+      .order("rank_national", { ascending: true })
+      .limit(50);
+    standings = data;
+  } catch {
+    // Supabase not configured (local dev without .env.local)
+  }
 
   const hasData = standings && standings.length > 0;
 
