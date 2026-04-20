@@ -64,6 +64,9 @@ npx supabase stop            # parar Supabase local
 npx supabase db reset        # resetear DB y aplicar migrations
 npx supabase db diff         # ver cambios sin migration
 npx supabase gen types typescript --local > lib/supabase/types.ts
+npm run smoke:pipeline [deck_id]  # smoke test del pipeline end-to-end
+npx supabase functions serve evaluator-pipeline --env-file .env.local
+npx supabase functions logs evaluator-pipeline
 ```
 
 ---

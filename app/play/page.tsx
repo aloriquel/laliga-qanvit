@@ -1,309 +1,298 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Upload, CheckCircle2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
+import { Upload, ChevronRight, AlertCircle } from "lucide-react";
 
-const STEPS = ["Tu startup", "Tu deck", "Consentimiento"] as const;
+type Step = 0 | 1;
+
+type StartupFormData = {
+  name: string;
+  website: string;
+  oneLiner: string;
+};
 
 export default function PlayPage() {
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState({
-    name: "",
-    website: "",
-    oneLiner: "",
-    file: null as File | null,
-    consentEval: false,
-    consentPublic: false,
-    consentInternal: false,
-  });
+  const router = useRouter();
+  const [step, setStep] = useState<Step>(0);
+  const [startupId, setStartupId] = useState<string | null>(null);
+  const [form, setForm] = useState<StartupFormData>({ name: "", website: "", oneLiner: "" });
+  const [file, setFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [consentEval, setConsentEval] = useState(false);
+  const [consentPublic, setConsentPublic] = useState(false);
+  const [consentInternal, setConsentInternal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const progress = ((step + 1) / STEPS.length) * 100;
+  // ── Step 0: Startup basics ──────────────────────────────────────────────
+  async function handleStep0(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        const email = window.prompt("Introduce tu email para acceder:");
+        if (!email) { setLoading(false); return; }
+        const { error: authError } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+        if (authError) throw authError;
+        setError("Te hemos enviado un enlace mágico. Vuelve aquí después de verificar tu email.");
+        setLoading(false);
+        return;
+      }
+
+      const slug = form.name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 60);
+
+      const { data: existing } = await supabase
+        .from("startups")
+        .select("id")
+        .eq("owner_id", user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase.from("startups").update({
+          name: form.name,
+          website: form.website || null,
+          one_liner: form.oneLiner || null,
+        }).eq("id", existing.id);
+        setStartupId(existing.id);
+      } else {
+        const { data: created, error: createError } = await supabase
+          .from("startups")
+          .insert({
+            owner_id: user.id,
+            slug,
+            name: form.name,
+            website: form.website || null,
+            one_liner: form.oneLiner || null,
+          })
+          .select("id")
+          .single();
+        if (createError) throw createError;
+        setStartupId(created!.id);
+      }
+
+      setStep(1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Step 1: Upload deck ─────────────────────────────────────────────────
+  async function handleStep1(e: React.FormEvent) {
+    e.preventDefault();
+    if (!file || !startupId) return;
+    if (!consentEval) { setError("Debes aceptar que tu deck sea evaluado para continuar."); return; }
+    setError(null);
+    setLoading(true);
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("startup_id", startupId);
+      fd.append("consent_evaluation", String(consentEval));
+      fd.append("consent_public_profile", String(consentPublic));
+      fd.append("consent_internal_use", String(consentInternal));
+
+      const res = await fetch("/api/decks/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Error al subir el deck");
+
+      router.push(`/play/evaluando/${json.deck_id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+      setLoading(false);
+    }
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+    const dropped = e.dataTransfer.files[0];
+    if (dropped?.type === "application/pdf") { setFile(dropped); setError(null); }
+    else setError("Solo se aceptan archivos PDF.");
+  }
+
+  const STEPS = ["Tu startup", "Tu deck"];
 
   return (
     <div className="bg-brand-lavender min-h-screen py-16">
-      <div className="container-brand max-w-lg">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <p className="font-mono text-brand-navy/40 text-sm tracking-widest uppercase mb-3">
-            {"{ ficha tu startup }"}
-          </p>
-          <h1 className="font-sora font-bold text-3xl text-brand-navy">
-            Únete a La Liga
-          </h1>
-          <p className="font-body text-ink-secondary mt-2 text-sm">
-            3 pasos · menos de 3 minutos
-          </p>
-        </div>
-
+      <div className="container-brand max-w-xl">
         {/* Stepper */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            {STEPS.map((label, i) => (
-              <div key={label} className="flex flex-col items-center gap-1 flex-1">
-                <div
-                  className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-sora font-semibold transition-colors ${
-                    i < step
-                      ? "bg-brand-navy text-brand-salmon"
-                      : i === step
-                      ? "bg-brand-salmon text-brand-navy"
-                      : "bg-white border border-border-soft text-ink-secondary"
-                  }`}
-                >
-                  {i < step ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
-                </div>
-                <span
-                  className={`font-body text-xs text-center hidden sm:block ${
-                    i === step ? "text-brand-navy font-semibold" : "text-ink-secondary"
-                  }`}
-                >
-                  {label}
-                </span>
+        <div className="flex items-center gap-2 mb-10 justify-center">
+          {STEPS.map((label, i) => (
+            <div key={label} className="flex items-center gap-2">
+              <div className={cn(
+                "h-8 w-8 rounded-full flex items-center justify-center font-mono text-sm font-semibold transition-colors",
+                i < step ? "bg-brand-navy text-white" : i === step ? "bg-brand-salmon text-brand-navy" : "bg-white border border-border-soft text-ink-secondary"
+              )}>
+                {i < step ? "✓" : i + 1}
               </div>
-            ))}
-          </div>
-          <Progress value={progress} className="h-1.5 bg-white" />
+              <span className={cn("font-body text-sm hidden sm:block", i === step ? "text-brand-navy font-semibold" : "text-ink-secondary")}>
+                {label}
+              </span>
+              {i < STEPS.length - 1 && <div className="w-8 h-px bg-border-soft" />}
+            </div>
+          ))}
         </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-card shadow-card border border-border-soft p-8">
-          {/* Paso 1: Datos básicos */}
-          {step === 0 && (
-            <div className="flex flex-col gap-5">
-              <h2 className="font-sora font-semibold text-xl text-brand-navy">
-                Cuéntanos sobre tu startup
-              </h2>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="name" className="font-body text-sm text-ink-primary">
-                  Nombre de la startup *
-                </Label>
-                <Input
-                  id="name"
-                  placeholder="Ej. Acme Robotics"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData((f) => ({ ...f, name: e.target.value }))
-                  }
-                  className="font-body border-border-soft focus:ring-brand-salmon"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="website" className="font-body text-sm text-ink-primary">
-                  Web
-                </Label>
-                <Input
-                  id="website"
-                  type="url"
-                  placeholder="https://tuempresa.com"
-                  value={formData.website}
-                  onChange={(e) =>
-                    setFormData((f) => ({ ...f, website: e.target.value }))
-                  }
-                  className="font-body border-border-soft"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="oneLiner" className="font-body text-sm text-ink-primary">
-                  ¿Qué hace tu startup? (una línea)
-                </Label>
-                <Input
-                  id="oneLiner"
-                  placeholder="Ej. Automatizamos la inspección industrial con visión artificial"
-                  maxLength={140}
-                  value={formData.oneLiner}
-                  onChange={(e) =>
-                    setFormData((f) => ({ ...f, oneLiner: e.target.value }))
-                  }
-                  className="font-body border-border-soft"
-                />
-                <span className="font-mono text-xs text-ink-secondary text-right">
-                  {formData.oneLiner.length}/140
-                </span>
-              </div>
-              <Button
-                onClick={() => setStep(1)}
-                disabled={!formData.name}
-                className="bg-brand-navy text-white hover:bg-brand-navy/90 rounded-xl mt-2"
-              >
-                Continuar
-              </Button>
+        <div className="bg-white rounded-hero shadow-card border border-border-soft p-8">
+          {error && (
+            <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
-          {/* Paso 2: Upload deck */}
-          {step === 1 && (
-            <div className="flex flex-col gap-5">
-              <h2 className="font-sora font-semibold text-xl text-brand-navy">
-                Sube tu deck
-              </h2>
-              <p className="font-body text-sm text-ink-secondary">
-                PDF · máximo 20 MB. El contenido de tu deck es privado — solo lo
-                vemos nosotros para evaluar.
-              </p>
-              <label
-                htmlFor="deck-upload"
-                className={`flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-card p-10 cursor-pointer transition-colors ${
-                  formData.file
-                    ? "border-brand-navy bg-brand-lavender/50"
-                    : "border-border-soft hover:border-brand-navy/40 bg-brand-lavender/20"
-                }`}
-              >
-                <Upload
-                  className={`h-8 w-8 ${
-                    formData.file ? "text-brand-navy" : "text-ink-secondary"
-                  }`}
+          {/* ── STEP 0 ── */}
+          {step === 0 && (
+            <form onSubmit={handleStep0} className="flex flex-col gap-5">
+              <div>
+                <h1 className="font-sora font-bold text-2xl text-brand-navy">Ficha tu startup</h1>
+                <p className="font-body text-ink-secondary text-sm mt-1">Cuéntanos lo básico. Lo puedes editar más adelante.</p>
+              </div>
+              <label className="flex flex-col gap-1">
+                <span className="font-body text-sm font-semibold text-brand-navy">Nombre de la startup *</span>
+                <input
+                  required
+                  className="rounded-card border border-border-soft px-4 py-2.5 font-body text-sm text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-salmon"
+                  value={form.name}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                  placeholder="Ej: Orbea Robotics"
                 />
-                {formData.file ? (
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="font-body text-sm font-semibold text-brand-navy">Website</span>
+                <input
+                  type="url"
+                  className="rounded-card border border-border-soft px-4 py-2.5 font-body text-sm text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-salmon"
+                  value={form.website}
+                  onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
+                  placeholder="https://tuempresa.com"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="font-body text-sm font-semibold text-brand-navy">
+                  One-liner <span className="font-normal text-ink-secondary">(max 140 chars)</span>
+                </span>
+                <input
+                  maxLength={140}
+                  className="rounded-card border border-border-soft px-4 py-2.5 font-body text-sm text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-salmon"
+                  value={form.oneLiner}
+                  onChange={e => setForm(f => ({ ...f, oneLiner: e.target.value }))}
+                  placeholder="Automatizamos la inspección industrial con visión por computador."
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={loading || !form.name.trim()}
+                className="mt-2 bg-brand-navy text-white font-semibold rounded-xl px-6 py-3 font-body flex items-center justify-center gap-2 hover:bg-brand-navy/90 transition-colors disabled:opacity-50"
+              >
+                {loading ? "Guardando..." : "Siguiente"}
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </form>
+          )}
+
+          {/* ── STEP 1 ── */}
+          {step === 1 && (
+            <form onSubmit={handleStep1} className="flex flex-col gap-5">
+              <div>
+                <h2 className="font-sora font-bold text-2xl text-brand-navy">Sube tu deck</h2>
+                <p className="font-body text-ink-secondary text-sm mt-1">PDF, máximo 20 MB. Asegúrate de que el PDF tenga texto seleccionable.</p>
+              </div>
+
+              <div
+                className={cn(
+                  "border-2 border-dashed rounded-hero p-10 flex flex-col items-center gap-3 cursor-pointer transition-colors",
+                  dragging ? "border-brand-salmon bg-brand-salmon/5" : "border-border-soft hover:border-brand-navy/30",
+                  file ? "bg-green-50 border-green-400" : ""
+                )}
+                onDragOver={e => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={handleDrop}
+                onClick={() => document.getElementById("fileInput")?.click()}
+              >
+                <Upload className={cn("h-10 w-10", file ? "text-green-600" : "text-ink-secondary")} />
+                {file ? (
                   <div className="text-center">
-                    <p className="font-sora font-semibold text-sm text-brand-navy">
-                      {formData.file.name}
-                    </p>
-                    <p className="font-mono text-xs text-ink-secondary mt-1">
-                      {(formData.file.size / 1024 / 1024).toFixed(1)} MB
-                    </p>
+                    <p className="font-body font-semibold text-green-700 text-sm">{file.name}</p>
+                    <p className="font-body text-xs text-green-600">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
                   </div>
                 ) : (
                   <div className="text-center">
-                    <p className="font-body text-sm text-ink-primary">
-                      Arrastra tu deck aquí o{" "}
-                      <span className="text-brand-navy font-semibold underline underline-offset-2">
-                        selecciona el archivo
-                      </span>
-                    </p>
-                    <p className="font-mono text-xs text-ink-secondary mt-1">PDF · máx 20 MB</p>
+                    <p className="font-body text-sm text-brand-navy font-semibold">Arrastra tu PDF aquí</p>
+                    <p className="font-body text-xs text-ink-secondary">o haz clic para seleccionar</p>
                   </div>
                 )}
-                <input
-                  id="deck-upload"
-                  type="file"
-                  accept=".pdf"
-                  className="sr-only"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    setFormData((f) => ({ ...f, file }));
-                  }}
-                />
-              </label>
-              <div className="flex gap-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => setStep(0)}
-                  className="flex-1 text-ink-secondary"
-                >
-                  Atrás
-                </Button>
-                <Button
-                  onClick={() => setStep(2)}
-                  disabled={!formData.file}
-                  className="flex-1 bg-brand-navy text-white hover:bg-brand-navy/90 rounded-xl"
-                >
-                  Continuar
-                </Button>
               </div>
-            </div>
-          )}
+              <input
+                id="fileInput"
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={e => {
+                  const f = e.target.files?.[0];
+                  if (f) { setFile(f); setError(null); }
+                }}
+              />
 
-          {/* Paso 3: Consentimiento */}
-          {step === 2 && (
-            <div className="flex flex-col gap-5">
-              <h2 className="font-sora font-semibold text-xl text-brand-navy">
-                Consentimiento
-              </h2>
-              <p className="font-body text-sm text-ink-secondary">
-                Elige qué autorizas. Puedes revocar en cualquier momento desde tu
-                perfil.
-              </p>
-              <div className="flex flex-col gap-4">
-                {[
-                  {
-                    id: "consentEval",
-                    label: "Autorizo evaluar mi deck con IA",
-                    description:
-                      "Necesario para participar. El texto de tu deck se procesa para generar feedback.",
-                    required: true,
-                    key: "consentEval" as const,
-                  },
-                  {
-                    id: "consentPublic",
-                    label: "Mostrar mi posición en el leaderboard público",
-                    description:
-                      "Tu nombre, score y posición serán visibles para cualquier visitante.",
-                    required: false,
-                    key: "consentPublic" as const,
-                  },
-                  {
-                    id: "consentInternal",
-                    label: "Uso interno del deck por Qanvit",
-                    description:
-                      "Permite a Qanvit usar tu deck para mejorar el evaluador y la plataforma.",
-                    required: false,
-                    key: "consentInternal" as const,
-                  },
-                ].map(({ id, label, description, required, key }) => (
-                  <label
-                    key={id}
-                    htmlFor={id}
-                    className="flex items-start gap-3 cursor-pointer"
-                  >
-                    <input
-                      id={id}
-                      type="checkbox"
-                      className="mt-0.5 h-4 w-4 rounded border-border-soft accent-brand-navy"
-                      checked={formData[key]}
-                      onChange={(e) =>
-                        setFormData((f) => ({ ...f, [key]: e.target.checked }))
-                      }
-                    />
-                    <div>
-                      <p className="font-body text-sm font-medium text-ink-primary">
-                        {label}
-                        {required && (
-                          <span className="text-brand-salmon ml-1 text-xs">
-                            (requerido)
-                          </span>
-                        )}
-                      </p>
-                      <p className="font-body text-xs text-ink-secondary mt-0.5">
-                        {description}
-                      </p>
-                    </div>
-                  </label>
-                ))}
+              {/* Consents */}
+              <div className="flex flex-col gap-3 border-t border-border-soft pt-4">
+                <p className="font-body text-sm font-semibold text-brand-navy">Permisos de uso</p>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" checked={consentEval} onChange={e => setConsentEval(e.target.checked)} className="mt-0.5 accent-brand-salmon" />
+                  <span className="font-body text-sm text-brand-navy">
+                    <strong>Acepto que mi deck sea evaluado por IA</strong> — Qanvit procesará el texto para generar feedback. El contenido del deck nunca es visible a terceros. <span className="text-red-500">*</span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" checked={consentPublic} onChange={e => setConsentPublic(e.target.checked)} className="mt-0.5 accent-brand-salmon" />
+                  <span className="font-body text-sm text-ink-secondary">
+                    Mi nombre, score y División pueden aparecer en el leaderboard público.
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" checked={consentInternal} onChange={e => setConsentInternal(e.target.checked)} className="mt-0.5 accent-brand-salmon" />
+                  <span className="font-body text-sm text-ink-secondary">
+                    Qanvit puede usar el feedback anonimizado para mejorar el evaluador.
+                  </span>
+                </label>
               </div>
+
               <div className="flex gap-3 pt-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => setStep(1)}
-                  className="flex-1 text-ink-secondary"
+                <button
+                  type="button"
+                  onClick={() => setStep(0)}
+                  className="border border-border-soft rounded-xl px-4 py-3 font-body text-sm text-ink-secondary hover:bg-brand-lavender transition-colors"
                 >
                   Atrás
-                </Button>
-                <Button
-                  disabled={!formData.consentEval}
-                  className="flex-1 bg-brand-salmon text-brand-navy hover:bg-brand-salmon/90 font-semibold rounded-xl"
-                  onClick={() => {
-                    // TODO (prompt #2): submit form → POST /api/decks/upload
-                    alert("Coming soon — prompt #2 implementa el upload real");
-                  }}
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || !file || !consentEval}
+                  className="flex-1 bg-brand-salmon text-brand-navy font-semibold rounded-xl px-6 py-3 font-body flex items-center justify-center gap-2 hover:bg-brand-salmon/90 transition-colors disabled:opacity-50"
                 >
-                  Ficharme en la liga
-                </Button>
+                  {loading ? "Subiendo..." : "Evaluar mi startup"}
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
-            </div>
+            </form>
           )}
         </div>
-
-        {/* Privacy note */}
-        <p className="text-center font-body text-xs text-ink-secondary mt-6">
-          Tu deck completo nunca se comparte con terceros. Solo el equipo Qanvit
-          accede a él.{" "}
-          <a href="/legal/privacidad" className="underline hover:text-brand-navy">
-            Política de privacidad
-          </a>
-        </p>
       </div>
     </div>
   );
