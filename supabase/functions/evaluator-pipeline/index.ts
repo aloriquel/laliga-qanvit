@@ -15,6 +15,7 @@ serve(async (req) => {
   // ── Auth ─────────────────────────────────────────────────────────────────
   const auth = req.headers.get("Authorization") ?? "";
   const token = auth.replace("Bearer ", "").trim();
+  console.log("[auth] expected_len:", EXPECTED_SECRET.length, "token_len:", token.length, "match:", token === EXPECTED_SECRET);
   if (!EXPECTED_SECRET || token !== EXPECTED_SECRET) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
