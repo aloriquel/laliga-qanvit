@@ -60,7 +60,27 @@ export async function POST(req: NextRequest) {
       })
       .eq("id", startupId);
 
-    return NextResponse.json({ deck_id: result.deckId, status: "pending" }, { status: 201 });
+    // Apply referral if cookie present and startup has no referrer yet
+    const refCode = req.cookies.get("qvt_ref")?.value;
+    const finalResponse = NextResponse.json({ deck_id: result.deckId, status: "pending" }, { status: 201 });
+    if (refCode) {
+      const { data: refOrg } = await serviceClient
+        .from("ecosystem_organizations")
+        .select("id, owner_id")
+        .eq("referral_code", refCode)
+        .maybeSingle();
+
+      if (refOrg && refOrg.owner_id !== user.id) {
+        await serviceClient
+          .from("startups")
+          .update({ referred_by_org_id: refOrg.id })
+          .eq("id", startupId)
+          .is("referred_by_org_id", null);
+      }
+      finalResponse.cookies.set("qvt_ref", "", { path: "/", maxAge: 0 });
+    }
+
+    return finalResponse;
   } catch (err) {
     console.error("Upload route error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

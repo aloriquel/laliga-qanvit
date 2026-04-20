@@ -77,6 +77,22 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // /play → capture ?ref=CODE referral cookie and redirect clean URL
+  if (pathname === "/play") {
+    const refCode = request.nextUrl.searchParams.get("ref");
+    if (refCode) {
+      const cleanUrl = new URL("/play", request.url);
+      const redirectResponse = NextResponse.redirect(cleanUrl);
+      redirectResponse.cookies.set("qvt_ref", refCode, {
+        path: "/",
+        maxAge: 180 * 24 * 3600,
+        sameSite: "lax",
+        httpOnly: true,
+      });
+      return redirectResponse;
+    }
+  }
+
   // /play/re-subir → must be authenticated with a startup
   if (pathname === "/play/re-subir") {
     if (!user) {
@@ -101,6 +117,7 @@ export const config = {
     "/dashboard/:path*",
     "/admin/:path*",
     "/ecosistema/dashboard/:path*",
+    "/play",
     "/play/re-subir",
   ],
 };

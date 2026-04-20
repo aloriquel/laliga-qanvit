@@ -8,6 +8,7 @@ type Startup = {
   is_public: boolean;
   consent_public_profile: boolean;
   show_public_timeline: boolean;
+  consent_direct_contact: boolean;
 };
 
 function getSupabase() {
@@ -56,6 +57,7 @@ export default function PrivacyToggles({ startup }: { startup: Startup }) {
   const [isPublic, setIsPublic] = useState(startup.is_public);
   const [consentPublic, setConsentPublic] = useState(startup.consent_public_profile);
   const [showTimeline, setShowTimeline] = useState(startup.show_public_timeline);
+  const [consentContact, setConsentContact] = useState(startup.consent_direct_contact);
 
   async function update(field: string, value: boolean) {
     const supabase = getSupabase();
@@ -81,6 +83,12 @@ export default function PrivacyToggles({ startup }: { startup: Startup }) {
         description="Si está ON, tu perfil público muestra el historial de evaluaciones."
         checked={showTimeline}
         onChange={(v) => { setShowTimeline(v); update("show_public_timeline", v); }}
+      />
+      <Toggle
+        label="Aceptar contacto del ecosistema"
+        description="Si está ON, organizaciones del ecosistema (tier Elite) podrán enviarte solicitudes de contacto."
+        checked={consentContact}
+        onChange={(v) => { setConsentContact(v); update("consent_direct_contact", v); }}
       />
     </div>
   );
