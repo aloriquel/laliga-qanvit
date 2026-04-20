@@ -877,6 +877,7 @@ export type Database = {
           score_total: number
           score_traction: number
           startup_id: string
+          is_calibration_sample: boolean
           summary: string | null
           tokens_input: number | null
           tokens_output: number | null
@@ -892,6 +893,7 @@ export type Database = {
           evaluator_model: string
           feedback: Json
           id?: string
+          is_calibration_sample?: boolean
           latency_ms?: number | null
           next_actions?: Json | null
           prompt_version: string
@@ -920,6 +922,7 @@ export type Database = {
           evaluator_model?: string
           feedback?: Json
           id?: string
+          is_calibration_sample?: boolean
           latency_ms?: number | null
           next_actions?: Json | null
           prompt_version?: string
@@ -1290,6 +1293,108 @@ export type Database = {
           },
         ]
       }
+      admin_audit_log: {
+        Row: {
+          action_type: Database["public"]["Enums"]["admin_action_type"]
+          admin_id: string
+          created_at: string
+          id: string
+          payload: Json
+          reason: string | null
+          target_id: string | null
+          target_type: string
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["admin_action_type"]
+          admin_id: string
+          created_at?: string
+          id?: string
+          payload?: Json
+          reason?: string | null
+          target_id?: string | null
+          target_type: string
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["admin_action_type"]
+          admin_id?: string
+          created_at?: string
+          id?: string
+          payload?: Json
+          reason?: string | null
+          target_id?: string | null
+          target_type?: string
+        }
+        Relationships: []
+      }
+      admin_settings: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      dataset_exports: {
+        Row: {
+          admin_id: string
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          expires_at: string | null
+          file_size_bytes: number | null
+          filters: Json | null
+          id: string
+          record_count: number | null
+          scope: string
+          status: string
+          storage_path: string | null
+        }
+        Insert: {
+          admin_id: string
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          expires_at?: string | null
+          file_size_bytes?: number | null
+          filters?: Json | null
+          id?: string
+          record_count?: number | null
+          scope: string
+          status?: string
+          storage_path?: string | null
+        }
+        Update: {
+          admin_id?: string
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          expires_at?: string | null
+          file_size_bytes?: number | null
+          filters?: Json | null
+          id?: string
+          record_count?: number | null
+          scope?: string
+          status?: string
+          storage_path?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       ecosystem_anonymous_standings: {
@@ -1363,11 +1468,38 @@ export type Database = {
           },
         ]
       }
+      metrics_summary: {
+        Row: {
+          avg_cost_per_eval_30d: number | null
+          avg_latency_ms_7d: number | null
+          cost_usd_30d: number | null
+          cost_usd_7d: number | null
+          decks_error_7d: number | null
+          decks_error_total: number | null
+          decks_evaluated_7d: number | null
+          decks_evaluated_total: number | null
+          degraded_evals_30d: number | null
+          orgs_verified: number | null
+          pipeline_success_rate_7d: number | null
+          refreshed_at: string | null
+          startups_with_score: number | null
+          total_cost_usd: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_challenge_vote_rate_limit: {
         Args: { p_org_id: string }
         Returns: boolean
+      }
+      get_cohort_retention: {
+        Args: { weeks_back?: number }
+        Returns: { cohort: string; cohort_size: number; retention_w1: number; retention_w4: number; retention_w8: number; retention_w12: number }[]
+      }
+      get_division_vertical_heatmap: {
+        Args: Record<string, never>
+        Returns: { division: Database["public"]["Enums"]["league_division"]; vertical: Database["public"]["Enums"]["startup_vertical"]; startup_count: number; avg_score: number }[]
       }
       is_admin: { Args: never; Returns: boolean }
       is_ecosystem: { Args: never; Returns: boolean }
@@ -1430,6 +1562,13 @@ export type Database = {
         | "space_aerospace"
         | "materials_chemistry"
         | "cybersecurity"
+      admin_action_type:
+        | "org_approved" | "org_rejected" | "org_info_requested" | "org_revoked" | "org_points_adjusted"
+        | "evaluation_overridden" | "evaluation_rerun" | "evaluation_deleted" | "evaluation_calibration_flagged"
+        | "appeal_accepted_override" | "appeal_accepted_rerun" | "appeal_rejected"
+        | "startup_hidden" | "startup_restored" | "startup_rerun_forced"
+        | "challenge_approved_voting" | "challenge_activated" | "challenge_cancelled" | "challenge_prizes_distributed"
+        | "dataset_exported" | "setting_updated"
       user_role: "startup" | "ecosystem" | "admin"
     }
     CompositeTypes: {

@@ -5,10 +5,18 @@ import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
 const NAV_ITEMS = [
-  { href: "/admin/deck-errors", label: "Deck Errors", badge: true },
-  { href: "/admin/evaluations", label: "Evaluations", badge: false },
-  { href: "/admin/organizations", label: "Organizations", badge: false },
-  { href: "/admin/metrics", label: "Metrics", badge: false },
+  { href: "/admin", label: "Inicio", exact: true },
+  { href: "/admin/ecosystem-applications", label: "Solicitudes eco." },
+  { href: "/admin/ecosystem-organizations", label: "Organizaciones" },
+  { href: "/admin/deck-errors", label: "Deck errors" },
+  { href: "/admin/evaluations", label: "Evaluaciones" },
+  { href: "/admin/evaluation-appeals", label: "Impugnaciones" },
+  { href: "/admin/challenges", label: "Retos" },
+  { href: "/admin/startups", label: "Startups" },
+  { href: "/admin/metrics", label: "Métricas" },
+  { href: "/admin/data-export", label: "Export datos" },
+  { href: "/admin/audit-log", label: "Auditoría" },
+  { href: "/admin/settings", label: "Configuración" },
 ];
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
@@ -27,13 +35,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <div className="min-h-screen flex bg-brand-lavender">
-      {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 bg-brand-navy min-h-screen flex flex-col">
         <div className="px-5 py-6 border-b border-white/10">
-          <p className="font-mono text-brand-salmon text-xs font-semibold tracking-widest">{ "{ }" }</p>
-          <p className="font-sora font-bold text-white text-sm mt-1">Admin Panel</p>
+          <p className="font-mono text-brand-salmon text-xs font-semibold tracking-widest">{"{ }"}</p>
+          <p className="font-sora font-bold text-white text-sm mt-1">admin</p>
         </div>
-        <nav className="flex flex-col gap-1 px-3 py-4 flex-1">
+        <nav className="flex flex-col gap-0.5 px-3 py-4 flex-1 overflow-y-auto">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
@@ -48,11 +55,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           ))}
         </nav>
         <div className="px-5 py-4 border-t border-white/10">
-          <p className="font-body text-white/30 text-xs">{user.email}</p>
+          <p className="font-body text-white/30 text-xs truncate">{user.email}</p>
         </div>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 p-8 overflow-auto">{children}</main>
     </div>
   );
