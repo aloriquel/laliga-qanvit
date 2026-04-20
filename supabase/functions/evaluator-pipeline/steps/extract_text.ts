@@ -1,9 +1,5 @@
-// @ts-ignore — pdfjs-dist ESM build works in Deno edge runtime without a worker
-import * as pdfjsLib from "https://esm.sh/pdfjs-dist@3.11.174/build/pdf.mjs";
-
-// Disable the web worker (not available in edge runtime)
-// @ts-ignore
-pdfjsLib.GlobalWorkerOptions.workerSrc = "";
+// @ts-ignore — pdfjs-dist v2 has no canvas dependency, works in Deno edge
+import * as pdfjsLib from "https://esm.sh/pdfjs-dist@2.16.105/build/pdf.js";
 
 export type ExtractResult = {
   text: string;
@@ -13,9 +9,9 @@ export type ExtractResult = {
 
 export async function extractText(pdfBuffer: Uint8Array): Promise<ExtractResult> {
   // @ts-ignore
-  const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer, useWorkerFetch: false, isEvalSupported: false, useSystemFonts: true });
+  const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer });
   const pdf = await loadingTask.promise;
-  const totalPages = pdf.numPages;
+  const totalPages: number = pdf.numPages;
 
   const pageTexts: string[] = [];
   for (let i = 1; i <= totalPages; i++) {
