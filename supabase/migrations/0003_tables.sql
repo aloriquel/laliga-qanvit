@@ -13,7 +13,7 @@ create table profiles (
 
 -- 3.2 startups: canonical profile for each startup in the league
 create table startups (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references profiles(id) on delete cascade,
   slug text not null unique,
   name text not null,
@@ -42,7 +42,7 @@ create index idx_startups_score_desc on startups(current_score desc) where is_pu
 
 -- 3.3 decks: metadata for each uploaded deck
 create table decks (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   startup_id uuid not null references startups(id) on delete cascade,
   version int not null default 1,
   storage_path text not null,                   -- "{startup_id}/{deck_id}.pdf"
@@ -63,7 +63,7 @@ create index idx_decks_startup on decks(startup_id);
 
 -- 3.4 deck_chunks: vectorized chunks for semantic search and evaluator pipeline
 create table deck_chunks (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   deck_id uuid not null references decks(id) on delete cascade,
   chunk_index int not null,
   content text not null,
@@ -82,7 +82,7 @@ create index idx_deck_chunks_embedding on deck_chunks
 
 -- 3.5 evaluations: one evaluation per deck (result of the pipeline)
 create table evaluations (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   deck_id uuid not null references decks(id) on delete cascade,
   startup_id uuid not null references startups(id) on delete cascade,
 
@@ -128,7 +128,7 @@ create index idx_evaluations_score on evaluations(score_total desc);
 
 -- 3.7 ecosystem_organizations: parks, clusters, associations
 create table ecosystem_organizations (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references profiles(id) on delete cascade,
   name text not null,
   org_type ecosystem_org_type not null,
@@ -146,7 +146,7 @@ create table ecosystem_organizations (
 
 -- 3.8 ecosystem_points_log: append-only points events
 create table ecosystem_points_log (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   org_id uuid not null references ecosystem_organizations(id) on delete cascade,
   event_type points_event_type not null,
   points int not null,
@@ -163,7 +163,7 @@ create index idx_points_log_created on ecosystem_points_log(created_at desc);
 
 -- 3.10 feedback_validations: ecosystem thumbs up/down on evaluations
 create table feedback_validations (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   evaluation_id uuid not null references evaluations(id) on delete cascade,
   org_id uuid not null references ecosystem_organizations(id) on delete cascade,
   is_positive boolean not null,
@@ -175,7 +175,7 @@ create table feedback_validations (
 
 -- 3.11 deck_access_log: audit trail for deck access
 create table deck_access_log (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   deck_id uuid not null references decks(id) on delete cascade,
   accessed_by uuid not null references profiles(id),
   access_type text not null,                    -- 'download' | 'view' | 'api'
@@ -186,7 +186,7 @@ create table deck_access_log (
 
 -- 3.12 evaluation_appeals: startup impugna su clasificación
 create table evaluation_appeals (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   evaluation_id uuid not null references evaluations(id) on delete cascade,
   startup_id uuid not null references startups(id) on delete cascade,
   reason text not null,
