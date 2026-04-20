@@ -46,7 +46,11 @@
       "Read(//c/Users/1t12d/AppData/Roaming/**)",
       "Bash(npx kill-port *)",
       "Bash(netstat -ano)",
-      "Bash(curl -s -X PATCH 'https://ongwrbdypbusnwlclqjg.supabase.co/rest/v1/profiles?id=eq.80b8eaf9-20a5-428a-89ce-9fa5292eb2e9' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9uZ3dyYmR5cGJ1c253bGNscWpnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjY3ODU3NSwiZXhwIjoyMDkyMjU0NTc1fQ.T72Fq1uY6w80VtVFe6q0KwC_0BUGmA3P82F2Raq9m18' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9uZ3dyYmR5cGJ1c253bGNscWpnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjY3ODU3NSwiZXhwIjoyMDkyMjU0NTc1fQ.T72Fq1uY6w80VtVFe6q0KwC_0BUGmA3P82F2Raq9m18' -H 'Content-Type: application/json' -H 'Prefer: return=representation' -d '{\"role\":\"admin\"}')"
+      "Bash(curl -s -X PATCH 'https://ongwrbdypbusnwlclqjg.supabase.co/rest/v1/profiles?id=eq.80b8eaf9-20a5-428a-89ce-9fa5292eb2e9' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9uZ3dyYmR5cGJ1c253bGNscWpnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjY3ODU3NSwiZXhwIjoyMDkyMjU0NTc1fQ.T72Fq1uY6w80VtVFe6q0KwC_0BUGmA3P82F2Raq9m18' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9uZ3dyYmR5cGJ1c253bGNscWpnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjY3ODU3NSwiZXhwIjoyMDkyMjU0NTc1fQ.T72Fq1uY6w80VtVFe6q0KwC_0BUGmA3P82F2Raq9m18' -H 'Content-Type: application/json' -H 'Prefer: return=representation' -d '{\"role\":\"admin\"}')",
+      "Bash(npx vercel *)",
+      "Bash(yes)",
+      "Bash(curl -s -X POST https://ongwrbdypbusnwlclqjg.supabase.co/storage/v1/bucket -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9uZ3dyYmR5cGJ1c253bGNscWpnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjY3ODU3NSwiZXhwIjoyMDkyMjU0NTc1fQ.T72Fq1uY6w80VtVFe6q0KwC_0BUGmA3P82F2Raq9m18' -H 'Content-Type: application/json' -d '{\"id\":\"exports\",\"name\":\"exports\",\"public\":false,\"fileSizeLimit\":104857600}')",
+      "Bash(git commit *)"
     ]
   }
 }
