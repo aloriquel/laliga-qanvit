@@ -186,5 +186,29 @@
     "sign_in": "Sign in",
     "my_area": "My area",
     "sign_out": "Sign out"
+  },
+  "hub": {
+    "greeting": "Hello, {name}",
+    "subtitle": "Your area in La Liga Qanvit",
+    "startup_card_title": "Your startup: {name}",
+    "startup_card_pending": "Evaluation pending",
+    "startup_cta": "Go to my dashboard",
+    "newcomer_startup_title": "I am a startup",
+    "newcomer_startup_copy": "Upload your deck and get a position in the national league.",
+    "newcomer_startup_cta": "Register your startup",
+    "newcomer_org_title": "I am a park, cluster or association",
+    "newcomer_org_copy": "Discover startups in your ecosystem with gamified access.",
+    "newcomer_org_cta": "Apply to the ecosystem",
+    "org_pending_title": "Your ecosystem application",
+    "org_pending_copy": "We are reviewing your application. We will email you once it is approved.",
+    "org_verified_title": "Your organization: {name}",
+    "org_verified_cta": "Go to ecosystem dashboard",
+    "admin_title": "Admin panel",
+    "admin_copy": "La Liga Qanvit operations",
+    "admin_cta": "Go to admin panel",
+    "also_org": "Do you also represent an organization?",
+    "also_org_cta": "Apply to ecosystem",
+    "also_startup": "Do you also want to register a startup?",
+    "also_startup_cta": "Register startup"
   }
 }

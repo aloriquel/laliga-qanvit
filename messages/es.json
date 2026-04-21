@@ -186,5 +186,29 @@
     "sign_in": "Iniciar sesión",
     "my_area": "Mi área",
     "sign_out": "Cerrar sesión"
+  },
+  "hub": {
+    "greeting": "Hola, {name}",
+    "subtitle": "Tu área en La Liga Qanvit",
+    "startup_card_title": "Tu startup: {name}",
+    "startup_card_pending": "Evaluación pendiente",
+    "startup_cta": "Ir a mi dashboard",
+    "newcomer_startup_title": "Soy una startup",
+    "newcomer_startup_copy": "Sube tu deck y recibe una posición en la liga nacional.",
+    "newcomer_startup_cta": "Ficha tu startup",
+    "newcomer_org_title": "Soy un parque, cluster o asociación",
+    "newcomer_org_copy": "Descubre startups de tu ecosistema con acceso gamificado.",
+    "newcomer_org_cta": "Aplicar al ecosistema",
+    "org_pending_title": "Tu aplicación al ecosistema",
+    "org_pending_copy": "Estamos revisando tu solicitud. Te avisamos por email en cuanto esté aprobada.",
+    "org_verified_title": "Tu organización: {name}",
+    "org_verified_cta": "Ir al dashboard del ecosistema",
+    "admin_title": "Panel admin",
+    "admin_copy": "Operación de La Liga Qanvit",
+    "admin_cta": "Ir al panel admin",
+    "also_org": "¿También representas a una organización?",
+    "also_org_cta": "Aplicar al ecosistema",
+    "also_startup": "¿También quieres fichar una startup?",
+    "also_startup_cta": "Fichar startup"
   }
 }
