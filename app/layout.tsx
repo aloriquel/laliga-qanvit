@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     title: "La Liga Qanvit · La liga de startups de España",
     description:
       "Sube tu deck. Recibe feedback de expertos. Entra en la clasificación nacional.",
-    images: [{ url: "/og-default.png", width: 1200, height: 630 }],
+    images: [{ url: "/api/og/default", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
