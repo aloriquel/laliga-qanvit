@@ -1,12 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import EcosystemShell from "@/components/ecosystem/EcosystemShell";
+import { ConsentGateModal } from "@/components/auth/ConsentGateModal";
+import { ensureProfile } from "@/lib/auth/ensure-profile";
 
 export default async function EcosystemDashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/ecosistema/aplicar");
+
+  const profile = await ensureProfile(user);
 
   const { data: org } = await supabase
     .from("ecosystem_organizations")
@@ -30,8 +34,11 @@ export default async function EcosystemDashboardLayout({ children }: { children:
     .eq("org_id", org.id)
     .eq("email_sent", false);
 
+  const needsConsent = !profile?.consented_at;
+
   return (
     <EcosystemShell orgName={org.name} tier={tier} unreadAlerts={unreadAlerts ?? 0}>
+      <ConsentGateModal show={needsConsent} />
       {children}
     </EcosystemShell>
   );

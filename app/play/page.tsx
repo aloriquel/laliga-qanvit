@@ -39,10 +39,15 @@ export default function PlayPage() {
       if (!user) {
         const email = window.prompt("Introduce tu email para acceder:");
         if (!email) { setLoading(false); return; }
-        const redirectTo = `${window.location.origin}/auth/callback?next=/play`;
-        const { error: authError } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: redirectTo } });
-        if (authError) throw authError;
-        setError("Te hemos enviado un enlace mágico. Haz clic en él y volverás aquí autenticado.");
+        const res = await fetch("/api/auth/send-magic-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error ?? "Error al enviar el enlace.");
+        // Anti-enumeration: never reveal whether email exists
+        setError("Si existe una cuenta con ese email, te hemos enviado un enlace para entrar. Revisa también spam.");
         setLoading(false);
         return;
       }

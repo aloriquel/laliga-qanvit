@@ -52,7 +52,12 @@
       "Bash(curl -s -X POST https://ongwrbdypbusnwlclqjg.supabase.co/storage/v1/bucket -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9uZ3dyYmR5cGJ1c253bGNscWpnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjY3ODU3NSwiZXhwIjoyMDkyMjU0NTc1fQ.T72Fq1uY6w80VtVFe6q0KwC_0BUGmA3P82F2Raq9m18' -H 'Content-Type: application/json' -d '{\"id\":\"exports\",\"name\":\"exports\",\"public\":false,\"fileSizeLimit\":104857600}')",
       "Bash(git commit *)",
       "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")",
-      "Bash(node -e \"require\\('sharp'\\); console.log\\('ok'\\)\")"
+      "Bash(node -e \"require\\('sharp'\\); console.log\\('ok'\\)\")",
+      "Bash(xargs grep *)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('auth',{}\\), indent=2, ensure_ascii=False\\)\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const d=JSON.parse\\(fs.readFileSync\\('c:/Users/1t12d/github/laliga-qanvit/messages/es.json'\\)\\); console.log\\(JSON.stringify\\(d.auth||{},null,2\\)\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(grep -v \"DEPRECATION\\\\|webpack\\\\|sentry\\\\|^$\")"
     ]
   }
 }

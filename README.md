@@ -165,6 +165,48 @@ NEXT_PUBLIC_APP_URL=https://laliga.qanvit.com
 EVALUATOR_FN_SECRET=
 ```
 
+## Antes de abrir el login público
+
+Estas dos configuraciones manuales en Supabase son **obligatorias** antes de que usuarios reales accedan. Sin ellas, los magic links pueden ir a spam y los endpoints de auth están expuestos a abuso.
+
+### 1. Custom SMTP para emails de auth
+
+Supabase Dashboard → **Authentication → SMTP Settings**:
+
+| Campo | Valor |
+|---|---|
+| Sender email | `liga@qanvit.com` |
+| Sender name | `La Liga Qanvit` |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | `<RESEND_API_KEY>` (la misma key verificada con qanvit.com) |
+
+> Sin esto, Supabase usa su SMTP por defecto y los magic links llegan desde `noreply@mail.supabase.io`, lo que dispara filtros de spam.
+
+### 2. Rate limits en Supabase Auth
+
+Supabase Dashboard → **Authentication → Rate Limits**:
+
+| Endpoint | Límite recomendado |
+|---|---|
+| Sign-up | 10 por hora por IP |
+| Magic link / OTP | 5 por hora por IP |
+| Email change | 3 por hora por IP |
+
+> El rate limiter de aplicación (`lib/auth/rate-limit.ts` + Upstash) opera en capa Next.js. Los límites de Supabase son la segunda barrera si alguien llama directamente a la API de Supabase.
+
+### 3. Upstash Redis para rate limiting de aplicación
+
+1. Crea un Redis gratuito en [upstash.com](https://upstash.com) → región EU-West-1.
+2. Añade a Vercel env vars:
+   - `UPSTASH_REDIS_REST_URL`
+   - `UPSTASH_REDIS_REST_TOKEN`
+
+> Sin las vars de Upstash el rate limiter pasa todas las peticiones (graceful degradation). Con las vars activo, límite de 3 intentos/IP/15min y 5/email/hora.
+
+---
+
 ## Prompts implementados
 
 | Prompt | Qué implementa |

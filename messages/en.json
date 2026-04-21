@@ -158,5 +158,24 @@
     "section_ecosystem_title": "For the ecosystem",
     "section_data_title": "How we use your data",
     "faq_title": "Frequently asked questions"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to La Liga Qanvit",
+      "email_placeholder": "you@email.com",
+      "submit": "Send magic link",
+      "submitting": "Sending...",
+      "check_email_body": "If an account with that email exists, we have sent you a sign-in link. Check your spam folder too.",
+      "rate_limited": "Too many attempts. Please wait a few minutes and try again.",
+      "error_generic": "Failed to send link. Please try again."
+    },
+    "consent": {
+      "title": "Before you enter",
+      "description": "To use La Liga Qanvit you need to accept how we handle your data. We process your deck with AI to generate feedback. Your deck is never visible to third parties.",
+      "checkbox_label": "I have read and accept the privacy policy and terms of service.",
+      "cta": "I accept, let me in",
+      "saving": "Saving...",
+      "error": "Failed to save consent. Please try again."
+    }
   }
 }

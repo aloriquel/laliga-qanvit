@@ -158,5 +158,24 @@
     "section_ecosystem_title": "Para el ecosistema",
     "section_data_title": "Cómo usamos los datos",
     "faq_title": "Preguntas frecuentes"
+  },
+  "auth": {
+    "login": {
+      "title": "Entra en La Liga Qanvit",
+      "email_placeholder": "tu@email.com",
+      "submit": "Enviar enlace de acceso",
+      "submitting": "Enviando...",
+      "check_email_body": "Si existe una cuenta con ese email, te hemos enviado un enlace para entrar. Revisa también spam.",
+      "rate_limited": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+      "error_generic": "Error al enviar el enlace. Inténtalo de nuevo."
+    },
+    "consent": {
+      "title": "Antes de entrar",
+      "description": "Para usar La Liga Qanvit necesitas aceptar cómo tratamos tus datos. Procesamos tu deck con IA para generar feedback. Tu deck nunca es visible a terceros.",
+      "checkbox_label": "He leído y acepto la política de privacidad y los términos de servicio.",
+      "cta": "Acepto y entro",
+      "saving": "Guardando...",
+      "error": "Error al guardar el consentimiento. Inténtalo de nuevo."
+    }
   }
 }

@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import DashboardShell from "@/components/dashboard/DashboardShell";
+import { ConsentGateModal } from "@/components/auth/ConsentGateModal";
+import { ensureProfile } from "@/lib/auth/ensure-profile";
 import type { Database } from "@/lib/supabase/types";
 
 type StartupRow = Database["public"]["Tables"]["startups"]["Row"];
@@ -11,6 +13,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/play");
 
+  const profile = await ensureProfile(user);
+
   const { data: startup } = await supabase
     .from("startups")
     .select("*")
@@ -19,15 +23,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!startup) redirect("/play");
 
-  // Unread alert count for notification bell
   const { count: unreadCount } = await supabase
     .from("startup_alerts")
     .select("id", { count: "exact", head: true })
     .eq("startup_id", startup.id)
     .eq("is_read", false);
 
+  const needsConsent = !profile?.consented_at;
+
   return (
     <DashboardShell unreadAlerts={unreadCount ?? 0} startupName={startup.name}>
+      <ConsentGateModal show={needsConsent} />
       {children}
     </DashboardShell>
   );
