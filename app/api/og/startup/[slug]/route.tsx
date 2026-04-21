@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 
 export const runtime = "edge";
 export const revalidate = 3600;
@@ -41,7 +42,10 @@ function rankMedal(rank: number): string | null {
 type Props = { params: { slug: string } };
 
 export async function GET(_req: Request, { params }: Props) {
-  const supabase = createClient();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   const { data: startup } = await supabase
     .from("startups")
