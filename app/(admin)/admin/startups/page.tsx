@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/server";
 import StartupAdminActions from "@/components/admin/StartupAdminActions";
 
@@ -72,7 +73,12 @@ export default async function StartupsAdminPage({
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <StartupAdminActions startupId={s.id} startupName={s.name} isPublic={s.is_public} />
+                  <div className="flex flex-col gap-1">
+                    <Link href={`/admin/startups/${s.id}`} className="text-brand-navy font-body text-xs hover:underline font-semibold">
+                      Ver detalle →
+                    </Link>
+                    <StartupAdminActions startupId={s.id} startupName={s.name} isPublic={s.is_public} />
+                  </div>
                 </td>
               </tr>
             ))}
