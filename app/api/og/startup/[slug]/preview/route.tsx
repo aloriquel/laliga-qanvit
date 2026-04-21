@@ -9,11 +9,13 @@ type Props = { params: { slug: string } };
 export async function GET(req: Request, { params }: Props) {
   const res = await baseGet(req, { params });
 
-  // Clone response with download header
+  // Materialize the full PNG buffer before cloning — ImageResponse streams
+  // cannot be piped directly into a new Response in Edge Runtime.
+  const body = await res.arrayBuffer();
   const headers = new Headers(res.headers);
   headers.set("Content-Disposition", `attachment; filename="laliga-${params.slug}.png"`);
 
-  return new Response(res.body, {
+  return new Response(body, {
     status: res.status,
     headers,
   });
