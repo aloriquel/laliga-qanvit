@@ -27,14 +27,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "consent_evaluation is required" }, { status: 400 });
     }
 
-    // Verify ownership
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const isAdmin = profile?.role === "admin";
+
+    // Verify ownership (admins can upload to any startup)
     const { data: startup, error: startupError } = await supabase
       .from("startups")
       .select("id, owner_id")
       .eq("id", startupId)
       .single();
 
-    if (startupError || !startup || startup.owner_id !== user.id) {
+    if (startupError || !startup || (!isAdmin && startup.owner_id !== user.id)) {
       return NextResponse.json({ error: "Startup not found or not owned by user" }, { status: 403 });
     }
 
@@ -45,6 +52,7 @@ export async function POST(req: NextRequest) {
       startupId,
       serviceClient,
       userClient: supabase,
+      skipRateLimit: isAdmin,
     });
 
     if (!result.ok) {
