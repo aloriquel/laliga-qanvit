@@ -42,7 +42,7 @@ export default function PlayPage() {
         const res = await fetch("/api/auth/send-magic-link", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ email, next: "/play" }),
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Error al enviar el enlace.");

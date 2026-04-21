@@ -5,7 +5,8 @@ import type { Database } from "@/lib/supabase/types";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/play";
+  // Respect ?next= for flows like /play?ref=CODE; otherwise land on /hub
+  const next = searchParams.get("next") ?? "/hub";
 
   if (code) {
     const response = NextResponse.redirect(`${origin}${next}`);
@@ -31,5 +32,5 @@ export async function GET(request: NextRequest) {
     if (!error) return response;
   }
 
-  return NextResponse.redirect(`${origin}/play?error=auth`);
+  return NextResponse.redirect(`${origin}/login?error=auth`);
 }

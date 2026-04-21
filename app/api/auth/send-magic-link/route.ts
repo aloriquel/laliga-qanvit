@@ -12,9 +12,11 @@ function getIp(req: NextRequest): string {
 
 export async function POST(req: NextRequest) {
   let email: string;
+  let next: string;
   try {
     const body = await req.json();
     email = (body.email ?? "").toLowerCase().trim();
+    next = typeof body.next === "string" && body.next.startsWith("/") ? body.next : "/hub";
   } catch {
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/play`;
+  const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback${next !== "/hub" ? `?next=${encodeURIComponent(next)}` : ""}`;
   const supabase = createClient();
 
   const { error } = await supabase.auth.signInWithOtp({

@@ -161,11 +161,15 @@
   },
   "auth": {
     "login": {
-      "title": "Entra en La Liga Qanvit",
+      "title": "Entra en La Liga",
+      "subtitle": "Te enviamos un enlace para entrar. Sin contraseñas.",
       "email_placeholder": "tu@email.com",
-      "submit": "Enviar enlace de acceso",
-      "submitting": "Enviando...",
-      "check_email_body": "Si existe una cuenta con ese email, te hemos enviado un enlace para entrar. Revisa también spam.",
+      "cta_magic_link": "Enviarme enlace mágico",
+      "cta_google": "Continuar con Google",
+      "check_email_title": "Revisa tu correo",
+      "check_email_body": "Te hemos enviado un enlace a {email}. El enlace expira en 1 hora.",
+      "change_email": "Cambiar email",
+      "check_email_note": "Si existe una cuenta con ese email, te hemos enviado un enlace para entrar. Revisa también spam.",
       "rate_limited": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
       "error_generic": "Error al enviar el enlace. Inténtalo de nuevo."
     },
@@ -177,5 +181,10 @@
       "saving": "Guardando...",
       "error": "Error al guardar el consentimiento. Inténtalo de nuevo."
     }
+  },
+  "header": {
+    "sign_in": "Iniciar sesión",
+    "my_area": "Mi área",
+    "sign_out": "Cerrar sesión"
   }
 }

@@ -161,13 +161,17 @@
   },
   "auth": {
     "login": {
-      "title": "Sign in to La Liga Qanvit",
+      "title": "Sign in to La Liga",
+      "subtitle": "We send you a magic link. No passwords.",
       "email_placeholder": "you@email.com",
-      "submit": "Send magic link",
-      "submitting": "Sending...",
-      "check_email_body": "If an account with that email exists, we have sent you a sign-in link. Check your spam folder too.",
+      "cta_magic_link": "Send me a magic link",
+      "cta_google": "Continue with Google",
+      "check_email_title": "Check your inbox",
+      "check_email_body": "We sent a link to {email}. The link expires in 1 hour.",
+      "change_email": "Change email",
+      "check_email_note": "If an account with that email exists, we sent you a sign-in link. Check spam too.",
       "rate_limited": "Too many attempts. Please wait a few minutes and try again.",
-      "error_generic": "Failed to send link. Please try again."
+      "error_generic": "Failed to send the link. Please try again."
     },
     "consent": {
       "title": "Before you enter",
@@ -177,5 +181,10 @@
       "saving": "Saving...",
       "error": "Failed to save consent. Please try again."
     }
+  },
+  "header": {
+    "sign_in": "Sign in",
+    "my_area": "My area",
+    "sign_out": "Sign out"
   }
 }
