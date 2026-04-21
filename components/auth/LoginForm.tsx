@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { AlertCircle, Mail } from "lucide-react";
 
 type State = "idle" | "loading" | "sent" | "error";
 
 export function LoginForm({ authError }: { authError?: string }) {
+  const t = useTranslations("auth.login");
   const [email, setEmail] = useState("");
   const [state, setState] = useState<State>(authError ? "error" : "idle");
   const [errorMsg, setErrorMsg] = useState(
-    authError === "auth" ? "El enlace de acceso no es válido o ha expirado. Inténtalo de nuevo." : ""
+    authError === "auth" ? t("error_link_expired") : ""
   );
   const [sentEmail, setSentEmail] = useState("");
 
@@ -28,7 +30,7 @@ export function LoginForm({ authError }: { authError?: string }) {
     const json = await res.json();
 
     if (!res.ok) {
-      setErrorMsg(json.error ?? "Error al enviar el enlace. Inténtalo de nuevo.");
+      setErrorMsg(json.error ?? t("error_generic"));
       setState("error");
       return;
     }
@@ -53,17 +55,16 @@ export function LoginForm({ authError }: { authError?: string }) {
         <div className="h-14 w-14 rounded-full bg-brand-salmon/20 flex items-center justify-center">
           <Mail className="h-7 w-7 text-brand-salmon" />
         </div>
-        <h2 className="font-sora font-bold text-2xl text-brand-navy">Revisa tu correo</h2>
+        <h2 className="font-sora font-bold text-2xl text-brand-navy">{t("check_email_title")}</h2>
         <p className="font-body text-ink-secondary text-sm leading-relaxed">
-          Te hemos enviado un enlace a{" "}
-          <strong className="text-brand-navy">{sentEmail}</strong>. El enlace expira en 1 hora.
+          {t("check_email_body", { email: sentEmail })}
         </p>
-        <p className="font-body text-xs text-ink-secondary">Revisa también la carpeta de spam.</p>
+        <p className="font-body text-xs text-ink-secondary">{t("check_email_spam")}</p>
         <button
           onClick={() => { setState("idle"); setEmail(""); }}
           className="mt-2 text-sm text-brand-navy underline underline-offset-2 font-medium hover:text-brand-navy/70 transition-colors"
         >
-          Cambiar email
+          {t("change_email")}
         </button>
       </div>
     );
@@ -72,9 +73,9 @@ export function LoginForm({ authError }: { authError?: string }) {
   return (
     <div className="bg-brand-lavender rounded-2xl shadow-xl border border-white/10 p-8 flex flex-col gap-6">
       <div className="text-center">
-        <h1 className="font-sora font-bold text-2xl text-brand-navy">Entra en La Liga</h1>
+        <h1 className="font-sora font-bold text-2xl text-brand-navy">{t("title")}</h1>
         <p className="font-body text-ink-secondary text-sm mt-1">
-          Te enviamos un enlace para entrar. Sin contraseñas.
+          {t("subtitle")}
         </p>
       </div>
 
@@ -87,13 +88,13 @@ export function LoginForm({ authError }: { authError?: string }) {
 
       <form onSubmit={handleMagicLink} className="flex flex-col gap-3">
         <label className="flex flex-col gap-1.5">
-          <span className="font-body text-sm font-semibold text-brand-navy">Email</span>
+          <span className="font-body text-sm font-semibold text-brand-navy">{t("email_label")}</span>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="tu@email.com"
+            placeholder={t("email_placeholder")}
             className="rounded-xl border border-border-soft px-4 py-3 font-body text-sm text-brand-navy bg-white focus:outline-none focus:ring-2 focus:ring-brand-salmon placeholder:text-ink-secondary/50"
           />
         </label>
@@ -102,13 +103,13 @@ export function LoginForm({ authError }: { authError?: string }) {
           disabled={state === "loading" || !email.trim()}
           className="w-full bg-brand-navy text-white font-semibold rounded-xl px-6 py-3 text-sm hover:bg-brand-navy/90 transition-colors disabled:opacity-50"
         >
-          {state === "loading" ? "Enviando..." : "Enviarme enlace mágico"}
+          {state === "loading" ? t("sending") : t("cta_magic_link")}
         </button>
       </form>
 
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-border-soft" />
-        <span className="font-body text-xs text-ink-secondary">o continúa con</span>
+        <span className="font-body text-xs text-ink-secondary">{t("or_continue_with")}</span>
         <div className="flex-1 h-px bg-border-soft" />
       </div>
 
@@ -135,7 +136,7 @@ export function LoginForm({ authError }: { authError?: string }) {
             fill="#EA4335"
           />
         </svg>
-        Continuar con Google
+        {t("cta_google")}
       </button>
     </div>
   );

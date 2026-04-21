@@ -87,7 +87,7 @@ export default async function RootLayout({
           <TooltipProvider>
             <Header />
             <main className="flex-1">{children}</main>
-            <Footer locale={locale} />
+            <Footer />
             <Toaster richColors position="bottom-right" />
             <CookieBanner />
           </TooltipProvider>

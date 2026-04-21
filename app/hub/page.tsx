@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfile } from "@/lib/auth/ensure-profile";
+import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -68,12 +69,12 @@ function HubCard({
   children,
   href,
   cta,
-  muted,
+  inReviewLabel,
 }: {
   children: React.ReactNode;
   href?: string;
   cta?: string;
-  muted?: boolean;
+  inReviewLabel?: string;
 }) {
   return (
     <div className="bg-brand-lavender border border-border-soft rounded-2xl p-6 flex flex-col gap-4 hover:scale-[1.02] transition-transform duration-200">
@@ -86,10 +87,10 @@ function HubCard({
           {cta}
         </Link>
       )}
-      {muted && (
+      {inReviewLabel && (
         <span className="mt-auto inline-flex items-center gap-1.5 text-xs text-ink-secondary font-medium bg-white/60 border border-border-soft rounded-full px-3 py-1 w-fit">
           <span className="h-1.5 w-1.5 rounded-full bg-brand-salmon animate-pulse" />
-          En revisión
+          {inReviewLabel}
         </span>
       )}
     </div>
@@ -112,6 +113,8 @@ export default async function HubPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const t = await getTranslations("hub");
 
   // All queries in parallel
   const [profile, { data: startups }, { data: orgs }] = await Promise.all([
@@ -160,32 +163,32 @@ export default async function HubPage() {
         <div className="mb-10 text-center">
           <h1 className="font-sora font-bold text-3xl md:text-4xl text-white tracking-tight">
             <span className="text-brand-salmon">{"{ "}</span>
-            Hola, {name}
+            {t("greeting", { name })}
             <span className="text-brand-salmon">{" }"}</span>
           </h1>
-          <p className="font-body text-white/50 mt-2 text-sm">Tu área en La Liga Qanvit</p>
+          <p className="font-body text-white/50 mt-2 text-sm">{t("subtitle")}</p>
         </div>
 
         {/* ── Newcomer: 2 hero cards ── */}
         {isNewcomer && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <HubCard href="/play" cta="Ficha tu startup">
+            <HubCard href="/play" cta={t("newcomer_startup_cta")}>
               <div className="text-3xl">🚀</div>
               <div>
-                <h2 className="font-sora font-bold text-lg text-brand-navy">Soy una startup</h2>
+                <h2 className="font-sora font-bold text-lg text-brand-navy">{t("newcomer_startup_title")}</h2>
                 <p className="font-body text-sm text-ink-secondary mt-1 leading-relaxed">
-                  Sube tu deck y recibe una posición en la liga nacional.
+                  {t("newcomer_startup_copy")}
                 </p>
               </div>
             </HubCard>
-            <HubCard href="/ecosistema/aplicar" cta="Aplicar al ecosistema">
+            <HubCard href="/ecosistema/aplicar" cta={t("newcomer_org_cta")}>
               <div className="text-3xl">🏛️</div>
               <div>
                 <h2 className="font-sora font-bold text-lg text-brand-navy">
-                  Soy un parque, cluster o asociación
+                  {t("newcomer_org_title")}
                 </h2>
                 <p className="font-body text-sm text-ink-secondary mt-1 leading-relaxed">
-                  Descubre startups de tu ecosistema con acceso gamificado.
+                  {t("newcomer_org_copy")}
                 </p>
               </div>
             </HubCard>
@@ -198,12 +201,12 @@ export default async function HubPage() {
 
             {/* Admin card */}
             {isAdmin && (
-              <HubCard href="/admin" cta="Ir al panel admin">
+              <HubCard href="/admin" cta={t("admin_cta")}>
                 <div className="text-3xl">⚙️</div>
                 <div>
-                  <h2 className="font-sora font-bold text-lg text-brand-navy">Panel admin</h2>
+                  <h2 className="font-sora font-bold text-lg text-brand-navy">{t("admin_title")}</h2>
                   <p className="font-body text-sm text-ink-secondary mt-1">
-                    Operación de La Liga Qanvit.
+                    {t("admin_copy")}
                   </p>
                 </div>
               </HubCard>
@@ -211,7 +214,7 @@ export default async function HubPage() {
 
             {/* Startup card */}
             {hasStartup && startup && (
-              <HubCard href="/dashboard" cta="Ir a mi dashboard">
+              <HubCard href="/dashboard" cta={t("startup_cta")}>
                 <div className="text-3xl">🚀</div>
                 <div>
                   <h2 className="font-sora font-bold text-lg text-brand-navy line-clamp-1">
@@ -233,7 +236,7 @@ export default async function HubPage() {
                     </div>
                   ) : (
                     <p className="font-body text-xs text-ink-secondary mt-1.5">
-                      Evaluación pendiente
+                      {t("startup_card_pending")}
                     </p>
                   )}
                 </div>
@@ -242,14 +245,14 @@ export default async function HubPage() {
 
             {/* Org pending card */}
             {orgPending && pendingOrg && (
-              <HubCard muted>
+              <HubCard inReviewLabel={t("in_review")}>
                 <div className="text-3xl">⏳</div>
                 <div>
                   <h2 className="font-sora font-bold text-lg text-brand-navy">
-                    Tu aplicación al ecosistema
+                    {t("org_pending_title")}
                   </h2>
                   <p className="font-body text-sm text-ink-secondary mt-1 leading-relaxed">
-                    Estamos revisando tu solicitud. Te avisamos por email en cuanto esté aprobada.
+                    {t("org_pending_copy")}
                   </p>
                 </div>
               </HubCard>
@@ -257,7 +260,7 @@ export default async function HubPage() {
 
             {/* Org verified card */}
             {orgVerified && verifiedOrg && (
-              <HubCard href="/ecosistema/dashboard" cta="Ir al dashboard del ecosistema">
+              <HubCard href="/ecosistema/dashboard" cta={t("org_verified_cta")}>
                 <div className="text-3xl">🏛️</div>
                 <div>
                   <h2 className="font-sora font-bold text-lg text-brand-navy line-clamp-1">
@@ -280,13 +283,13 @@ export default async function HubPage() {
         {/* ── Cross-role suggestions ── */}
         {hasStartup && !hasOrg && (
           <>
-            <SectionDivider label="¿También representas a una organización?" />
+            <SectionDivider label={t("also_org")} />
             <div className="text-center mt-4">
               <Link
                 href="/ecosistema/aplicar"
                 className="font-body text-sm text-white/50 hover:text-white/80 underline underline-offset-2 transition-colors"
               >
-                Aplicar al ecosistema →
+                {t("also_org_cta")}
               </Link>
             </div>
           </>
@@ -294,13 +297,13 @@ export default async function HubPage() {
 
         {hasOrg && !hasStartup && (
           <>
-            <SectionDivider label="¿También quieres fichar una startup?" />
+            <SectionDivider label={t("also_startup")} />
             <div className="text-center mt-4">
               <Link
                 href="/play"
                 className="font-body text-sm text-white/50 hover:text-white/80 underline underline-offset-2 transition-colors"
               >
-                Fichar startup →
+                {t("also_startup_cta")}
               </Link>
             </div>
           </>

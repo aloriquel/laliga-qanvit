@@ -2,32 +2,21 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight, Upload, Star, Trophy } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
-const HOW_IT_WORKS = [
-  {
-    step: "01",
-    icon: Upload,
-    title: "Sube tu deck",
-    description:
-      "Ficha tu startup en 2 minutos. Sube tu pitch deck en PDF y cuéntanos lo básico.",
-  },
-  {
-    step: "02",
-    icon: Star,
-    title: "Recibe feedback",
-    description:
-      "Nuestro evaluador analiza tu deck en 7 dimensiones y te da feedback accionable basado en evidencia de tu propio texto.",
-  },
-  {
-    step: "03",
-    icon: Trophy,
-    title: "Entra en la clasificación",
-    description:
-      "Te asignamos División (Ideation, Seed, Growth o Elite) y Vertical. Compites en el ranking nacional.",
-  },
-];
+export default async function LandingPage() {
+  const [t, tl, tc] = await Promise.all([
+    getTranslations("landing"),
+    getTranslations("leaderboard"),
+    getTranslations("common"),
+  ]);
 
-export default function LandingPage() {
+  const HOW_IT_WORKS = [
+    { step: "01", icon: Upload, title: t("step1_title"), description: t("step1_desc") },
+    { step: "02", icon: Star, title: t("step2_title"), description: t("step2_desc") },
+    { step: "03", icon: Trophy, title: t("step3_title"), description: t("step3_desc") },
+  ];
+
   return (
     <div className="flex flex-col">
       {/* Hero */}
@@ -37,10 +26,10 @@ export default function LandingPage() {
             {"{ La Liga Qanvit }"}
           </div>
           <h1 className="font-sora font-bold text-5xl md:text-7xl leading-tight">
-            La liga de startups de España.
+            {t("hero_title")}
           </h1>
           <p className="font-body text-xl text-white/70 max-w-xl leading-relaxed">
-            Sube tu deck. Recibe feedback. Entra en la clasificación.
+            {t("hero_subtitle")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 pt-2">
             <Link
@@ -50,7 +39,7 @@ export default function LandingPage() {
                 "bg-brand-salmon text-brand-navy hover:bg-brand-salmon/90 font-semibold rounded-xl text-base px-8 py-4 h-auto"
               )}
             >
-              Ficha tu startup
+              {t("hero_cta")}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
             <Link
@@ -60,7 +49,7 @@ export default function LandingPage() {
                 "text-white/80 hover:text-white hover:bg-white/10 rounded-xl text-base px-8 py-4 h-auto border border-white/20"
               )}
             >
-              Soy un parque, cluster o asociación
+              {tc("cta_ecosystem")}
             </Link>
           </div>
         </div>
@@ -74,7 +63,7 @@ export default function LandingPage() {
               {"— { } —"}
             </p>
             <h2 className="font-sora font-bold text-4xl text-brand-navy">
-              Cómo funciona
+              {t("how_it_works_title")}
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -106,7 +95,7 @@ export default function LandingPage() {
         <div className="container-brand">
           <div className="flex items-center justify-between mb-10">
             <h2 className="font-sora font-bold text-4xl text-brand-navy">
-              Leaderboard en vivo
+              {t("leaderboard_live")}
             </h2>
             <Link
               href="/liga"
@@ -115,7 +104,7 @@ export default function LandingPage() {
                 "text-ink-secondary"
               )}
             >
-              Ver todo
+              {t("see_all")}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </div>
@@ -145,7 +134,7 @@ export default function LandingPage() {
           </div>
 
           <p className="mt-6 text-center font-mono text-sm text-ink-secondary">
-            {"{ la liga está empezando }"} · Sé la primera en tu vertical.
+            {tl("empty")}
           </p>
         </div>
       </section>

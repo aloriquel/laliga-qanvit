@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 
 export const revalidate = 60; // ISR: refresh every 60s
@@ -8,14 +9,7 @@ export const metadata: Metadata = {
   description: "Ranking nacional de startups de La Liga Qanvit por División y Vertical.",
 };
 
-const DIVISION_LABELS: Record<string, string> = {
-  ideation: "🥚 Ideation",
-  seed: "🌱 Seed",
-  growth: "🚀 Growth",
-  elite: "👑 Elite",
-};
-
-const VERTICAL_LABELS: Record<string, string> = {
+const VERTICAL_SHORT: Record<string, string> = {
   deeptech_ai: "Deeptech & AI",
   robotics_automation: "Robotics",
   mobility: "Mobility",
@@ -29,8 +23,20 @@ const VERTICAL_LABELS: Record<string, string> = {
 };
 
 export default async function LeaderboardPage() {
+  const [t, divT] = await Promise.all([
+    getTranslations("leaderboard"),
+    getTranslations("divisions"),
+  ]);
+
+  const DIVISION_LABELS: Record<string, string> = {
+    ideation: `🥚 ${divT("ideation")}`,
+    seed: `🌱 ${divT("seed")}`,
+    growth: `🚀 ${divT("growth")}`,
+    elite: `👑 ${divT("elite")}`,
+  };
+
   let standings: Array<{
-    startup_id: string;
+    startup_id: string | null;
     name: string;
     slug: string;
     one_liner: string | null;
@@ -63,33 +69,33 @@ export default async function LeaderboardPage() {
             {"— { } —"}
           </p>
           <h1 className="font-sora font-bold text-4xl md:text-5xl text-brand-navy">
-            Leaderboard
+            {t("title")}
           </h1>
           <p className="font-body text-ink-secondary mt-2">
-            Ranking nacional de startups · La Liga Qanvit
+            {t("subtitle")}
           </p>
         </div>
 
         <div className="bg-white rounded-card shadow-card border border-border-soft overflow-hidden">
           {/* Table header */}
           <div className="bg-brand-navy/5 px-6 py-3 grid grid-cols-[3rem_1fr_auto_auto_auto] gap-4 text-xs font-semibold text-ink-secondary uppercase tracking-wider">
-            <span>#</span>
-            <span>Startup</span>
-            <span className="hidden lg:block">División</span>
-            <span className="hidden md:block">Vertical</span>
-            <span>Score</span>
+            <span>{t("rank")}</span>
+            <span>{t("startup")}</span>
+            <span className="hidden lg:block">{t("division")}</span>
+            <span className="hidden md:block">{t("vertical")}</span>
+            <span>{t("score")}</span>
           </div>
 
           {!hasData ? (
             <div className="py-20 text-center">
               <p className="font-mono text-ink-secondary text-sm">
-                {"{ la liga está empezando }"} · Sé la primera en tu vertical.
+                {t("empty")}
               </p>
             </div>
           ) : (
-            standings!.map((row) => (
+            standings!.map((row, idx) => (
               <div
-                key={row.startup_id}
+                key={row.startup_id ?? idx}
                 className="px-6 py-4 grid grid-cols-[3rem_1fr_auto_auto_auto] gap-4 items-center border-t border-border-soft hover:bg-brand-lavender/30 transition-colors"
               >
                 {/* Rank */}
@@ -125,12 +131,12 @@ export default async function LeaderboardPage() {
 
                 {/* División */}
                 <span className="hidden lg:block font-body text-xs text-ink-secondary whitespace-nowrap">
-                  {row.current_division ? DIVISION_LABELS[row.current_division] : "—"}
+                  {row.current_division ? (DIVISION_LABELS[row.current_division] ?? row.current_division) : "—"}
                 </span>
 
                 {/* Vertical */}
                 <span className="hidden md:block font-body text-xs text-ink-secondary whitespace-nowrap">
-                  {row.current_vertical ? VERTICAL_LABELS[row.current_vertical] : "—"}
+                  {row.current_vertical ? (VERTICAL_SHORT[row.current_vertical] ?? row.current_vertical) : "—"}
                 </span>
 
                 {/* Score */}

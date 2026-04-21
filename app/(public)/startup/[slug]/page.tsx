@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import type { Database } from "@/lib/supabase/types";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +53,7 @@ const VERTICAL_LABELS: Record<string, string> = {
 
 export default async function StartupPublicPage({ params }: Props) {
   const supabase = createClient();
+  const t = await getTranslations("startup_profile");
 
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -116,9 +118,9 @@ export default async function StartupPublicPage({ params }: Props) {
         {/* Owner banner */}
         {isOwner && (
           <div className="bg-brand-navy/10 border border-brand-navy/20 rounded-xl px-5 py-3 flex items-center justify-between mb-6">
-            <p className="font-body text-sm text-brand-navy">Este es tu perfil público.</p>
+            <p className="font-body text-sm text-brand-navy">{t("owner_banner")}</p>
             <Link href="/dashboard/configuracion" className="font-body text-sm text-brand-navy font-semibold underline underline-offset-2">
-              Editar en dashboard →
+              {t("edit_in_dashboard")}
             </Link>
           </div>
         )}
@@ -143,11 +145,11 @@ export default async function StartupPublicPage({ params }: Props) {
         {/* Latest eval: summary + next actions */}
         {evalTimeline.length > 0 && evalTimeline[0].summary && (
           <div className="bg-white rounded-card border border-border-soft p-6 mb-6">
-            <p className="font-body text-xs text-ink-secondary uppercase tracking-wider font-semibold mb-2">Feedback público</p>
+            <p className="font-body text-xs text-ink-secondary uppercase tracking-wider font-semibold mb-2">{t("public_feedback")}</p>
             <p className="font-body text-brand-navy leading-relaxed text-sm">{evalTimeline[0].summary}</p>
             {evalTimeline[0].next_actions && (evalTimeline[0].next_actions as string[]).length > 0 && (
               <div className="mt-4">
-                <p className="font-body text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">Próximas acciones</p>
+                <p className="font-body text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">{t("next_actions")}</p>
                 <ol className="flex flex-col gap-1.5">
                   {(evalTimeline[0].next_actions as string[]).map((a, i) => (
                     <li key={i} className="flex items-start gap-2 font-body text-sm text-brand-navy">
@@ -164,7 +166,7 @@ export default async function StartupPublicPage({ params }: Props) {
         {/* Timeline — only if show_public_timeline is ON */}
         {startup.show_public_timeline && evalTimeline.length > 1 && (
           <div className="bg-white rounded-card border border-border-soft p-6 mb-6">
-            <p className="font-body text-xs text-ink-secondary uppercase tracking-wider font-semibold mb-4">Evolución</p>
+            <p className="font-body text-xs text-ink-secondary uppercase tracking-wider font-semibold mb-4">{t("evolution")}</p>
             <div className="flex flex-col gap-3">
               {evalTimeline.map((ev, idx) => {
                 const prev = evalTimeline[idx + 1];

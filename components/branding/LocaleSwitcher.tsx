@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useLocale } from "next-intl";
 import { setLocaleAction } from "@/lib/actions/locale";
 
 const LOCALES = [
@@ -8,7 +9,8 @@ const LOCALES = [
   { code: "en", label: "EN" },
 ];
 
-export function LocaleSwitcher({ currentLocale }: { currentLocale: string }) {
+export function LocaleSwitcher() {
+  const currentLocale = useLocale();
   const [isPending, startTransition] = useTransition();
 
   function handleSwitch(locale: string) {

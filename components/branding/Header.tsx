@@ -2,14 +2,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
+import { getTranslations } from "next-intl/server";
 import { UserMenu } from "./UserMenu";
-
-const NAV_LINKS = [
-  { href: "/liga", label: "Liga" },
-  { href: "/liga?tab=divisiones", label: "Divisiones" },
-  { href: "/liga?tab=verticales", label: "Verticales" },
-  { href: "/ecosistema", label: "Ecosistema" },
-] as const;
 
 function getInitials(email?: string | null, fullName?: string | null): string {
   if (fullName) {
@@ -22,8 +16,21 @@ function getInitials(email?: string | null, fullName?: string | null): string {
 }
 
 export async function Header() {
-  const supabase = createClient();
+  const [t, ht, ct, supabase] = await Promise.all([
+    getTranslations("nav"),
+    getTranslations("header"),
+    getTranslations("common"),
+    Promise.resolve(createClient()),
+  ]);
+
   const { data: { user } } = await supabase.auth.getUser();
+
+  const NAV_LINKS = [
+    { href: "/liga", label: t("liga") },
+    { href: "/liga?tab=divisiones", label: t("divisiones") },
+    { href: "/liga?tab=verticales", label: t("verticales") },
+    { href: "/ecosistema", label: t("ecosistema") },
+  ] as const;
 
   // Use user_metadata (from JWT) — no extra DB round-trip on every request
   const initials = user
@@ -79,7 +86,7 @@ export async function Header() {
                 href="/login"
                 className="font-body text-sm text-white/80 hover:text-white transition-colors px-3 py-2"
               >
-                Iniciar sesión
+                {ht("sign_in")}
               </Link>
               <Link
                 href="/play"
@@ -88,7 +95,7 @@ export async function Header() {
                   "bg-brand-salmon text-brand-navy hover:bg-brand-salmon/90 font-semibold rounded-xl px-5 py-2.5 text-sm"
                 )}
               >
-                Ficha tu startup
+                {ct("cta_startup")}
               </Link>
             </>
           )}

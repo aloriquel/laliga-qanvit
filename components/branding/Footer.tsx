@@ -1,7 +1,13 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 
-export function Footer({ locale = "es" }: { locale?: string }) {
+export async function Footer() {
+  const [t, nav, legal] = await Promise.all([
+    getTranslations("footer"),
+    getTranslations("nav"),
+    getTranslations("legal"),
+  ]);
   const year = new Date().getFullYear();
 
   return (
@@ -20,26 +26,26 @@ export function Footer({ locale = "es" }: { locale?: string }) {
             >
               Qanvit
             </Link>
-            . Todos los derechos reservados.
+            . {t("rights")}
           </span>
         </div>
 
         {/* Legal links + locale switcher */}
         <nav className="flex items-center gap-4 flex-wrap justify-center" aria-label="Legal">
           <Link href="/como-funciona" className="hover:text-white transition-colors">
-            Cómo funciona
+            {nav("como_funciona")}
           </Link>
           <Link href="/legal/privacidad" className="hover:text-white transition-colors">
-            Privacidad
+            {legal("privacy")}
           </Link>
           <Link href="/legal/terminos" className="hover:text-white transition-colors">
-            Términos
+            {legal("terms")}
           </Link>
           <Link href="/legal/cookies" className="hover:text-white transition-colors">
-            Cookies
+            {legal("cookies")}
           </Link>
           <Link href="/legal/transparencia" className="hover:text-white transition-colors">
-            Transparencia
+            {legal("transparency")}
           </Link>
           <Link
             href="https://www.qanvit.com"
@@ -49,7 +55,7 @@ export function Footer({ locale = "es" }: { locale?: string }) {
           >
             qanvit.com
           </Link>
-          <LocaleSwitcher currentLocale={locale} />
+          <LocaleSwitcher />
         </nav>
       </div>
     </footer>

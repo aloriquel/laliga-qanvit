@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Upload, ChevronRight, AlertCircle } from "lucide-react";
@@ -15,6 +16,8 @@ type StartupFormData = {
 };
 
 export default function PlayPage() {
+  const t = useTranslations("play");
+  const ta = useTranslations("auth.login");
   const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [startupId, setStartupId] = useState<string | null>(null);
@@ -37,7 +40,7 @@ export default function PlayPage() {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        const email = window.prompt("Introduce tu email para acceder:");
+        const email = window.prompt(ta("email_label") + ":");
         if (!email) { setLoading(false); return; }
         const res = await fetch("/api/auth/send-magic-link", {
           method: "POST",
@@ -45,9 +48,8 @@ export default function PlayPage() {
           body: JSON.stringify({ email, next: "/play" }),
         });
         const json = await res.json();
-        if (!res.ok) throw new Error(json.error ?? "Error al enviar el enlace.");
-        // Anti-enumeration: never reveal whether email exists
-        setError("Si existe una cuenta con ese email, te hemos enviado un enlace para entrar. Revisa también spam.");
+        if (!res.ok) throw new Error(json.error ?? t("error_send_link"));
+        setError(t("magic_link_sent"));
         setLoading(false);
         return;
       }
@@ -91,7 +93,7 @@ export default function PlayPage() {
 
       setStep(1);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      setError(err instanceof Error ? err.message : t("error_send_link"));
     } finally {
       setLoading(false);
     }
@@ -101,7 +103,7 @@ export default function PlayPage() {
   async function handleStep1(e: React.FormEvent) {
     e.preventDefault();
     if (!file || !startupId) return;
-    if (!consentEval) { setError("Debes aceptar que tu deck sea evaluado para continuar."); return; }
+    if (!consentEval) { setError(t("error_no_consent")); return; }
     setError(null);
     setLoading(true);
 
@@ -115,11 +117,11 @@ export default function PlayPage() {
 
       const res = await fetch("/api/decks/upload", { method: "POST", body: fd });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Error al subir el deck");
+      if (!res.ok) throw new Error(json.error ?? t("upload_hint"));
 
       router.push(`/play/evaluando/${json.deck_id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      setError(err instanceof Error ? err.message : t("error_send_link"));
       setLoading(false);
     }
   }
@@ -129,10 +131,10 @@ export default function PlayPage() {
     setDragging(false);
     const dropped = e.dataTransfer.files[0];
     if (dropped?.type === "application/pdf") { setFile(dropped); setError(null); }
-    else setError("Solo se aceptan archivos PDF.");
+    else setError(t("error_only_pdf"));
   }
 
-  const STEPS = ["Tu startup", "Tu deck"];
+  const STEPS = [t("step_startup"), t("step_deck")];
 
   return (
     <div className="bg-brand-lavender min-h-screen py-16">
@@ -167,39 +169,39 @@ export default function PlayPage() {
           {step === 0 && (
             <form onSubmit={handleStep0} className="flex flex-col gap-5">
               <div>
-                <h1 className="font-sora font-bold text-2xl text-brand-navy">Ficha tu startup</h1>
-                <p className="font-body text-ink-secondary text-sm mt-1">Cuéntanos lo básico. Lo puedes editar más adelante.</p>
+                <h1 className="font-sora font-bold text-2xl text-brand-navy">{t("title")}</h1>
+                <p className="font-body text-ink-secondary text-sm mt-1">{t("basics_subtitle")}</p>
               </div>
               <label className="flex flex-col gap-1">
-                <span className="font-body text-sm font-semibold text-brand-navy">Nombre de la startup *</span>
+                <span className="font-body text-sm font-semibold text-brand-navy">{t("name_label")}</span>
                 <input
                   required
                   className="rounded-card border border-border-soft px-4 py-2.5 font-body text-sm text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-salmon"
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="Ej: Orbea Robotics"
+                  placeholder={t("name_placeholder")}
                 />
               </label>
               <label className="flex flex-col gap-1">
-                <span className="font-body text-sm font-semibold text-brand-navy">Website</span>
+                <span className="font-body text-sm font-semibold text-brand-navy">{t("website_label")}</span>
                 <input
                   type="url"
                   className="rounded-card border border-border-soft px-4 py-2.5 font-body text-sm text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-salmon"
                   value={form.website}
                   onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
-                  placeholder="https://tuempresa.com"
+                  placeholder={t("website_placeholder")}
                 />
               </label>
               <label className="flex flex-col gap-1">
                 <span className="font-body text-sm font-semibold text-brand-navy">
-                  One-liner <span className="font-normal text-ink-secondary">(max 140 chars)</span>
+                  {t("one_liner_label")} <span className="font-normal text-ink-secondary">{t("one_liner_max")}</span>
                 </span>
                 <input
                   maxLength={140}
                   className="rounded-card border border-border-soft px-4 py-2.5 font-body text-sm text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-salmon"
                   value={form.oneLiner}
                   onChange={e => setForm(f => ({ ...f, oneLiner: e.target.value }))}
-                  placeholder="Automatizamos la inspección industrial con visión por computador."
+                  placeholder={t("one_liner_placeholder")}
                 />
               </label>
               <button
@@ -207,7 +209,7 @@ export default function PlayPage() {
                 disabled={loading || !form.name.trim()}
                 className="mt-2 bg-brand-navy text-white font-semibold rounded-xl px-6 py-3 font-body flex items-center justify-center gap-2 hover:bg-brand-navy/90 transition-colors disabled:opacity-50"
               >
-                {loading ? "Guardando..." : "Siguiente"}
+                {loading ? t("saving") : t("next")}
                 <ChevronRight className="h-4 w-4" />
               </button>
             </form>
@@ -217,8 +219,8 @@ export default function PlayPage() {
           {step === 1 && (
             <form onSubmit={handleStep1} className="flex flex-col gap-5">
               <div>
-                <h2 className="font-sora font-bold text-2xl text-brand-navy">Sube tu deck</h2>
-                <p className="font-body text-ink-secondary text-sm mt-1">PDF, máximo 20 MB. Asegúrate de que el PDF tenga texto seleccionable.</p>
+                <h2 className="font-sora font-bold text-2xl text-brand-navy">{t("deck_title")}</h2>
+                <p className="font-body text-ink-secondary text-sm mt-1">{t("deck_subtitle")}</p>
               </div>
 
               <div
@@ -240,8 +242,8 @@ export default function PlayPage() {
                   </div>
                 ) : (
                   <div className="text-center">
-                    <p className="font-body text-sm text-brand-navy font-semibold">Arrastra tu PDF aquí</p>
-                    <p className="font-body text-xs text-ink-secondary">o haz clic para seleccionar</p>
+                    <p className="font-body text-sm text-brand-navy font-semibold">{t("drag_pdf")}</p>
+                    <p className="font-body text-xs text-ink-secondary">{t("click_select")}</p>
                   </div>
                 )}
               </div>
@@ -258,23 +260,23 @@ export default function PlayPage() {
 
               {/* Consents */}
               <div className="flex flex-col gap-3 border-t border-border-soft pt-4">
-                <p className="font-body text-sm font-semibold text-brand-navy">Permisos de uso</p>
+                <p className="font-body text-sm font-semibold text-brand-navy">{t("permisos")}</p>
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input type="checkbox" checked={consentEval} onChange={e => setConsentEval(e.target.checked)} className="mt-0.5 accent-brand-salmon" />
                   <span className="font-body text-sm text-brand-navy">
-                    <strong>Acepto que mi deck sea evaluado por IA</strong> — Qanvit procesará el texto para generar feedback. El contenido del deck nunca es visible a terceros. <span className="text-red-500">*</span>
+                    <strong>{t("consent_eval_label")}</strong> — {t("consent_eval_desc")} <span className="text-red-500">*</span>
                   </span>
                 </label>
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input type="checkbox" checked={consentPublic} onChange={e => setConsentPublic(e.target.checked)} className="mt-0.5 accent-brand-salmon" />
                   <span className="font-body text-sm text-ink-secondary">
-                    Mi nombre, score y División pueden aparecer en el leaderboard público.
+                    {t("consent_public_label")}
                   </span>
                 </label>
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input type="checkbox" checked={consentInternal} onChange={e => setConsentInternal(e.target.checked)} className="mt-0.5 accent-brand-salmon" />
                   <span className="font-body text-sm text-ink-secondary">
-                    Qanvit puede usar el feedback anonimizado para mejorar el evaluador.
+                    {t("consent_internal_label")}
                   </span>
                 </label>
               </div>
@@ -285,14 +287,14 @@ export default function PlayPage() {
                   onClick={() => setStep(0)}
                   className="border border-border-soft rounded-xl px-4 py-3 font-body text-sm text-ink-secondary hover:bg-brand-lavender transition-colors"
                 >
-                  Atrás
+                  {t("back")}
                 </button>
                 <button
                   type="submit"
                   disabled={loading || !file || !consentEval}
                   className="flex-1 bg-brand-salmon text-brand-navy font-semibold rounded-xl px-6 py-3 font-body flex items-center justify-center gap-2 hover:bg-brand-salmon/90 transition-colors disabled:opacity-50"
                 >
-                  {loading ? "Subiendo..." : "Evaluar mi startup"}
+                  {loading ? t("uploading") : t("evaluate_cta")}
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
