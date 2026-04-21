@@ -49,6 +49,26 @@ const ECOSYSTEM_STEPS = [
   },
 ];
 
+const DIVISIONS = [
+  { key: "ideation", icon: "🥚", label: "Ideation", desc: "Idea validada, equipo fundador, MVP en desarrollo." },
+  { key: "seed",     icon: "🌱", label: "Seed",     desc: "Producto funcionando, primeros clientes o tracción validada." },
+  { key: "growth",   icon: "🚀", label: "Growth",   desc: "Crecimiento recurrente, modelo de negocio probado." },
+  { key: "elite",    icon: "👑", label: "Elite",    desc: "Líderes de mercado, tracción internacional." },
+];
+
+const VERTICALS = [
+  { key: "deeptech_ai",              label: "Deeptech & AI" },
+  { key: "robotics_automation",      label: "Robotics & Automation" },
+  { key: "mobility",                 label: "Mobility" },
+  { key: "energy_cleantech",         label: "Energy & Cleantech" },
+  { key: "agrifood",                 label: "AgriFood" },
+  { key: "healthtech_medtech",       label: "HealthTech & MedTech" },
+  { key: "industrial_manufacturing", label: "Industrial & Manufacturing" },
+  { key: "space_aerospace",          label: "Space & Aerospace" },
+  { key: "materials_chemistry",      label: "Materials & Chemistry" },
+  { key: "cybersecurity",            label: "Cybersecurity" },
+];
+
 const FAQ = [
   {
     q: "¿Cuánto tarda la evaluación?",
@@ -174,8 +194,90 @@ export default function ComoFuncionaPage() {
           </div>
         </section>
 
-        {/* Cómo usamos los datos */}
+        {/* División × Vertical */}
         <section className="py-20 px-4 bg-brand-lavender">
+          <div className="max-w-5xl mx-auto">
+            <div className="mb-10">
+              <p className="font-sora text-brand-navy/40 text-xs font-semibold tracking-widest uppercase mb-3">
+                Estructura de la liga
+              </p>
+              <h2 className="font-sora font-bold text-3xl text-ink-primary mb-3">
+                División × Vertical
+              </h2>
+              <p className="text-ink-secondary text-sm max-w-xl">
+                Cada startup ocupa una <strong>celda</strong> del tablero: su División
+                (madurez) y su Vertical (categoría tecnológica). El ranking existe
+                tanto a nivel global como dentro de cada celda.
+              </p>
+            </div>
+
+            {/* Division descriptions */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+              {DIVISIONS.map((d) => (
+                <div
+                  key={d.key}
+                  className="bg-white rounded-xl border border-border-soft p-5 shadow-sm"
+                >
+                  <div className="text-2xl mb-2" aria-hidden="true">{d.icon}</div>
+                  <p className="font-sora font-bold text-brand-navy text-base mb-1">{d.label}</p>
+                  <p className="text-ink-secondary text-xs leading-relaxed">{d.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* 4 × 10 grid table */}
+            <div className="overflow-x-auto rounded-xl border border-border-soft shadow-sm">
+              <table className="w-full min-w-[600px] text-sm font-body border-collapse">
+                <thead>
+                  <tr className="bg-brand-navy text-white">
+                    <th className="text-left px-4 py-3 font-semibold text-xs tracking-wide w-48">
+                      Vertical ↓ / División →
+                    </th>
+                    {DIVISIONS.map((d) => (
+                      <th
+                        key={d.key}
+                        className="px-4 py-3 font-semibold text-xs tracking-wide text-center whitespace-nowrap"
+                      >
+                        {d.icon} {d.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-soft">
+                  {VERTICALS.map((v, vIdx) => (
+                    <tr
+                      key={v.key}
+                      className={vIdx % 2 === 0 ? "bg-white" : "bg-brand-lavender/20"}
+                    >
+                      <td className="px-4 py-3 font-semibold text-brand-navy text-xs">
+                        {v.label}
+                      </td>
+                      {DIVISIONS.map((d) => (
+                        <td key={d.key} className="px-4 py-3 text-center">
+                          <Link
+                            href={`/liga?division=${d.key}&vertical=${v.key}`}
+                            className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-lavender hover:bg-brand-salmon/20 text-brand-navy/40 hover:text-brand-navy transition-colors text-xs font-mono"
+                            title={`${d.icon} ${d.label} × ${v.label}`}
+                          >
+                            →
+                          </Link>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="mt-4 text-xs text-ink-secondary text-center">
+              Cada celda es un ranking independiente. Haz clic en{" "}
+              <span className="font-mono text-brand-navy">→</span> para ver las startups de esa combinación.
+            </p>
+          </div>
+        </section>
+
+        {/* Cómo usamos los datos */}
+        <section className="py-20 px-4 bg-white">
           <div className="max-w-3xl mx-auto">
             <h2 className="font-sora font-bold text-3xl text-ink-primary mb-6">
               Cómo usamos los datos
@@ -211,7 +313,7 @@ export default function ComoFuncionaPage() {
         </section>
 
         {/* FAQ */}
-        <section className="py-20 px-4 bg-white">
+        <section className="py-20 px-4 bg-brand-lavender">
           <div className="max-w-3xl mx-auto">
             <h2 className="font-sora font-bold text-3xl text-ink-primary mb-10">
               Preguntas frecuentes
@@ -231,7 +333,7 @@ export default function ComoFuncionaPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-10 p-6 bg-brand-lavender rounded-card text-sm text-ink-secondary">
+            <div className="mt-10 p-6 bg-white rounded-card text-sm text-ink-secondary">
               ¿Más preguntas?{" "}
               <a
                 href="mailto:hola@qanvit.com"

@@ -4,6 +4,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
 import { UserMenu } from "./UserMenu";
+import { NavMenu } from "./NavMenu";
+import type { DivisionItem, VerticalItem } from "./NavMenu";
 
 function getInitials(email?: string | null, fullName?: string | null): string {
   if (fullName) {
@@ -15,6 +17,26 @@ function getInitials(email?: string | null, fullName?: string | null): string {
   return email ? email[0].toUpperCase() : "?";
 }
 
+const DIVISIONS: DivisionItem[] = [
+  { key: "ideation", icon: "🥚", label: "Ideation" },
+  { key: "seed",     icon: "🌱", label: "Seed" },
+  { key: "growth",   icon: "🚀", label: "Growth" },
+  { key: "elite",    icon: "👑", label: "Elite" },
+];
+
+const VERTICALS: VerticalItem[] = [
+  { key: "deeptech_ai",             label: "Deeptech & AI" },
+  { key: "robotics_automation",     label: "Robotics & Automation" },
+  { key: "mobility",                label: "Mobility" },
+  { key: "energy_cleantech",        label: "Energy & Cleantech" },
+  { key: "agrifood",                label: "AgriFood" },
+  { key: "healthtech_medtech",      label: "HealthTech & MedTech" },
+  { key: "industrial_manufacturing",label: "Industrial & Manufacturing" },
+  { key: "space_aerospace",         label: "Space & Aerospace" },
+  { key: "materials_chemistry",     label: "Materials & Chemistry" },
+  { key: "cybersecurity",           label: "Cybersecurity" },
+];
+
 export async function Header() {
   const [t, ht, ct, supabase] = await Promise.all([
     getTranslations("nav"),
@@ -25,14 +47,6 @@ export async function Header() {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const NAV_LINKS = [
-    { href: "/liga", label: t("liga") },
-    { href: "/liga?tab=divisiones", label: t("divisiones") },
-    { href: "/liga?tab=verticales", label: t("verticales") },
-    { href: "/ecosistema", label: t("ecosistema") },
-  ] as const;
-
-  // Use user_metadata (from JWT) — no extra DB round-trip on every request
   const initials = user
     ? getInitials(user.email, user.user_metadata?.full_name as string | null)
     : "?";
@@ -41,11 +55,18 @@ export async function Header() {
     (user?.user_metadata?.picture as string | null) ??
     null;
 
+  const navLabels = {
+    liga:      t("liga"),
+    divisions: t("divisiones"),
+    verticals: t("verticales"),
+    ecosystem: t("ecosistema"),
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-brand-navy">
       <div className="container-brand flex h-16 items-center justify-between">
         {/* Isotipo + wordmark */}
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href="/" className="flex items-center gap-2 group shrink-0">
           <span
             className="font-sora font-bold text-brand-salmon text-xl tracking-tight select-none"
             aria-hidden="true"
@@ -63,18 +84,12 @@ export async function Header() {
           </span>
         </Link>
 
-        {/* Nav desktop */}
-        <nav className="hidden md:flex items-center gap-6" aria-label="Navegación principal">
-          {NAV_LINKS.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className="font-body text-sm text-white/70 hover:text-white transition-colors"
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
+        {/* Nav (desktop inline, mobile via NavMenu's hamburger) */}
+        <NavMenu
+          labels={navLabels}
+          divisions={DIVISIONS}
+          verticals={VERTICALS}
+        />
 
         {/* Auth area */}
         <div className="flex items-center gap-3">
@@ -84,7 +99,7 @@ export async function Header() {
             <>
               <Link
                 href="/login"
-                className="font-body text-sm text-white/80 hover:text-white transition-colors px-3 py-2"
+                className="hidden sm:block font-body text-sm text-white/80 hover:text-white transition-colors px-3 py-2"
               >
                 {ht("sign_in")}
               </Link>
