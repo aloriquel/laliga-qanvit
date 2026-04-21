@@ -59,7 +59,8 @@
       "Bash(node -e ' *)",
       "Bash(grep -v \"DEPRECATION\\\\|webpack\\\\|sentry\\\\|^$\")",
       "Bash(node -e \"const msgs = require\\('./messages/es.json'\\); const login = msgs.auth.login; console.log\\(Object.keys\\(login\\).join\\(', '\\)\\)\")",
-      "Bash(node -e \"const msgs = require\\('./messages/es.json'\\); console.log\\('hub keys:', Object.keys\\(msgs.hub\\).join\\(', '\\)\\); console.log\\('play keys:', Object.keys\\(msgs.play\\).join\\(', '\\)\\)\")"
+      "Bash(node -e \"const msgs = require\\('./messages/es.json'\\); console.log\\('hub keys:', Object.keys\\(msgs.hub\\).join\\(', '\\)\\); console.log\\('play keys:', Object.keys\\(msgs.play\\).join\\(', '\\)\\)\")",
+      "Bash(node -e \"const es = require\\('./messages/es.json'\\); const en = require\\('./messages/en.json'\\); const eKeys = Object.keys\\(es.ecosystem_landing\\); const enKeys = Object.keys\\(en.ecosystem_landing\\); console.log\\('ES keys:', eKeys.join\\(', '\\)\\); console.log\\('Parity:', JSON.stringify\\(eKeys\\) === JSON.stringify\\(enKeys\\) ? 'OK' : 'MISMATCH'\\)\")"
     ]
   }
 }

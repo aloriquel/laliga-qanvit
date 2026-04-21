@@ -229,6 +229,19 @@
     "my_area": "My area",
     "sign_out": "Sign out"
   },
+  "ecosystem_landing": {
+    "hero_eyebrow": "{ ecosystem }",
+    "hero_title": "The La Liga Qanvit ecosystem",
+    "hero_subtitle": "Science parks, clusters and associations: access Spain's best deep-tech startups and climb the rankings by contributing to the ecosystem.",
+    "card1_title": "How it works",
+    "card1_body": "Apply for access and we approve it in 24-48 h. You get a unique referral code and access to your dashboard. You start as Rookie and move up each tier as you contribute.",
+    "card2_title": "Points system",
+    "card2_body": "Three tiers: 🥉 Rookie, 🥈 Pro and 🥇 Elite. Each tier unlocks more filters, more evaluator data and exclusive vertical reports.",
+    "card3_title": "Monthly challenges",
+    "card3_body": "Every month we publish community challenges — refer startups, validate feedback, complete your profile — and the top ecosystems climb the ranking.",
+    "cta_apply": "Apply to the ecosystem",
+    "cta_dashboard": "Go to my dashboard"
+  },
   "hub": {
     "greeting": "Hello, {name}",
     "subtitle": "Your area in La Liga Qanvit",
