@@ -11,6 +11,8 @@ import {
   alertNotificationEmail,
   ecosystemNewStartupAlertEmail,
   ecosystemDigestEmail,
+  ecosystemApplicationEmail,
+  ecosystemApplicationAdminEmail,
   FROM,
 } from "./templates";
 
@@ -85,5 +87,15 @@ export async function sendEcosystemNewStartupAlertEmail(to: string, params: Para
 
 export async function sendEcosystemDigestEmail(to: string, params: Parameters<typeof ecosystemDigestEmail>[0]): Promise<SendResult> {
   const { subject, html } = ecosystemDigestEmail(params);
+  return send(to, subject, html);
+}
+
+export async function sendEcosystemApplicationEmail(to: string, params: Parameters<typeof ecosystemApplicationEmail>[0]): Promise<SendResult> {
+  const { subject, html } = ecosystemApplicationEmail(params);
+  return send(to, subject, html);
+}
+
+export async function sendEcosystemApplicationAdminEmail(to: string, params: Parameters<typeof ecosystemApplicationAdminEmail>[0]): Promise<SendResult> {
+  const { subject, html } = ecosystemApplicationAdminEmail(params);
   return send(to, subject, html);
 }

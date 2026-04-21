@@ -115,6 +115,37 @@ export function ecosystemApplicationEmail(params: { orgName: string; contactEmai
   };
 }
 
+// 4b. Ecosystem application — admin notification
+export function ecosystemApplicationAdminEmail(params: {
+  orgName: string;
+  orgType: string;
+  contactEmail: string;
+  website?: string;
+  about?: string;
+  region?: string;
+  adminPanelUrl: string;
+}) {
+  const typeLabel = params.orgType.replace(/_/g, " ");
+  return {
+    subject: `[La Liga — Admin] Nueva aplicación de ecosistema: ${params.orgName}`,
+    html: wrap(`
+      <p style="font-size:16px;font-weight:600;margin-top:0;">Nueva solicitud de ecosistema</p>
+      <div style="background:white;border-radius:12px;padding:16px 20px;margin:12px 0;border:1px solid #e5d8ea;">
+        <p style="margin:0;font-size:14px;font-weight:700;color:#22183a;">${params.orgName}</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#6b5b8a;">Tipo: ${typeLabel}</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#6b5b8a;">Contacto: ${params.contactEmail}</p>
+        ${params.region ? `<p style="margin:4px 0 0;font-size:13px;color:#6b5b8a;">Región: ${params.region}</p>` : ""}
+        ${params.website ? `<p style="margin:4px 0 0;font-size:13px;color:#6b5b8a;">Web: <a href="${params.website}" style="color:#22183a;">${params.website}</a></p>` : ""}
+        ${params.about ? `<p style="margin:8px 0 0;font-size:12px;color:#6b5b8a;font-style:italic;">"${params.about.slice(0, 200)}${params.about.length > 200 ? "…" : ""}"</p>` : ""}
+      </div>
+      <a href="${params.adminPanelUrl}"
+         style="display:inline-block;background:#22183a;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;margin-top:8px;">
+        Revisar en el panel admin →
+      </a>
+    `),
+  };
+}
+
 // 5. Ecosystem application approved
 export function ecosystemApprovedEmail(params: { orgName: string }) {
   return {

@@ -11,42 +11,74 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
 type OrgType = "science_park" | "cluster" | "innovation_association" | "other";
 
 const ORG_TYPE_LABELS: Record<OrgType, string> = {
-  science_park: "Parque científico o tecnológico",
-  cluster: "Cluster sectorial",
+  science_park:          "Parque científico o tecnológico",
+  cluster:               "Cluster sectorial",
   innovation_association: "Asociación de innovación",
-  other: "Otro",
+  other:                 "Otro",
 };
 
 export default function EcosistemaAplicarPage() {
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState<string | null>(null);
   const [form, setForm] = useState({
-    name: "",
-    org_type: "" as OrgType | "",
-    website: "",
-    about: "",
-    email: "",
+    name:      "",
+    org_type:  "" as OrgType | "",
+    website:   "",
+    about:     "",
+    region:    "",
+    email:     "",
   });
 
   const isValid =
-    form.name.trim().length > 0 &&
+    form.name.trim().length >= 2 &&
     form.org_type !== "" &&
     form.email.includes("@");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isValid) return;
-    setLoading(true);
+    if (!isValid || loading) return;
 
-    // TODO (prompt #4): POST to API route that inserts ecosystem_organizations
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
-    setSubmitted(true);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/ecosystem/apply", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name:        form.name.trim(),
+          org_type:    form.org_type,
+          website:     form.website.trim() || undefined,
+          about:       form.about.trim()   || undefined,
+          region:      form.region.trim()  || undefined,
+          email_owner: form.email.trim(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(
+          data.error ??
+          "Hubo un problema procesando tu solicitud. Escríbenos a liga@qanvit.com."
+        );
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      setError(
+        "No pudimos conectar con el servidor. Revisa tu conexión e inténtalo de nuevo."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (submitted) {
@@ -89,6 +121,14 @@ export default function EcosistemaAplicarPage() {
           onSubmit={handleSubmit}
           className="bg-white rounded-card shadow-card border border-border-soft p-8 flex flex-col gap-5"
         >
+          {/* Error banner */}
+          {error && (
+            <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+              <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="font-body text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="org-name" className="font-body text-sm text-ink-primary">
               Nombre de la organización *
@@ -126,6 +166,19 @@ export default function EcosistemaAplicarPage() {
                 )}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="org-region" className="font-body text-sm text-ink-primary">
+              Región / comunidad autónoma
+            </Label>
+            <Input
+              id="org-region"
+              placeholder="Ej. Madrid, Cataluña, País Vasco…"
+              value={form.region}
+              onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
+              className="font-body border-border-soft"
+            />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -170,7 +223,7 @@ export default function EcosistemaAplicarPage() {
               required
             />
             <p className="font-mono text-xs text-ink-secondary">
-              Usaremos este email para verificar vuestra organización.
+              Usaremos este email para verificar vuestra organización y enviarte el acceso.
             </p>
           </div>
 
@@ -179,7 +232,7 @@ export default function EcosistemaAplicarPage() {
             disabled={!isValid || loading}
             className="bg-brand-navy text-white hover:bg-brand-navy/90 font-semibold rounded-xl mt-2 h-12"
           >
-            {loading ? "Enviando..." : "Solicitar acceso"}
+            {loading ? "Enviando solicitud…" : "Solicitar acceso"}
           </Button>
         </form>
 
