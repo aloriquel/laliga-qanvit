@@ -2,6 +2,8 @@ import { ImageResponse } from "next/og";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 
+// Service key bypasses RLS — consent is enforced manually in isReady check below.
+
 export const runtime = "edge";
 export const revalidate = 3600;
 
@@ -44,7 +46,8 @@ type Props = { params: { slug: string } };
 export async function GET(_req: Request, { params }: Props) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
   );
 
   const { data: startup } = await supabase
