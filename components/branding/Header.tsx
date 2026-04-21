@@ -25,19 +25,14 @@ export async function Header() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let initials = "?";
-  let avatarUrl: string | null = null;
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name, avatar_url")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    initials = getInitials(user.email, profile?.full_name);
-    avatarUrl = profile?.avatar_url ?? null;
-  }
+  // Use user_metadata (from JWT) — no extra DB round-trip on every request
+  const initials = user
+    ? getInitials(user.email, user.user_metadata?.full_name as string | null)
+    : "?";
+  const avatarUrl: string | null =
+    (user?.user_metadata?.avatar_url as string | null) ??
+    (user?.user_metadata?.picture as string | null) ??
+    null;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-brand-navy">
