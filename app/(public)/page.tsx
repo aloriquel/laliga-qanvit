@@ -3,8 +3,20 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight, Upload, Star, Trophy } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 
-export default async function LandingPage() {
+export default async function LandingPage({
+  searchParams,
+}: {
+  searchParams: { code?: string; next?: string };
+}) {
+  // Supabase PKCE code sometimes lands here if site_url was misconfigured.
+  // Forward it to the real callback handler.
+  if (searchParams.code) {
+    const next = searchParams.next ? `&next=${encodeURIComponent(searchParams.next)}` : "";
+    redirect(`/auth/callback?code=${searchParams.code}${next}`);
+  }
+
   const [t, tl, tc] = await Promise.all([
     getTranslations("landing"),
     getTranslations("leaderboard"),
