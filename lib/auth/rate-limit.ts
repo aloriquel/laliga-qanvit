@@ -77,23 +77,29 @@ export async function checkLoginRateLimit(
     return { success: true, remaining: 999, reset: 0 };
   }
 
-  const [ipResult, emailResult] = await Promise.all([
-    ipLimiter.limit(ip),
-    emailLimiter.limit(email.toLowerCase()),
-  ]);
+  try {
+    const [ipResult, emailResult] = await Promise.all([
+      ipLimiter.limit(ip),
+      emailLimiter.limit(email.toLowerCase()),
+    ]);
 
-  if (!ipResult.success) {
-    return { success: false, remaining: 0, reset: ipResult.reset, reason: "ip" };
-  }
-  if (!emailResult.success) {
-    return { success: false, remaining: 0, reset: emailResult.reset, reason: "email" };
-  }
+    if (!ipResult.success) {
+      return { success: false, remaining: 0, reset: ipResult.reset, reason: "ip" };
+    }
+    if (!emailResult.success) {
+      return { success: false, remaining: 0, reset: emailResult.reset, reason: "email" };
+    }
 
-  return {
-    success: true,
-    remaining: Math.min(ipResult.remaining, emailResult.remaining),
-    reset: Math.max(ipResult.reset, emailResult.reset),
-  };
+    return {
+      success: true,
+      remaining: Math.min(ipResult.remaining, emailResult.remaining),
+      reset: Math.max(ipResult.reset, emailResult.reset),
+    };
+  } catch (err) {
+    // Fail open: if Redis is unreachable or credentials are wrong, allow the request.
+    console.error("[rate-limit] Upstash error — failing open:", (err as Error).message);
+    return { success: true, remaining: 999, reset: 0 };
+  }
 }
 
 export async function checkSignupRateLimit(
@@ -102,11 +108,16 @@ export async function checkSignupRateLimit(
   const limiter = getSignupLimiter();
   if (!limiter) return { success: true, remaining: 999, reset: 0 };
 
-  const result = await limiter.limit(ip);
-  return {
-    success: result.success,
-    remaining: result.remaining,
-    reset: result.reset,
-    reason: result.success ? undefined : "ip",
-  };
+  try {
+    const result = await limiter.limit(ip);
+    return {
+      success: result.success,
+      remaining: result.remaining,
+      reset: result.reset,
+      reason: result.success ? undefined : "ip",
+    };
+  } catch (err) {
+    console.error("[rate-limit] Upstash error — failing open:", (err as Error).message);
+    return { success: true, remaining: 999, reset: 0 };
+  }
 }
