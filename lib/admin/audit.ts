@@ -6,6 +6,7 @@ type AdminActionType =
   | "evaluation_overridden" | "evaluation_rerun" | "evaluation_deleted" | "evaluation_calibration_flagged"
   | "appeal_accepted_override" | "appeal_accepted_rerun" | "appeal_rejected"
   | "startup_hidden" | "startup_restored" | "startup_rerun_forced" | "startup_consent_forced"
+  | "test_email_sent"
   | "challenge_approved_voting" | "challenge_activated" | "challenge_cancelled" | "challenge_prizes_distributed"
   | "dataset_exported" | "setting_updated";
 

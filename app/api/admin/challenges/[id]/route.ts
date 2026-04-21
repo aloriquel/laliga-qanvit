@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { auditAction } from "@/lib/admin/audit";
+import { sendChallengePrizeEmail } from "@/lib/emails/send";
 import { z } from "zod";
 import type { Database } from "@/lib/supabase/types";
 
@@ -108,6 +109,27 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         targetId: challengeId,
         payload: { winners: inserts.length, total_points: totalPoints },
       });
+
+      // Email each winner org
+      const challengeTitle = (await service.from("challenges").select("title").eq("id", challengeId).single()).data?.title ?? "reto";
+      for (const insert of inserts) {
+        try {
+          const { data: winnerOrg } = await service.from("ecosystem_organizations").select("name, owner_id").eq("id", insert.org_id).single();
+          if (winnerOrg) {
+            const { data: ownerProfile } = await service.from("profiles").select("email").eq("id", winnerOrg.owner_id).single();
+            if (ownerProfile?.email) {
+              await sendChallengePrizeEmail(ownerProfile.email, {
+                startupName: winnerOrg.name,
+                challengeTitle,
+                rank: (insert.metadata as Record<string, number>).position,
+                points: insert.points,
+              });
+            }
+          }
+        } catch (err) {
+          console.error(`[challenge-prizes] email failed for org ${insert.org_id}:`, (err as Error).message);
+        }
+      }
 
       return NextResponse.json({ ok: true, winners: inserts.length, totalPoints });
     }

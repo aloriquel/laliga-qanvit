@@ -36,11 +36,11 @@ serve(async (req) => {
   // Get new startups since cutoff (public, with scores)
   const { data: newStartups } = await supabase
     .from("startups")
-    .select("id, name, slug, vertical, division, rank_national, rank_division")
+    .select("id, name, slug, current_vertical, current_division")
     .eq("is_public", true)
     .eq("consent_public_profile", true)
     .gte("created_at", cutoff.toISOString())
-    .order("rank_national", { ascending: true })
+    .order("current_score", { ascending: false })
     .limit(10);
 
   // Get new active challenges
@@ -65,7 +65,7 @@ serve(async (req) => {
     const startupsHtml = newStartups?.length
       ? `<h3 style="color:#22183a;margin-bottom:8px;">Nuevas startups 🚀</h3><ul style="padding-left:20px;color:#1a1230;">` +
         newStartups.map(s =>
-          `<li><a href="${APP_URL}/startup/${s.slug}" style="color:#22183a;font-weight:600;">${s.name}</a> — ${s.division ?? ""} · ${s.vertical ?? ""}</li>`
+          `<li><a href="${APP_URL}/startup/${s.slug}" style="color:#22183a;font-weight:600;">${s.name}</a> — ${s.current_division ?? ""} · ${s.current_vertical ?? ""}</li>`
         ).join("") + `</ul>`
       : `<p style="color:#6b5b8a;">No hay nuevas startups en este periodo.</p>`;
 

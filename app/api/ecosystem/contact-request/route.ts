@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import crypto from "crypto";
+import { sendContactRequestToStartupEmail } from "@/lib/emails/send";
 
 const schema = z.object({
   startup_id: z.string().uuid(),
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   const { data: startup } = await supabase
     .from("startups")
-    .select("id, owner_id, consent_direct_contact")
+    .select("id, name, owner_id, consent_direct_contact")
     .eq("id", startup_id)
     .maybeSingle();
 
@@ -71,6 +72,23 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Email the startup owner about the incoming contact request
+  try {
+    const { data: orgData } = await serviceClient.from("ecosystem_organizations").select("name").eq("id", org.id).single();
+    const { data: ownerProfile } = await serviceClient.from("profiles").select("email").eq("id", startup.owner_id).single();
+    if (ownerProfile?.email) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://laliga.qanvit.com";
+      await sendContactRequestToStartupEmail(ownerProfile.email, {
+        startupName: startup.name ?? startup.id,
+        orgName: orgData?.name ?? "Un parque/clúster",
+        message,
+        respondUrl: `${appUrl}/api/contact-request/respond-page?token=${respondToken}`,
+      });
+    }
+  } catch (err) {
+    console.error("[contact-request] email failed:", (err as Error).message);
+  }
 
   return NextResponse.json({ id: request.id }, { status: 201 });
 }

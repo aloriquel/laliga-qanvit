@@ -1,7 +1,10 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const BEARER_SECRET = "laliga-dev-secret-32chars-local1";
+const BEARER_SECRET = Deno.env.get("EVALUATOR_FN_SECRET") ?? "laliga-dev-secret-32chars-local1";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const RESEND_FROM = Deno.env.get("RESEND_FROM_EMAIL") ?? "liga@qanvit.com";
+const APP_URL = Deno.env.get("NEXT_PUBLIC_APP_URL") ?? "https://laliga.qanvit.com";
 
 serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
@@ -147,6 +150,38 @@ serve(async (req) => {
       completed_at: new Date().toISOString(),
       expires_at: expiresAt,
     }).eq("id", export_id);
+
+    // Generate a 24h signed download URL and email the requesting admin
+    try {
+      const { data: signedData } = await supabase.storage.from("exports").createSignedUrl(filePath, 86400);
+      const { data: exportRow2 } = await supabase.from("dataset_exports").select("admin_id, scope").eq("id", export_id).single();
+      if (signedData?.signedUrl && exportRow2) {
+        const { data: adminProfile } = await supabase.from("profiles").select("email").eq("id", exportRow2.admin_id).single();
+        if (adminProfile?.email && RESEND_API_KEY) {
+          const html = `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+            <div style="background:#22183a;padding:24px;border-radius:12px 12px 0 0;text-align:center;">
+              <p style="color:#f4a9aa;font-size:14px;font-weight:600;margin:0;">{ La Liga Qanvit }</p>
+            </div>
+            <div style="background:#f1e8f4;padding:24px;border-radius:0 0 12px 12px;">
+              <p style="font-size:16px;font-weight:600;margin-top:0;">Tu export de datos está listo</p>
+              <p style="color:#6b5b8a;font-size:14px;">Scope: <strong>${exportRow2.scope}</strong> · ${startups?.length ?? 0} registros</p>
+              <a href="${signedData.signedUrl}"
+                 style="display:inline-block;background:#22183a;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;margin-top:8px;">
+                Descargar JSON (24h) →
+              </a>
+              <p style="font-size:11px;color:#6b5b8a;margin-top:16px;">O descárgalo desde el <a href="${APP_URL}/admin/data-export" style="color:#22183a;">panel admin</a>. El enlace firmado expira en 24 horas.</p>
+            </div>
+          </div>`;
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ from: RESEND_FROM, to: [adminProfile.email], subject: "[La Liga Qanvit] Export de datos listo", html }),
+          });
+        }
+      }
+    } catch (emailErr) {
+      console.error("[dataset-exporter] email failed:", String(emailErr));
+    }
 
     return new Response(JSON.stringify({ ok: true, records: startups?.length ?? 0 }), {
       headers: { "Content-Type": "application/json" },
