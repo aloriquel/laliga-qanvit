@@ -7,35 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import ClassificationCard from "@/components/league/ClassificationCard";
 import Link from "next/link";
 import EcosystemMomentumBadge from "@/components/ecosystem/EcosystemMomentumBadge";
+import PublicStrengthsHighlights from "@/components/public/PublicStrengthsHighlights";
+import PublicTopDimensions from "@/components/public/PublicTopDimensions";
+import { getPublicProfileData, getTopDimensions } from "@/lib/public/profile-helpers";
 
 type Props = { params: { slug: string } };
-type StartupRow = Database["public"]["Tables"]["startups"]["Row"];
 type EvaluationRow = Database["public"]["Tables"]["evaluations"]["Row"];
 
 export const revalidate = 60;
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const supabase = createClient();
-  const { data: startup } = await supabase
-    .from("startups")
-    .select("name, one_liner, is_public, slug")
-    .eq("slug", params.slug)
-    .single();
-
-  if (!startup || !startup.is_public) return { title: "Startup no encontrada" };
-
-  return {
-    title: startup.name,
-    description: startup.one_liner ?? undefined,
-    openGraph: {
-      images: [`/api/og/startup/${startup.slug}`],
-    },
-    twitter: {
-      card: "summary_large_image",
-      images: [`/api/og/startup/${startup.slug}`],
-    },
-  };
-}
 
 const DIVISION_LABELS: Record<string, { label: string; color: string }> = {
   ideation: { label: "🥚 Ideation", color: "bg-league-ideation text-ink-primary" },
@@ -52,23 +31,38 @@ const VERTICAL_LABELS: Record<string, string> = {
   cybersecurity: "Cybersecurity",
 };
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const profile = await getPublicProfileData(params.slug);
+  if (!profile) return { title: "Startup no encontrada" };
+
+  const { startup, evaluation } = profile;
+  const rawDesc = evaluation?.summary || (startup.one_liner as string | null) || null;
+  const description = rawDesc
+    ? rawDesc.length > 160 ? rawDesc.slice(0, 157) + "..." : rawDesc
+    : undefined;
+
+  return {
+    title: startup.name as string,
+    description,
+    openGraph: { images: [`/api/og/startup/${startup.slug}`] },
+    twitter: { card: "summary_large_image", images: [`/api/og/startup/${startup.slug}`] },
+  };
+}
+
 export default async function StartupPublicPage({ params }: Props) {
   const supabase = createClient();
+  const service = createServiceClient();
   const t = await getTranslations("startup_profile");
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: startup } = await supabase
-    .from("startups")
-    .select("*")
-    .eq("slug", params.slug)
-    .eq("is_public", true)
-    .single() as { data: StartupRow | null };
+  const profileData = await getPublicProfileData(params.slug);
+  if (!profileData) notFound();
 
-  if (!startup || !startup.consent_public_profile) notFound();
+  const { startup, evaluation, highlights } = profileData;
+  const topDimensions = evaluation ? getTopDimensions(evaluation.dimensions) : [];
 
-  const service = createServiceClient();
-  const [{ data: standing }, { data: profile }, { data: momentumRow }] = await Promise.all([
+  const [{ data: standing }, { data: profile }, { data: momentumData }] = await Promise.all([
     supabase
       .from("league_standings")
       .select("rank_national, rank_division, rank_division_vertical")
@@ -81,10 +75,17 @@ export default async function StartupPublicPage({ params }: Props) {
       .from("startup_momentum")
       .select("momentum_score, up_count, down_count, distinct_voters, last_vote_at")
       .eq("startup_id", startup.id)
-      .maybeSingle() as Promise<{ data: { momentum_score: number; up_count: number; down_count: number; distinct_voters: number; last_vote_at: string | null } | null }>,
+      .maybeSingle() as Promise<{
+        data: {
+          momentum_score: number;
+          up_count: number;
+          down_count: number;
+          distinct_voters: number;
+          last_vote_at: string | null;
+        } | null;
+      }>,
   ]);
 
-  // Timeline: only if show_public_timeline is ON
   let evalTimeline: EvaluationRow[] = [];
   if (startup.show_public_timeline) {
     const { data: evals } = await supabase
@@ -95,7 +96,7 @@ export default async function StartupPublicPage({ params }: Props) {
     evalTimeline = evals ?? [];
   }
 
-  // Track ecosystem view (non-blocking fire-and-forget)
+  // Track ecosystem view — non-blocking
   if (user && profile?.role === "ecosystem") {
     void (async () => {
       try {
@@ -132,10 +133,10 @@ export default async function StartupPublicPage({ params }: Props) {
           </div>
         )}
 
-        {/* Classification card */}
+        {/* Hero */}
         <div className="flex justify-center mb-8">
           <ClassificationCard
-            startup={startup}
+            startup={startup as any}
             ranking={standing}
             size="lg"
             interactive={false}
@@ -145,11 +146,28 @@ export default async function StartupPublicPage({ params }: Props) {
         {/* One-liner */}
         {startup.one_liner && (
           <div className="bg-white rounded-card border border-border-soft p-6 mb-6 text-center">
-            <p className="font-body text-brand-navy leading-relaxed">&ldquo;{startup.one_liner}&rdquo;</p>
+            <p className="font-body text-brand-navy leading-relaxed">&ldquo;{startup.one_liner as string}&rdquo;</p>
           </div>
         )}
 
-        {/* Latest eval: summary + next actions */}
+        {/* Community momentum */}
+        {momentumData && momentumData.distinct_voters > 0 && (
+          <div className="mb-6">
+            <EcosystemMomentumBadge
+              startupId={startup.id}
+              variant="full"
+              initialMomentum={momentumData}
+            />
+          </div>
+        )}
+
+        {/* Strengths highlights */}
+        <PublicStrengthsHighlights highlights={highlights} />
+
+        {/* Top scoring dimensions */}
+        <PublicTopDimensions dimensions={topDimensions} />
+
+        {/* Eval summary + next actions */}
         {evalTimeline.length > 0 && evalTimeline[0].summary && (
           <div className="bg-white rounded-card border border-border-soft p-6 mb-6">
             <p className="font-body text-xs text-ink-secondary uppercase tracking-wider font-semibold mb-2">{t("public_feedback")}</p>
@@ -170,7 +188,7 @@ export default async function StartupPublicPage({ params }: Props) {
           </div>
         )}
 
-        {/* Timeline — only if show_public_timeline is ON */}
+        {/* Timeline */}
         {startup.show_public_timeline && evalTimeline.length > 1 && (
           <div className="bg-white rounded-card border border-border-soft p-6 mb-6">
             <p className="font-body text-xs text-ink-secondary uppercase tracking-wider font-semibold mb-4">{t("evolution")}</p>
@@ -213,26 +231,15 @@ export default async function StartupPublicPage({ params }: Props) {
           </div>
         )}
 
-        {/* Community momentum — only if at least 1 voter */}
-        {momentumRow && momentumRow.distinct_voters > 0 && (
-          <div className="mb-6">
-            <EcosystemMomentumBadge
-              startupId={startup.id}
-              variant="full"
-              initialMomentum={momentumRow}
-            />
-          </div>
-        )}
-
         {startup.website && (
           <div className="text-center mt-4">
             <a
-              href={startup.website}
+              href={startup.website as string}
               target="_blank"
               rel="noopener noreferrer"
               className="font-body text-sm text-ink-secondary hover:text-brand-navy transition-colors"
             >
-              {startup.website.replace(/^https?:\/\//, "")}
+              {(startup.website as string).replace(/^https?:\/\//, "")}
             </a>
           </div>
         )}
