@@ -140,16 +140,14 @@ export default async function TransparenciaPage() {
       </ul>
 
       <div className="mt-8 p-4 bg-brand-lavender rounded-lg text-sm text-ink-secondary">
-        ¿Preguntas? <a href="mailto:hola@qanvit.com" className="text-brand-navy font-semibold">hola@qanvit.com</a>
+        ¿Preguntas? <a href="mailto:holaqanvit@gmail.com" className="text-brand-navy font-semibold">holaqanvit@gmail.com</a>
         {" "}·{" "}
         <Link href="/legal/faq-gdpr" className="text-brand-navy font-semibold">FAQ GDPR</Link>
       </div>
 
       <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
         Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}
-        <a href="mailto:privacy@qanvit.com" className="text-brand-navy font-semibold">privacy@qanvit.com</a>
-        {" "}o al responsable de protección de datos:{" "}
-        <a href="mailto:contact@fqsource.com" className="text-brand-navy font-semibold">contact@fqsource.com</a>
+        <a href="mailto:holaqanvit@gmail.com" className="text-brand-navy font-semibold">holaqanvit@gmail.com</a>
       </div>
     </>
   );

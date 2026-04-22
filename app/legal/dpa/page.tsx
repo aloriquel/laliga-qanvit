@@ -49,7 +49,7 @@ export default function DpaPage() {
 
       <h2>5. Subencargados</h2>
       <p>
-        Qanvit utiliza los siguientes subencargados aprobados: Supabase (almacenamiento), Anthropic (evaluación), OpenAI (embeddings), Resend (email), Vercel (hosting). El ecosistema puede consultar la lista actualizada escribiendo a <a href="mailto:dpo@qanvit.com">dpo@qanvit.com</a>.
+        Qanvit utiliza los siguientes subencargados aprobados: Supabase (almacenamiento), Anthropic (evaluación), OpenAI (embeddings), Resend (email), Vercel (hosting). El ecosistema puede consultar la lista actualizada escribiendo a <a href="mailto:holaqanvit@gmail.com">holaqanvit@gmail.com</a>.
       </p>
 
       <h2>6. Derechos de los interesados</h2>
@@ -74,14 +74,12 @@ export default function DpaPage() {
 
       <h2>10. Firma del DPA</h2>
       <p>
-        Para firmar el DPA con tu organización, escribe a <a href="mailto:dpo@qanvit.com">dpo@qanvit.com</a> indicando el nombre de la organización, CIF y persona de contacto responsable del tratamiento.
+        Para firmar el DPA con tu organización, escribe a <a href="mailto:holaqanvit@gmail.com">holaqanvit@gmail.com</a> indicando el nombre de la organización, CIF y persona de contacto responsable del tratamiento.
       </p>
 
       <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
         Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}
-        <a href="mailto:privacy@qanvit.com" className="text-brand-navy font-semibold">privacy@qanvit.com</a>
-        {" "}o al responsable de protección de datos:{" "}
-        <a href="mailto:contact@fqsource.com" className="text-brand-navy font-semibold">contact@fqsource.com</a>
+        <a href="mailto:holaqanvit@gmail.com" className="text-brand-navy font-semibold">holaqanvit@gmail.com</a>
       </div>
     </>
   );

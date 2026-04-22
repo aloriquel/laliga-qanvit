@@ -92,9 +92,7 @@ export default function CookiesPage() {
 
       <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
         Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}
-        <a href="mailto:privacy@qanvit.com" className="text-brand-navy font-semibold">privacy@qanvit.com</a>
-        {" "}o al responsable de protección de datos:{" "}
-        <a href="mailto:contact@fqsource.com" className="text-brand-navy font-semibold">contact@fqsource.com</a>
+        <a href="mailto:holaqanvit@gmail.com" className="text-brand-navy font-semibold">holaqanvit@gmail.com</a>
       </div>
     </>
   );

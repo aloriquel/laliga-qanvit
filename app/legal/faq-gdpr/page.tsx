@@ -29,7 +29,7 @@ const FAQ = [
   },
   {
     q: "¿Puedo obtener una copia de todos mis datos?",
-    a: "Sí. Escribe a dpo@qanvit.com indicando tu email de registro. En un plazo de 30 días recibirás un archivo JSON con todos tus datos: perfil, evaluaciones, historial de ranking y preferencias. El deck se te enviará por un enlace de descarga seguro.",
+    a: "Sí. Escribe a holaqanvit@gmail.com indicando tu email de registro. En un plazo de 30 días recibirás un archivo JSON con todos tus datos: perfil, evaluaciones, historial de ranking y preferencias. El deck se te enviará por un enlace de descarga seguro.",
   },
   {
     q: "¿Cómo retiro mi consentimiento para aparecer en el leaderboard?",
@@ -41,7 +41,7 @@ const FAQ = [
   },
   {
     q: "¿Cómo contacto al DPO?",
-    a: "Escribe a dpo@qanvit.com. El DPO responde en un plazo máximo de 5 días hábiles. Para ejercicio formal de derechos GDPR (acceso, rectificación, supresión, oposición, portabilidad), el plazo de respuesta es de 30 días según la normativa.",
+    a: "Escribe a holaqanvit@gmail.com. El DPO responde en un plazo máximo de 5 días hábiles. Para ejercicio formal de derechos GDPR (acceso, rectificación, supresión, oposición, portabilidad), el plazo de respuesta es de 30 días según la normativa.",
   },
 ];
 
@@ -66,8 +66,8 @@ export default function FaqGdprPage() {
         <p className="font-semibold text-ink-primary mb-2">¿No encuentras tu respuesta?</p>
         <p>
           Escribe a{" "}
-          <a href="mailto:dpo@qanvit.com" className="text-brand-navy font-semibold">
-            dpo@qanvit.com
+          <a href="mailto:holaqanvit@gmail.com" className="text-brand-navy font-semibold">
+            holaqanvit@gmail.com
           </a>{" "}
           o consulta la{" "}
           <Link href="/legal/privacidad" className="text-brand-navy font-semibold">
@@ -79,9 +79,7 @@ export default function FaqGdprPage() {
 
       <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
         Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}
-        <a href="mailto:privacy@qanvit.com" className="text-brand-navy font-semibold">privacy@qanvit.com</a>
-        {" "}o al responsable de protección de datos:{" "}
-        <a href="mailto:contact@fqsource.com" className="text-brand-navy font-semibold">contact@fqsource.com</a>
+        <a href="mailto:holaqanvit@gmail.com" className="text-brand-navy font-semibold">holaqanvit@gmail.com</a>
       </div>
     </>
   );

@@ -17,7 +17,7 @@ export default function AvisoLegalPage() {
           <tr><td><strong>Denominación social</strong></td><td>FQ Source Technologies, S.L.</td></tr>
           <tr><td><strong>CIF</strong></td><td>B24788796</td></tr>
           <tr><td><strong>Domicilio</strong></td><td>Calle Fuente de Don Diego, nº15, 4º I, 23001 Jaén, España</td></tr>
-          <tr><td><strong>Email de contacto</strong></td><td><a href="mailto:hola@qanvit.com">hola@qanvit.com</a></td></tr>
+          <tr><td><strong>Email de contacto</strong></td><td><a href="mailto:holaqanvit@gmail.com">holaqanvit@gmail.com</a></td></tr>
           <tr><td><strong>Web corporativa</strong></td><td><a href="https://www.qanvit.com" target="_blank" rel="noopener noreferrer">www.qanvit.com</a></td></tr>
         </tbody>
       </table>
@@ -49,9 +49,7 @@ export default function AvisoLegalPage() {
 
       <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
         Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}
-        <a href="mailto:privacy@qanvit.com" className="text-brand-navy font-semibold">privacy@qanvit.com</a>
-        {" "}o al responsable de protección de datos:{" "}
-        <a href="mailto:contact@fqsource.com" className="text-brand-navy font-semibold">contact@fqsource.com</a>
+        <a href="mailto:holaqanvit@gmail.com" className="text-brand-navy font-semibold">holaqanvit@gmail.com</a>
       </div>
     </>
   );

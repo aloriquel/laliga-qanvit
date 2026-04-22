@@ -16,8 +16,8 @@ export default function PrivacidadPage() {
         <strong>FQ Source Technologies, S.L.</strong> (en adelante, «Qanvit»)<br />
         CIF: B24788796<br />
         Dirección: Calle Fuente de Don Diego, nº15, 4º I, 23001 Jaén, España<br />
-        Email de contacto: <a href="mailto:hola@qanvit.com">hola@qanvit.com</a><br />
-        Email del DPO: <a href="mailto:dpo@qanvit.com">dpo@qanvit.com</a>
+        Email de contacto: <a href="mailto:holaqanvit@gmail.com">holaqanvit@gmail.com</a><br />
+        Email del DPO: <a href="mailto:holaqanvit@gmail.com">holaqanvit@gmail.com</a>
       </p>
 
       <h2>2. Datos recopilados</h2>
@@ -70,12 +70,12 @@ export default function PrivacidadPage() {
 
       <h2>7. Transferencias internacionales</h2>
       <p>
-        Anthropic y OpenAI procesan datos en Estados Unidos. Esta transferencia se ampara en las Standard Contractual Clauses (SCCs) adoptadas por la Comisión Europea (Decisión de Ejecución 2021/914). Puedes solicitar copia de las SCCs aplicables escribiendo a <a href="mailto:dpo@qanvit.com">dpo@qanvit.com</a>.
+        Anthropic y OpenAI procesan datos en Estados Unidos. Esta transferencia se ampara en las Standard Contractual Clauses (SCCs) adoptadas por la Comisión Europea (Decisión de Ejecución 2021/914). Puedes solicitar copia de las SCCs aplicables escribiendo a <a href="mailto:holaqanvit@gmail.com">holaqanvit@gmail.com</a>.
       </p>
 
       <h2>8. Tus derechos</h2>
       <p>
-        Puedes ejercer en cualquier momento los derechos de <strong>acceso, rectificación, supresión, oposición, portabilidad y retirada del consentimiento</strong> escribiendo a <a href="mailto:dpo@qanvit.com">dpo@qanvit.com</a> o desde el dashboard → Configuración → Eliminar cuenta.
+        Puedes ejercer en cualquier momento los derechos de <strong>acceso, rectificación, supresión, oposición, portabilidad y retirada del consentimiento</strong> escribiendo a <a href="mailto:holaqanvit@gmail.com">holaqanvit@gmail.com</a> o desde el dashboard → Configuración → Eliminar cuenta.
       </p>
       <p>
         Si consideras que el tratamiento no se ajusta a la normativa, tienes derecho a presentar una reclamación ante la <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer">Agencia Española de Protección de Datos (AEPD)</a>.
@@ -88,9 +88,7 @@ export default function PrivacidadPage() {
 
       <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
         Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}
-        <a href="mailto:privacy@qanvit.com" className="text-brand-navy font-semibold">privacy@qanvit.com</a>
-        {" "}o al responsable de protección de datos:{" "}
-        <a href="mailto:contact@fqsource.com" className="text-brand-navy font-semibold">contact@fqsource.com</a>
+        <a href="mailto:holaqanvit@gmail.com" className="text-brand-navy font-semibold">holaqanvit@gmail.com</a>
       </div>
     </>
   );
