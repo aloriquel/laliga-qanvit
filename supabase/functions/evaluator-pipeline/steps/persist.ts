@@ -52,7 +52,7 @@ export async function persistResults(args: PersistArgs): Promise<PersistResult> 
     estimateCost(args.evaluation.evaluator_model, args.evaluation.tokens_input, args.evaluation.tokens_output) +
     (args.embeddingTokens / 1000) * 0.00002; // text-embedding-3-small price
 
-  // --- INSERT deck_chunks (batch) ---
+  // --- UPSERT deck_chunks (idempotent on retry) ---
   if (args.chunks.length > 0) {
     const chunkRows = args.chunks.map((c) => ({
       deck_id: args.deckId,
@@ -63,13 +63,25 @@ export async function persistResults(args: PersistArgs): Promise<PersistResult> 
       metadata: c.metadata,
     }));
 
-    const { error: chunksError } = await db.from("deck_chunks").insert(chunkRows);
-    if (chunksError) throw new Error(`deck_chunks insert: ${chunksError.message}`);
+    const { error: chunksError } = await db
+      .from("deck_chunks")
+      .upsert(chunkRows, { onConflict: "deck_id,chunk_index" });
+    if (chunksError) throw new Error(`deck_chunks upsert: ${chunksError.message}`);
   }
 
-  // --- INSERT evaluation ---
-  const evaluationId = crypto.randomUUID();
-  const { error: evalError } = await db.from("evaluations").insert({
+  // --- UPSERT evaluation (idempotent on retry) ---
+  // Fetch existing id first so foreign keys to evaluations.id remain stable across retries.
+  const { data: existingEval } = await db
+    .from("evaluations")
+    .select("id")
+    .eq("deck_id", args.deckId)
+    .eq("prompt_version", "v1")
+    .eq("rubric_version", "v1")
+    .maybeSingle();
+
+  const evaluationId = existingEval?.id ?? crypto.randomUUID();
+
+  const { error: evalError } = await db.from("evaluations").upsert({
     id: evaluationId,
     deck_id: args.deckId,
     startup_id: args.startupId,
@@ -95,21 +107,9 @@ export async function persistResults(args: PersistArgs): Promise<PersistResult> 
     tokens_output: totalTokensOut,
     cost_estimate_usd: costEstimate,
     latency_ms: latencyMs,
-  });
+  }, { onConflict: "deck_id,prompt_version,rubric_version" });
 
-  if (evalError) {
-    if (evalError.code === "23505") {
-      // Unique constraint: already evaluated with this prompt_version/rubric_version — idempotent noop
-      const { data: existing } = await db
-        .from("evaluations")
-        .select("id, assigned_division, assigned_vertical")
-        .eq("deck_id", args.deckId)
-        .eq("prompt_version", "v1")
-        .single();
-      if (existing) return { evaluationId: existing.id, assignedDivision: existing.assigned_division as Phase, assignedVertical: existing.assigned_vertical };
-    }
-    throw new Error(`evaluations insert: ${evalError.message}`);
-  }
+  if (evalError) throw new Error(`evaluations upsert: ${evalError.message}`);
 
   // --- UPDATE decks: status='evaluated', raw_text, page_count, language ---
   const { error: deckUpdateError } = await db

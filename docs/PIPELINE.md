@@ -125,9 +125,18 @@ Solo 1 corrección por attempt. Si tras corregir sigue mal, cuenta como attempt 
 
 ## 6. Idempotencia
 
-- Clave única en `evaluations(deck_id, prompt_version, rubric_version)`.
-- Si el pipeline se re-dispara para un deck ya evaluado con la misma versión, el INSERT falla y se loguea un noop.
-- Para forzar re-evaluación, admin cambia manualmente `prompt_version` a `vN+1` o elimina el registro.
+El pipeline es retry-safe: ejecutarlo dos veces sobre el mismo deck sobreescribe datos en lugar de crashear.
+
+### deck_chunks
+`persist.ts` usa `.upsert(rows, { onConflict: "deck_id,chunk_index" })`. Si los chunks ya existen, se actualizan `content`, `embedding`, `token_count` y `metadata` in-place.
+
+### evaluations
+Antes del upsert se hace un `SELECT id ... .maybeSingle()` para recuperar el id existente (si lo hay). Ese id se reutiliza en el upsert `onConflict: "deck_id,prompt_version,rubric_version"`. Esto garantiza que las foreign keys que apunten a `evaluations.id` (p.ej. challenge_progress, leaderboard triggers) no se rompan en un retry.
+
+La segunda ejecución sobreescribe todos los scores, feedback y metadatos del modelo con los valores frescos — no es un noop, es una re-evaluación completa.
+
+### Para forzar re-evaluación con nueva versión
+Subir `prompt_version` o `rubric_version` en `persist.ts` hace que el lookup previo no encuentre nada y se cree un registro nuevo. El anterior queda en histórico.
 
 ## 7. Observabilidad
 
