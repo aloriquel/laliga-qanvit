@@ -51,14 +51,13 @@ DROP TYPE IF EXISTS challenge_objective_type CASCADE;
 ALTER TABLE ecosystem_points_log
   ADD COLUMN IF NOT EXISTS event_type_deprecated boolean NOT NULL DEFAULT false;
 
-UPDATE ecosystem_points_log
-  SET event_type_deprecated = true
-  WHERE event_type IN (
-    'challenge_vote_reward',
-    'challenge_proposer_reward',
-    'challenge_winner_reward',
-    'challenge_winner'
-  );
+-- Marcar como deprecated el ÚNICO event_type real de challenges usado: 'challenge_winner'.
+-- Verificado contra pg_enum el 2026-04-22: los otros event_types asumidos 
+-- por el prompt (challenge_vote_reward, challenge_proposer_reward, 
+-- challenge_winner_reward) nunca existieron en esta DB.
+UPDATE ecosystem_points_log 
+  SET event_type_deprecated = true 
+  WHERE event_type = 'challenge_winner';
 
 -- ── Admin audit log: limpiar tipos de challenge del enum si es posible ────────
 -- Los valores del enum admin_action_type se conservan para no perder histórico.
