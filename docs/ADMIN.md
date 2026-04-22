@@ -1,6 +1,6 @@
 # Admin — Panel de operación y control de La Liga Qanvit
 
-> Complementa todos los docs anteriores. Aquí se documenta el panel que tú (Arturo, super admin) usas para operar la liga en el día a día: aprobación de orgs, moderación de retos, overrides de clasificación, distribución de premios, métricas globales con cohortes y costes LLM, y export del dataset para alimentar los otros agentes de Qanvit (Structuring → Discovering → Coordinating).
+> Complementa todos los docs anteriores. Aquí se documenta el panel que tú (Arturo, super admin) usas para operar la liga en el día a día: aprobación de orgs, moderación de votos, overrides de clasificación, métricas globales con cohortes y costes LLM, y export del dataset para alimentar los otros agentes de Qanvit (Structuring → Discovering → Coordinating).
 
 ## 1. Filosofía del panel admin
 
@@ -21,9 +21,7 @@ Todas bajo `/admin/**`, protegidas por middleware que verifica `profiles.role = 
 /admin/deck-errors                    ← ya existe (Prompt #2)
 /admin/evaluations                    ← todas las evaluations (override div/vert, re-run, delete)
 /admin/evaluation-appeals             ← impugnaciones de startups, aceptar/rechazar
-/admin/challenges                     ← ya existe parcialmente (Prompt #4). Extender con:
-                                        aprobar draft → voting, activar voting → active,
-                                        distribuir premios al completar
+/admin/votes                          ← votos del ecosistema (tabla global + invalidar)
 /admin/startups                       ← buscador de startups con acciones admin
 /admin/metrics                        ← dashboard de métricas globales con cohortes + LLM costs
 /admin/audit-log                      ← log de todas las acciones admin
@@ -39,7 +37,6 @@ Dashboard de entrada con 4 secciones:
    - N ecosystem applications a aprobar.
    - N deck errors.
    - N evaluation appeals.
-   - N challenges en draft (a aprobar) o en voting con 5+ likes (a activar).
    - Cada ítem con CTA "Revisar" que lleva a la ruta correspondiente.
 
 2. **Salud de la liga** (pulso rápido):
@@ -52,7 +49,7 @@ Dashboard de entrada con 4 secciones:
 3. **Alertas operativas**:
    - Si error_rate > 10% → warning.
    - Si coste LLM 7d > 2× media histórica → warning.
-   - Si verticals con <3 startups → sugerencia de reto para impulsar.
+   - Si verticals con <3 startups → recordatorio para dirigir campañas de referral.
 
 4. **Actividad reciente**: feed con las últimas 20 acciones admin (del audit log).
 
@@ -92,17 +89,16 @@ Lista de `evaluation_appeals WHERE status = 'pending'`. Por cada:
   - **Aceptar con re-run**: UPDATE deck SET status='pending' → pipeline re-evalúa con prompt actualizado.
   - **Rechazar**: UPDATE status='rejected' + resolution_notes + email a la startup.
 
-## 7. Challenges admin (`/admin/challenges`)
+## 7. Votos admin (`/admin/votes`)
 
-Ya existe parcialmente desde Prompt #4. Completar:
-- **Tab "Drafts"**: retos proposed, botón "Aprobar para votación" → UPDATE status='voting'.
-- **Tab "En votación"**: retos con likes, botón "Activar" cuando ready.
-- **Tab "Activos"**: retos corriendo, ver progreso por org, botón "Cancelar" de emergencia.
-- **Tab "Completados"**: retos finalizados. Botón **"Distribuir premios"**:
-  - Muestra modal con top N orgs según `challenge_progress` ordenado desc.
-  - Aplica `prize_structure` (1º: X pts, 2º: Y, 3º: Z).
-  - Al confirmar: INSERT en ecosystem_points_log para cada ganador + UPDATE challenge status.
-  - Envía email a cada ganador.
+Tabla paginada (50/página) de todos los votos del ecosistema. Filtros: vote_type (all/up/down), página.
+
+Columnas: startup, org, tipo de voto (con peso ×N si >1), tier al votar, razón (truncada), fecha.
+
+**Acción: Invalidar voto**
+- Botón "Invalidar" con confirmación de dos pasos.
+- DELETE via service role + entrada en `admin_audit_log` con `action_type='vote_invalidated'`.
+- Casos de uso: votos de spam, acuerdos entre orgs para manipular momentum, errores detectados.
 
 ## 8. Startups admin (`/admin/startups`)
 
@@ -114,7 +110,7 @@ Buscador + acciones operativas:
   - **Ocultar del leaderboard**: UPDATE is_public=false + razón.
   - **Restaurar visibilidad**: UPDATE is_public=true.
   - **Marcar como verified** (badge blue): flag `is_verified_startup` para startups que aportan credibilidad (si decides añadirlo — TODO V1.5, dejar botón disabled).
-  - **Ver historial completo**: todas las evaluations + appeals + access logs + contact_requests.
+  - **Ver historial completo**: todas las evaluations + appeals + access logs + votos recibidos.
 
 ## 9. Metrics globales (`/admin/metrics`)
 
@@ -294,7 +290,6 @@ create table admin_settings (
 **Keys iniciales**:
 - `llm_budget_monthly_usd`: presupuesto mensual (default 500) — warning si forecast supera.
 - `pipeline_error_threshold_pct`: umbral de alerta de errores (default 10).
-- `challenge_min_votes`: votos mínimos para activar reto (default 5).
 - `referral_cookie_days`: duración cookie referral (default 180).
 - `deck_cooldown_days`: días entre re-subidas (default 7).
 - `rate_limit_upload_per_hour`: cap de uploads por hora por usuario (default 2).
@@ -320,10 +315,8 @@ create type admin_action_type as enum (
   'startup_hidden',
   'startup_restored',
   'startup_rerun_forced',
-  'challenge_approved_voting',
-  'challenge_activated',
-  'challenge_cancelled',
-  'challenge_prizes_distributed',
+  'startup_consent_forced',
+  'vote_invalidated',
   'dataset_exported',
   'setting_updated'
 );
@@ -509,7 +502,7 @@ El dashboard admin es operativo, no user-facing. Tono directo, sin emojis deport
 | Cola vacía | Nada pendiente. Buen trabajo. |
 | Org aprobada | Organización aprobada y notificada. |
 | Override confirmado | Clasificación actualizada. Razón guardada en auditoría. |
-| Premios distribuidos | {N} organizaciones recibieron {M} puntos en total. |
+| Voto invalidado | Voto eliminado. Acción registrada en auditoría. |
 | Export listo | Export listo. Link expira en 24h. |
 | Warning coste LLM | ⚠ Coste mensual proyectado supera presupuesto. |
 

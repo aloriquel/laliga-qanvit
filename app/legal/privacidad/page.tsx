@@ -38,7 +38,7 @@ export default function PrivacidadPage() {
         <li>Evaluar tu deck con IA y proporcionar feedback y clasificación.</li>
         <li>Mostrar tu posición en el leaderboard (solo con tu consentimiento explícito).</li>
         <li>Mejorar el servicio mediante análisis de uso agregado.</li>
-        <li>Alimentar el agente de Structuring de Qanvit con datos anonimizados o con tu consentimiento explícito para contacto directo por parte de Corporates.</li>
+        <li>Alimentar el agente de Structuring de Qanvit con datos anonimizados (siempre sin PII salvo consentimiento explícito).</li>
       </ul>
 
       <h2>4. Base legal</h2>

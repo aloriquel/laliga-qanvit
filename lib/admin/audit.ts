@@ -7,7 +7,7 @@ export type AdminActionType =
   | "appeal_accepted_override" | "appeal_accepted_rerun" | "appeal_rejected"
   | "startup_hidden" | "startup_restored" | "startup_rerun_forced" | "startup_consent_forced"
   | "test_email_sent"
-  | "challenge_approved_voting" | "challenge_activated" | "challenge_cancelled" | "challenge_prizes_distributed"
+  | "vote_invalidated"
   | "dataset_exported" | "setting_updated"
   | "ecosystem_application_received";
 

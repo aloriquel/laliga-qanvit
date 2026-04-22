@@ -1,12 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Trophy, Bell, Link2, Star } from "lucide-react";
+import { ArrowRight, Bell, Link2, Star, Target, ExternalLink, ThumbsUp } from "lucide-react";
 import { pointsToNextTier, TIER_THRESHOLDS } from "@/lib/ecosystem/points-helpers";
-import { isChallengeActive } from "@/lib/ecosystem/challenge-logic";
-import type { Database } from "@/lib/supabase/types";
+import { computeScoutingEye } from "@/lib/ecosystem/votes-helpers";
 
-type ChallengeRow = Database["public"]["Tables"]["challenges"]["Row"];
+const APP_QANVIT_URL = process.env.NEXT_PUBLIC_APP_QANVIT_URL ?? "https://app.qanvit.com";
 
 export default async function EcosystemDashboardHome() {
   const supabase = createClient();
@@ -16,18 +15,18 @@ export default async function EcosystemDashboardHome() {
 
   const { data: org } = await supabase
     .from("ecosystem_organizations")
-    .select("id, name, referral_code, region")
+    .select("id, name, referral_code")
     .eq("owner_id", user.id)
     .single();
 
   if (!org) redirect("/ecosistema/aplicar");
 
-  const [totalsRes, standingsRes, recentAlertsRes, activeChallengesRes, pointsLogRes] = await Promise.all([
+  const [totalsRes, standingsRes, recentAlertsRes, pointsLogRes, scoutingEye] = await Promise.all([
     supabase.from("ecosystem_totals").select("total_points, tier").eq("org_id", org.id).maybeSingle(),
     supabase.from("ecosystem_anonymous_standings").select("decile, percentile, total_points").eq("org_id", org.id).maybeSingle(),
     supabase.from("ecosystem_new_startup_alerts").select("id, startup_id, matched_reason, created_at").eq("org_id", org.id).order("created_at", { ascending: false }).limit(5),
-    supabase.from("challenges").select("id, title, status, active_ends_at, prize_structure").in("status", ["voting", "active"]).order("created_at", { ascending: false }).limit(3),
     supabase.from("ecosystem_points_log").select("id, event_type, points, created_at").eq("org_id", org.id).order("created_at", { ascending: false }).limit(5),
+    computeScoutingEye(org.id),
   ]);
 
   const totalPoints = totalsRes.data?.total_points ?? 0;
@@ -36,8 +35,6 @@ export default async function EcosystemDashboardHome() {
   const decile = standingsRes.data?.decile ?? null;
   const percentile = standingsRes.data?.percentile ?? null;
   const recentAlerts = recentAlertsRes.data ?? [];
-  const activeChallenges = (activeChallengesRes.data ?? []).filter((c) => isChallengeActive(c as ChallengeRow));
-  const votingChallenges = (activeChallengesRes.data ?? []).filter((c) => c.status === "voting");
   const recentPoints = pointsLogRes.data ?? [];
 
   const progressPct = nextTier
@@ -49,10 +46,10 @@ export default async function EcosystemDashboardHome() {
       {/* Header */}
       <div>
         <h1 className="font-sora text-2xl font-bold text-brand-navy">Dashboard</h1>
-        <p className="font-body text-ink-secondary mt-1">Bienvenido al panel de ecosistema de La Liga Qanvit.</p>
+        <p className="font-body text-ink-secondary mt-1">Observa el ecosistema de startups españolas.</p>
       </div>
 
-      {/* Puntos hero */}
+      {/* Puntos hero — Tile 1 */}
       <div className="bg-brand-navy rounded-2xl p-6 text-white">
         <div className="flex items-start justify-between">
           <div>
@@ -87,10 +84,7 @@ export default async function EcosystemDashboardHome() {
               <span>{TIER_THRESHOLDS[nextTier].toLocaleString("es-ES")} pts</span>
             </div>
             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-brand-salmon rounded-full transition-all"
-                style={{ width: `${progressPct}%` }}
-              />
+              <div className="h-full bg-brand-salmon rounded-full transition-all" style={{ width: `${progressPct}%` }} />
             </div>
           </div>
         )}
@@ -101,46 +95,72 @@ export default async function EcosystemDashboardHome() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Retos activos */}
-        <div className="bg-white rounded-2xl border border-border-soft p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-sora font-semibold text-brand-navy flex items-center gap-2">
-              <Trophy size={16} className="text-brand-salmon" />
-              Retos
-            </h2>
-            <Link href="/ecosistema/dashboard/retos" className="text-xs font-body text-ink-secondary hover:text-brand-navy">
-              Ver todos →
+        {/* Tile 2: Mi posición vs ecosistema */}
+        {decile !== null && (
+          <div className="bg-white rounded-2xl border border-border-soft p-5">
+            <h2 className="font-sora font-semibold text-brand-navy mb-3">Mi posición vs ecosistema</h2>
+            <p className="font-body text-sm text-ink-secondary">
+              Estás en el top <strong>{Math.round((1 - (percentile ?? 0)) * 100)}%</strong> de organizaciones.
+            </p>
+            <div className="mt-3 flex gap-1">
+              {Array.from({ length: 10 }, (_, i) => (
+                <div
+                  key={i}
+                  className={`h-8 flex-1 rounded-sm ${i + 1 === (10 - (decile ?? 0) + 1) ? "bg-brand-salmon" : "bg-brand-lavender"}`}
+                />
+              ))}
+            </div>
+            <Link href="/ecosistema/dashboard/puntos" className="mt-3 inline-block text-brand-salmon font-semibold text-sm font-body hover:underline">
+              Ver detalle →
             </Link>
           </div>
-          {activeChallenges.length === 0 && votingChallenges.length === 0 ? (
-            <p className="text-ink-secondary font-body text-sm">No hay retos activos ahora.</p>
+        )}
+
+        {/* Tile 3: Scouting Eye */}
+        <div className="bg-white rounded-2xl border border-border-soft p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-sora font-semibold text-brand-navy flex items-center gap-2">
+              <Target size={16} className="text-brand-salmon" />
+              Scouting Eye
+            </h2>
+            <Link href="/ecosistema/dashboard/votos" className="text-xs font-body text-ink-secondary hover:text-brand-navy">
+              Ver detalle →
+            </Link>
+          </div>
+          {scoutingEye.total_votes === 0 ? (
+            <div>
+              <p className="font-body text-sm text-ink-secondary">Aún no has votado ninguna startup.</p>
+              <Link href="/ecosistema/dashboard/startups" className="mt-2 inline-block text-brand-salmon font-semibold text-sm font-body hover:underline">
+                Explorar startups →
+              </Link>
+            </div>
           ) : (
-            <ul className="space-y-3">
-              {[...activeChallenges, ...votingChallenges].slice(0, 3).map((c) => (
-                <li key={c.id}>
-                  <Link href={`/ecosistema/dashboard/retos`} className="block group">
-                    <p className="font-body text-sm font-medium text-brand-navy group-hover:underline">{c.title}</p>
-                    <p className="font-body text-xs text-ink-secondary capitalize">{c.status}</p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <div>
+              <p className="font-sora text-3xl font-bold text-brand-navy">{scoutingEye.accuracy_rate}%</p>
+              <p className="font-body text-sm text-ink-secondary mt-1">
+                {scoutingEye.hits} de {scoutingEye.total_votes} startups votadas up han subido.
+              </p>
+            </div>
           )}
+          <Link href="/ecosistema/dashboard/votos" className="mt-3 inline-flex items-center gap-1 text-brand-salmon text-xs font-semibold font-body hover:underline">
+            <ThumbsUp size={12} />
+            Historial de votos →
+          </Link>
         </div>
 
-        {/* Novedades (alertas recientes) */}
+        {/* Tile 4: Novedades */}
         <div className="bg-white rounded-2xl border border-border-soft p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-sora font-semibold text-brand-navy flex items-center gap-2">
               <Bell size={16} className="text-brand-salmon" />
-              Novedades
+              Novedades en tus verticales
             </h2>
             <Link href="/ecosistema/dashboard/alertas" className="text-xs font-body text-ink-secondary hover:text-brand-navy">
               Ver todas →
             </Link>
           </div>
           {recentAlerts.length === 0 ? (
-            <p className="text-ink-secondary font-body text-sm">No hay alertas recientes.</p>
+            <p className="text-ink-secondary font-body text-sm">No hay alertas recientes. Configura tus verticales.</p>
           ) : (
             <ul className="space-y-3">
               {recentAlerts.map((a) => (
@@ -156,7 +176,7 @@ export default async function EcosystemDashboardHome() {
           )}
         </div>
 
-        {/* Referral tile */}
+        {/* Tile 5: Referral */}
         <div className="bg-white rounded-2xl border border-border-soft p-5">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-sora font-semibold text-brand-navy flex items-center gap-2">
@@ -164,7 +184,7 @@ export default async function EcosystemDashboardHome() {
               Tu enlace de referral
             </h2>
           </div>
-          <p className="font-body text-xs text-ink-secondary mb-2">Comparte este enlace para ganar puntos cuando startups se unan.</p>
+          <p className="font-body text-xs text-ink-secondary mb-2">Gana puntos cuando startups se unan con tu código.</p>
           <div className="flex items-center gap-2">
             <code className="flex-1 bg-brand-lavender px-3 py-2 rounded-xl text-xs font-mono text-brand-navy truncate">
               {`${process.env.NEXT_PUBLIC_APP_URL ?? "https://laliga.qanvit.com"}/play?ref=${org.referral_code}`}
@@ -174,6 +194,24 @@ export default async function EcosystemDashboardHome() {
             </Link>
           </div>
         </div>
+
+        {/* Tile 6: CTA app.qanvit.com — Lanza retos reales */}
+        <a
+          href={`${APP_QANVIT_URL}?utm_source=laliga&utm_medium=cta&utm_campaign=tile`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block bg-brand-salmon rounded-2xl p-5 hover:bg-brand-salmon/90 transition-colors col-span-1 md:col-span-2"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-sora font-bold text-brand-navy">Lanza retos reales con startups del ecosistema</p>
+              <p className="font-body text-brand-navy/70 text-sm mt-1">
+                La Liga es tu ventana para observar. Para gestionar innovación abierta, pásate a app.qanvit.com.
+              </p>
+            </div>
+            <ExternalLink size={20} className="text-brand-navy/50 shrink-0 ml-4" />
+          </div>
+        </a>
 
         {/* Últimos puntos */}
         <div className="bg-white rounded-2xl border border-border-soft p-5">

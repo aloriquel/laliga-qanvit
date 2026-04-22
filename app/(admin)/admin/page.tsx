@@ -24,7 +24,6 @@ export default async function AdminHomePage() {
     { label: "Solicitudes de ecosistema", count: pending.applications, href: "/admin/ecosystem-applications" },
     { label: "Deck errors", count: pending.deckErrors, href: "/admin/deck-errors" },
     { label: "Impugnaciones pendientes", count: pending.appeals, href: "/admin/evaluation-appeals" },
-    { label: "Retos en draft", count: pending.challengeDrafts, href: "/admin/challenges" },
   ].filter((i) => i.count > 0);
 
   const errorRate7d = m

@@ -16,7 +16,7 @@ export async function refreshMetricsSummary() {
 
 export async function getPendingCounts() {
   const supabase = createServiceClient();
-  const [apps, deckErrors, appeals, drafts] = await Promise.all([
+  const [apps, deckErrors, appeals] = await Promise.all([
     supabase
       .from("ecosystem_organizations")
       .select("id", { count: "exact", head: true })
@@ -29,16 +29,11 @@ export async function getPendingCounts() {
       .from("evaluation_appeals")
       .select("id", { count: "exact", head: true })
       .eq("status", "pending"),
-    supabase
-      .from("challenges")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "draft"),
   ]);
   return {
     applications: apps.count ?? 0,
     deckErrors: deckErrors.count ?? 0,
     appeals: appeals.count ?? 0,
-    challengeDrafts: drafts.count ?? 0,
   };
 }
 

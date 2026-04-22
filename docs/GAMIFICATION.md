@@ -18,8 +18,9 @@ Tres principios:
 | Startup referida sube de División (Ideation→Seed, etc.) | **+250** | Bonus por retención activa y crecimiento. |
 | Validar feedback de una evaluación (thumb ±  + comentario) | **+25** | Máximo 1 por evaluación por organización. |
 | Proponer nueva vertical o subcategoría aceptada por admin | **+1000** | Requiere validación humana. |
-| Completar "Reto del mes" (ej. referir 10 startups de Mobility) | **+500** | Configurable por admin. |
 | Reporte de abuso o deck fraudulento confirmado | **+200** | Para proteger la integridad del dataset. |
+
+> **Nota**: Los votos de startups (up/down) **no dan puntos**. Son señales de scouting, no mecánicas de puntuación — evita optimización artificial.
 
 ### Eventos que restan puntos
 
@@ -41,24 +42,29 @@ Tres principios:
 
 | Feature | Rookie | Pro | Elite |
 |---|:---:|:---:|:---:|
-| Ver leaderboard público (top global y por División × Vertical) | ✅ | ✅ | ✅ |
+| Ver leaderboard público | ✅ | ✅ | ✅ |
 | Filtros básicos (División, Vertical) | ✅ | ✅ | ✅ |
-| Perfil público de la startup (one-liner, score, posición) | ✅ | ✅ | ✅ |
-| Alertas email: nueva startup en tu vertical elegida | 1 vertical | 3 verticales | 10 verticales |
-| Filtros avanzados (región, score range, fecha de entrada) | ❌ | ✅ | ✅ |
-| Export CSV del leaderboard filtrado | ❌ | 100 rows/mes | Ilimitado |
-| Ver resumen LLM del deck (summary + next actions públicos) | ❌ | ✅ | ✅ |
-| Ver evolución histórica de una startup (timeline) | ❌ | ✅ | ✅ |
-| Búsqueda semántica dentro del dataset (ej. "startups con IA en predictive maintenance") | ❌ | ❌ | ✅ |
-| Alertas custom (webhooks) | ❌ | ❌ | ✅ |
-| Reportes mensuales personalizados | ❌ | ❌ | ✅ |
-| Acceso al "radar Qanvit" (detección temprana de tendencias) | ❌ | ❌ | ✅ |
+| Perfil público de la startup | ✅ | ✅ | ✅ |
+| Votar startups (up/down) | ✅ (×1) | ✅ (×2) | ✅ (×3) |
+| Alertas email: nueva startup en tu vertical | 1 vertical | 3 verticales | 10 verticales |
+| Filtros avanzados | ❌ | ✅ | ✅ |
+| Export CSV del leaderboard | ❌ | 100 rows/mes | Ilimitado |
+| Ver resumen LLM del deck | ❌ | ✅ | ✅ |
+| Ver evolución histórica (timeline) | ❌ | ✅ | ✅ |
+| Razón requerida en votos down | No | Sí | Sí |
+| Early access a startups nuevas (antes del digest) | ❌ | ❌ | ✅ |
+| Badge "Elite Scouter" en perfil org | ❌ | ❌ | ✅ |
+| Dataset export mensual (snapshot completo) | ❌ | ❌ | 1/mes |
+| Solicitar sesión con equipo Qanvit | ❌ | ❌ | ✅ |
 
-**Nota clave**: el **deck completo nunca se expone** al ecosistema. Solo metadata, score, summary generado por LLM y next actions (si la startup ha dado consent_public_profile).
+**Notas clave**:
+- El **deck completo nunca se expone** al ecosistema. Solo metadata, score, summary LLM y next actions.
+- **Elite ya no desbloquea contacto directo con founders**. Para gestionar relaciones con startups, el canal es app.qanvit.com.
+- El **peso del voto** (×1/×2/×3) afecta `startup_momentum` pero no da puntos al votante.
 
 ## 4. Cómo se calcula el tier
 
-Vista `ecosystem_totals` (ver `DATA_MODEL.md`) agrega los puntos del log en vivo y devuelve:
+Vista `ecosystem_totals` agrega los puntos del log en vivo y devuelve:
 - `total_points`
 - `tier` (computado con CASE WHEN)
 
@@ -89,39 +95,30 @@ Cada organización tiene un `referral_code` único (p.ej. `APTE-2026-MDR`). Al c
 - Si luego esa startup entra top 10 → `startup_referred_top10` con `+500`.
 - Si sube de División → `startup_referred_phase_up` con `+250`.
 
-## 7. Retos del mes (configurables por admin)
-
-Admin puede definir un reto público en `/admin/challenges`:
-
-Ejemplo:
-> **"Mobility Month — Mayo 2026"**
-> Refiere 10 startups de Mobility con deck evaluado antes del 31 de mayo.
-> Recompensa: **+500 puntos** + badge "Mobility Scout 2026" en el perfil de la organización.
-
-Los retos son opcionales y sirven para dirigir la actividad del ecosistema hacia los objetivos que Qanvit necesita en cada momento (llenar verticales vacías, explorar regiones concretas).
-
-## 8. Anti-abuso
+## 7. Anti-abuso
 
 Reglas automáticas:
 - **Unique email domain per startup**: no se puede referir 50 startups desde dominios de email Gmail personales del mismo cluster.
 - **Detección de duplicados**: si dos decks tienen similitud de embedding > 0.95, se marca y admin revisa.
 - **Cap diario**: máximo 20 referrals por organización por día (protege de bots).
 - **Review manual**: cualquier evento > 500 puntos dispara una tarea de revisión para admin antes de consolidar.
+- **Votos**: límite de 5 votos up por semana por org. No se puede votar la propia referida. 1 voto por startup por 90 días.
 
-## 9. Métricas de éxito de la gamificación
+## 8. Métricas de éxito de la gamificación
 
-- % de organizaciones **Pro** (Pro + Elite) sobre total: objetivo >30% en 6 meses.
-- Ratio startups referidas / startup total: objetivo >40% (el resto llega por inbound orgánico de Qanvit).
+- % de organizaciones **Pro+** (Pro + Elite) sobre total: objetivo >30% en 6 meses.
+- Ratio startups referidas / startup total: objetivo >40%.
 - Activación ecosistema (org que ha ganado al menos 1 punto en los últimos 30 días): objetivo >60%.
+- Scouting Eye promedio del ecosistema: objetivo >55% de accuracy_rate entre orgs con ≥5 votos.
 
-## 10. Copy para el dashboard ecosistema (referencia)
+## 9. Copy para el dashboard ecosistema (referencia)
 
 ```
 Dashboard / Tu ecosistema
 
 Tus puntos:       🥈 Pro · 2,340 pts
 Siguiente tier:   🥇 Elite · faltan 2,661 pts
-Última actividad: hoy
+Scouting Eye:     72% · 18/25 aciertos
 
 ─────────────────────────────────
 Cómo ganar más puntos:
@@ -129,6 +126,8 @@ Cómo ganar más puntos:
 · Valida feedback de startups (+25 pts cada una)
 · Propón una vertical nueva si detectas un hueco
 
-[ Copiar link referral ]  [ Ver retos activos ]
+[ Copiar link referral ]
+─────────────────────────────────
+Para lanzar retos de innovación abierta → app.qanvit.com
 ─────────────────────────────────
 ```

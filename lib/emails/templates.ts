@@ -164,31 +164,6 @@ export function ecosystemApprovedEmail(params: { orgName: string }) {
   };
 }
 
-// 6. Challenge prize distributed
-export function challengePrizeEmail(params: {
-  name?: string;
-  startupName: string;
-  challengeTitle: string;
-  rank: number;
-  points: number;
-}) {
-  const rankLabel = params.rank === 1 ? "🥇 1.º" : params.rank === 2 ? "🥈 2.º" : "🥉 3.º";
-  return {
-    subject: `[La Liga Qanvit] Premio recibido en el reto: ${params.challengeTitle}`,
-    html: wrap(`
-      <p style="font-size:16px;font-weight:600;margin-top:0;">${rankLabel} en «${params.challengeTitle}»</p>
-      <p style="color:#6b5b8a;font-size:14px;line-height:1.6;">
-        <strong>${params.startupName}</strong> ha terminado en el puesto ${rankLabel} del reto
-        y ha recibido <strong>${params.points} puntos</strong>.
-      </p>
-      <a href="${APP_URL}/dashboard"
-         style="display:inline-block;background:#22183a;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;margin-top:8px;">
-        Ver mis puntos →
-      </a>
-    `),
-  };
-}
-
 // 7. Ecosystem rejected
 export function ecosystemRejectedEmail(params: { orgName: string; reason?: string }) {
   return {
@@ -225,67 +200,7 @@ export function ecosystemInfoRequestedEmail(params: { orgName: string }) {
   };
 }
 
-// 9. Contact request to startup
-export function contactRequestToStartupEmail(params: {
-  startupName: string;
-  orgName: string;
-  message: string;
-  respondUrl: string;
-}) {
-  return {
-    subject: `[La Liga Qanvit] ${params.orgName} quiere contactar contigo`,
-    html: wrap(`
-      <p style="font-size:16px;font-weight:600;margin-top:0;">${params.orgName} quiere ponerse en contacto.</p>
-      <p style="color:#6b5b8a;font-size:14px;line-height:1.6;">
-        El parque / clúster <strong>${params.orgName}</strong> ha enviado una solicitud de contacto
-        a <strong>${params.startupName}</strong>:
-      </p>
-      <blockquote style="border-left:3px solid #f4a9aa;margin:12px 0;padding:8px 16px;background:white;border-radius:0 8px 8px 0;font-size:14px;color:#1a1230;">
-        ${params.message}
-      </blockquote>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;">
-        <a href="${params.respondUrl}?action=accepted"
-           style="display:inline-block;background:#22183a;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;">
-          Aceptar →
-        </a>
-        <a href="${params.respondUrl}?action=declined"
-           style="display:inline-block;background:transparent;color:#6b5b8a;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;border:1px solid #d9c8e4;">
-          Declinar
-        </a>
-      </div>
-      <p style="font-size:11px;color:#6b5b8a;margin-top:16px;">
-        Tienes 7 días para responder. Después, la solicitud se archivará automáticamente.
-      </p>
-    `),
-  };
-}
-
-// 10. Contact request accepted — to the org
-export function contactRequestAcceptedEmail(params: {
-  orgName: string;
-  startupName: string;
-  founderEmail: string;
-}) {
-  return {
-    subject: `[La Liga Qanvit] ${params.startupName} ha aceptado tu solicitud de contacto`,
-    html: wrap(`
-      <p style="font-size:16px;font-weight:600;margin-top:0;">¡Contacto aceptado!</p>
-      <p style="color:#6b5b8a;font-size:14px;line-height:1.6;">
-        <strong>${params.startupName}</strong> ha aceptado tu solicitud de contacto.
-        Puedes escribirles directamente a:
-      </p>
-      <div style="background:white;border-radius:12px;padding:16px 20px;margin:12px 0;text-align:center;border:1px solid #e5d8ea;">
-        <a href="mailto:${params.founderEmail}"
-           style="font-size:16px;font-weight:600;color:#22183a;text-decoration:none;">${params.founderEmail}</a>
-      </div>
-      <p style="font-size:11px;color:#6b5b8a;margin-top:16px;">
-        Recuerda que este contacto fue facilitado a través de La Liga Qanvit. Trátalo con respeto.
-      </p>
-    `),
-  };
-}
-
-// 11. Data export ready
+// 9. Data export ready
 export function dataExportReadyEmail(params: {
   scope: string;
   recordCount: number;
@@ -362,24 +277,18 @@ export function ecosystemDigestEmail(params: {
   recipientName?: string;
   frequency: "daily" | "weekly";
   newStartups: { name: string; slug: string; division?: string; vertical?: string }[];
-  activeChallenges: { title: string; status: string }[];
 }) {
   const label = params.frequency === "weekly" ? "Resumen semanal" : "Novedades de hoy";
   const startupsHtml = params.newStartups.length
     ? `<h3 style="color:#22183a;margin-bottom:8px;">Nuevas startups 🚀</h3><ul style="padding-left:20px;color:#1a1230;">` +
       params.newStartups.map(s => `<li><a href="${APP_URL}/startup/${s.slug}" style="color:#22183a;font-weight:600;">${s.name}</a>${s.division ? ` — ${s.division}` : ""}${s.vertical ? ` · ${s.vertical}` : ""}</li>`).join("") + `</ul>`
     : `<p style="color:#6b5b8a;">No hay nuevas startups en este periodo.</p>`;
-  const challengesHtml = params.activeChallenges.length
-    ? `<h3 style="color:#22183a;margin-bottom:8px;">Retos activos 🏆</h3><ul style="padding-left:20px;color:#1a1230;">` +
-      params.activeChallenges.map(c => `<li><strong>${c.title}</strong> — ${c.status === "voting" ? "Votación abierta" : "En marcha"}</li>`).join("") + `</ul>`
-    : "";
   return {
     subject: params.frequency === "weekly" ? "[La Liga Qanvit] Resumen semanal del ecosistema" : "[La Liga Qanvit] Novedades de hoy en La Liga",
     html: wrap(`
       <p style="margin-top:0;font-size:14px;color:#6b5b8a;">${label} — ${params.orgName}</p>
       <p>Hola${params.recipientName ? ` ${params.recipientName}` : ""},</p>
       ${startupsHtml}
-      ${challengesHtml}
       <div style="margin-top:24px;">
         <a href="${APP_URL}/ecosistema/dashboard"
            style="display:inline-block;background:#22183a;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;">

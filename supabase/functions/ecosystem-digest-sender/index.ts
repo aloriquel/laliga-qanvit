@@ -31,13 +31,6 @@ serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  // Get active challenges for the digest (informational section)
-  const { data: activeChallenges } = await supabase
-    .from("challenges")
-    .select("id, title, status")
-    .in("status", ["voting", "active"])
-    .limit(5);
-
   // Get all orgs configured for this frequency with email enabled
   const { data: configs } = await supabase
     .from("ecosystem_alerts_config")
@@ -118,15 +111,6 @@ serve(async (req) => {
         </div>`;
     }).join("");
 
-    const challengesHtml = activeChallenges?.length
-      ? `<div style="margin-top:20px;">
-           <p style="font-size:13px;font-weight:700;color:#22183a;margin-bottom:8px;">Retos activos 🏆</p>
-           <ul style="padding-left:18px;margin:0;color:#22183a;font-size:13px;">
-             ${activeChallenges.map(c => `<li>${c.title} — ${c.status === "voting" ? "Votación abierta" : "En marcha"}</li>`).join("")}
-           </ul>
-         </div>`
-      : "";
-
     const html = `<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
@@ -145,7 +129,6 @@ serve(async (req) => {
         ${startups.length} nueva${startups.length !== 1 ? "s" : ""} startup${startups.length !== 1 ? "s" : ""} que encajan con vuestros criterios de seguimiento.
       </p>
       ${startupsHtml}
-      ${challengesHtml}
       <div style="margin-top:24px;">
         <a href="${APP_URL}/ecosistema/dashboard"
            style="display:inline-block;background:#22183a;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;">
