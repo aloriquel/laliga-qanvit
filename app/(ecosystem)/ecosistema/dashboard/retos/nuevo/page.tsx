@@ -32,26 +32,29 @@ export default function NuevoRetoPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
-    const res = await fetch("/api/ecosystem/challenges", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: form.title,
-        description: form.description,
-        objective_type: form.objective_type,
-        objective_params: {},
-        duration_days: Number(form.duration_days),
-        prize_structure: { "1": Number(form.prize_1), "2": Number(form.prize_2), "3": Number(form.prize_3) },
-      }),
-    });
-
-    setLoading(false);
-    if (res.ok) {
-      router.push("/ecosistema/dashboard/retos");
-    } else {
+    try {
+      const res = await fetch("/api/ecosystem/challenges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: form.title,
+          description: form.description,
+          objective_type: form.objective_type,
+          objective_params: {},
+          duration_days: Number(form.duration_days),
+          prize_structure: { "1": Number(form.prize_1), "2": Number(form.prize_2), "3": Number(form.prize_3) },
+        }),
+      });
       const body = await res.json().catch(() => ({}));
-      setError(body.error ?? "Error al proponer reto");
+      if (res.ok) {
+        router.push("/ecosistema/dashboard/retos");
+        return;
+      }
+      setError(typeof body.error === "string" ? body.error : "Error al proponer reto");
+    } catch {
+      setError("Error de conexión. Inténtalo de nuevo.");
+    } finally {
+      setLoading(false);
     }
   }
 
