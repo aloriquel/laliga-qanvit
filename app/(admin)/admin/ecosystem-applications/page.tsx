@@ -6,11 +6,13 @@ export const dynamic = "force-dynamic";
 export default async function EcosystemApplicationsPage() {
   const supabase = createServiceClient();
 
-  const { data: orgs } = await supabase
+  const { data: orgs, error: orgsError } = await supabase
     .from("ecosystem_organizations")
-    .select("id, name, org_type, website, about, region, referral_code, created_at, owner:profiles(email, full_name)")
+    .select("id, name, org_type, website, about, region, referral_code, created_at, owner:profiles!owner_id(email, full_name)")
     .eq("is_verified", false)
     .order("created_at", { ascending: true });
+
+  if (orgsError) console.error("[ecosystem-applications] query error:", orgsError.message);
 
   return (
     <div className="space-y-6">

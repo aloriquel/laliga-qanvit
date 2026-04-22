@@ -6,11 +6,13 @@ export const dynamic = "force-dynamic";
 export default async function EcosystemOrganizationsPage() {
   const supabase = createServiceClient();
 
-  const { data: orgs } = await supabase
+  const { data: orgs, error: orgsError } = await supabase
     .from("ecosystem_organizations")
-    .select("id, name, org_type, region, is_verified, referral_code, created_at, verified_at, owner:profiles(email)")
+    .select("id, name, org_type, region, is_verified, referral_code, created_at, verified_at, owner:profiles!owner_id(email)")
     .eq("is_verified", true)
     .order("created_at", { ascending: false });
+
+  if (orgsError) console.error("[ecosystem-organizations] query error:", orgsError.message);
 
   const { data: totals } = await supabase
     .from("ecosystem_totals")
