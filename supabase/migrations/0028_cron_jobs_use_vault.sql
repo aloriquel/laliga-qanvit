@@ -1,79 +1,73 @@
--- Migration 0028: Recreate pg_cron jobs that call edge functions using get_setting()
--- Supersedes the 4 edge-function cron jobs from 0018_pg_cron_jobs.sql.
--- Requires: 0026 (get_setting function)
+-- Migration 0028: Re-schedule cron jobs that call edge functions using get_vault_setting()
+-- Supersedes the edge-function cron jobs from 0018_pg_cron_jobs.sql.
+-- Requires: 0026 (get_vault_setting function)
 --
--- The 4 pure-SQL jobs (refresh-metrics-summary, refresh-anon-standings,
--- complete-expired-challenges, cleanup-expired-exports) are untouched.
+-- Pure-SQL jobs (refresh-metrics-summary, refresh-anon-standings,
+-- complete-expired-challenges, cleanup-expired-exports, exports-file-cleanup)
+-- are NOT touched.
 
-SELECT cron.unschedule(jobname)
-FROM cron.job
-WHERE jobname IN (
-  'update-challenge-progress',
-  'daily-ecosystem-digest',
-  'weekly-ecosystem-digest',
-  'exports-file-cleanup'
-);
+DO $$
+BEGIN
+  PERFORM cron.unschedule('update-challenge-progress');
+EXCEPTION WHEN others THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  PERFORM cron.unschedule('daily-ecosystem-digest');
+EXCEPTION WHEN others THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  PERFORM cron.unschedule('weekly-ecosystem-digest');
+EXCEPTION WHEN others THEN NULL;
+END $$;
 
 SELECT cron.schedule(
   'update-challenge-progress',
   '15 0 * * *',
-  $$
+  $cmd$
     SELECT net.http_post(
-      url     := get_setting('challenge_progress_updater_url'),
+      url     := get_vault_setting('challenge_progress_updater_url'),
       headers := jsonb_build_object(
         'Content-Type',  'application/json',
-        'Authorization', 'Bearer ' || get_setting('evaluator_secret')
+        'Authorization', 'Bearer ' || get_vault_setting('evaluator_secret')
       ),
       body    := '{}'::jsonb
     )
-    WHERE get_setting('challenge_progress_updater_url') IS NOT NULL
-  $$
+    WHERE get_vault_setting('challenge_progress_updater_url') IS NOT NULL
+  $cmd$
 );
 
 SELECT cron.schedule(
   'daily-ecosystem-digest',
   '0 8 * * *',
-  $$
+  $cmd$
     SELECT net.http_post(
-      url     := get_setting('ecosystem_digest_url'),
+      url     := get_vault_setting('ecosystem_digest_url'),
       headers := jsonb_build_object(
         'Content-Type',  'application/json',
-        'Authorization', 'Bearer ' || get_setting('evaluator_secret')
+        'Authorization', 'Bearer ' || get_vault_setting('evaluator_secret')
       ),
       body    := '{"frequency":"daily"}'::jsonb
     )
-    WHERE get_setting('ecosystem_digest_url') IS NOT NULL
-  $$
+    WHERE get_vault_setting('ecosystem_digest_url') IS NOT NULL
+  $cmd$
 );
 
 SELECT cron.schedule(
   'weekly-ecosystem-digest',
   '0 8 * * 1',
-  $$
+  $cmd$
     SELECT net.http_post(
-      url     := get_setting('ecosystem_digest_url'),
+      url     := get_vault_setting('ecosystem_digest_url'),
       headers := jsonb_build_object(
         'Content-Type',  'application/json',
-        'Authorization', 'Bearer ' || get_setting('evaluator_secret')
+        'Authorization', 'Bearer ' || get_vault_setting('evaluator_secret')
       ),
       body    := '{"frequency":"weekly"}'::jsonb
     )
-    WHERE get_setting('ecosystem_digest_url') IS NOT NULL
-  $$
-);
-
-SELECT cron.schedule(
-  'exports-file-cleanup',
-  '30 3 * * *',
-  $$
-    SELECT net.http_post(
-      url     := get_setting('exports_cleanup_url'),
-      headers := jsonb_build_object(
-        'Content-Type',  'application/json',
-        'Authorization', 'Bearer ' || get_setting('evaluator_secret')
-      ),
-      body    := '{}'::jsonb
-    )
-    WHERE get_setting('exports_cleanup_url') IS NOT NULL
-  $$
+    WHERE get_vault_setting('ecosystem_digest_url') IS NOT NULL
+  $cmd$
 );

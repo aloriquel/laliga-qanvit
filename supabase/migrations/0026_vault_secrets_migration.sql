@@ -1,37 +1,28 @@
--- Migration 0026: Private settings table + accessor function
--- Replaces Vault approach (extension not available on this Supabase plan).
--- Stores edge function URLs and secrets in a schema inaccessible to
--- anon/authenticated roles; exposed only via a SECURITY DEFINER function.
+-- Migration 0026: Helper function to read secrets from Supabase Vault.
+-- Vault extension (supabase_vault) is already installed in the project — do NOT create it.
+-- The 7 secrets must be inserted into vault.secrets before triggers/cron jobs fire.
 
--- ── Private schema (inaccessible to anon/authenticated) ──────────────────────
-CREATE SCHEMA IF NOT EXISTS _private;
-REVOKE ALL ON SCHEMA _private FROM anon, authenticated, public;
-GRANT USAGE ON SCHEMA _private TO postgres, service_role;
-
--- ── Settings table ────────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS _private.settings (
-  key   text PRIMARY KEY,
-  value text NOT NULL
-);
-
-REVOKE ALL ON _private.settings FROM anon, authenticated, public;
-GRANT ALL ON _private.settings TO postgres, service_role;
-
--- ── SECURITY DEFINER accessor ─────────────────────────────────────────────────
--- Triggers and pg_cron jobs call this. They don't need direct _private access.
-CREATE OR REPLACE FUNCTION public.get_setting(p_key text)
+CREATE OR REPLACE FUNCTION public.get_vault_setting(p_name text)
 RETURNS text
-LANGUAGE sql
+LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, vault
 STABLE
-SET search_path = _private, public
 AS $$
-  SELECT value FROM _private.settings WHERE key = p_key LIMIT 1;
+DECLARE
+  v_value text;
+BEGIN
+  SELECT decrypted_secret INTO v_value
+  FROM vault.decrypted_secrets
+  WHERE name = p_name
+  LIMIT 1;
+  RETURN v_value;
+END;
 $$;
 
--- Only postgres and service_role; never anon/authenticated
-GRANT EXECUTE ON FUNCTION public.get_setting(text) TO postgres, service_role;
-REVOKE EXECUTE ON FUNCTION public.get_setting(text) FROM anon, authenticated, public;
+REVOKE ALL ON FUNCTION public.get_vault_setting(text) FROM public;
+GRANT EXECUTE ON FUNCTION public.get_vault_setting(text) TO postgres, service_role;
 
--- ── Verify (run after applying) ───────────────────────────────────────────────
--- SELECT get_setting('evaluator_url');  -- returns NULL until you INSERT values
+COMMENT ON FUNCTION public.get_vault_setting(text) IS
+  'Returns decrypted secret from Supabase Vault by name. Used by trigger
+   functions and pg_cron jobs to read edge function URLs and shared secrets.';
