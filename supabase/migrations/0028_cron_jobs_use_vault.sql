@@ -1,12 +1,10 @@
--- Migration 0028: Recreate pg_cron jobs that call edge functions using Vault
+-- Migration 0028: Recreate pg_cron jobs that call edge functions using get_setting()
 -- Supersedes the 4 edge-function cron jobs from 0018_pg_cron_jobs.sql.
--- Requires: 0026 (get_vault_setting)
+-- Requires: 0026 (get_setting function)
 --
--- Only the 4 jobs that invoke edge functions via net.http_post are changed.
 -- The 4 pure-SQL jobs (refresh-metrics-summary, refresh-anon-standings,
 -- complete-expired-challenges, cleanup-expired-exports) are untouched.
 
--- ── Remove the 4 edge-function jobs ──────────────────────────────────────────
 SELECT cron.unschedule(jobname)
 FROM cron.job
 WHERE jobname IN (
@@ -16,83 +14,66 @@ WHERE jobname IN (
   'exports-file-cleanup'
 );
 
--- ── 5. challenge-progress-updater (diario 00:15) ─────────────────────────────
--- Before: current_setting('app.settings.challenge_progress_updater_url')
--- After:  get_vault_setting('challenge_progress_updater_url')
-
 SELECT cron.schedule(
   'update-challenge-progress',
   '15 0 * * *',
   $$
     SELECT net.http_post(
-      url     := get_vault_setting('challenge_progress_updater_url'),
+      url     := get_setting('challenge_progress_updater_url'),
       headers := jsonb_build_object(
         'Content-Type',  'application/json',
-        'Authorization', 'Bearer ' || get_vault_setting('evaluator_secret')
+        'Authorization', 'Bearer ' || get_setting('evaluator_secret')
       ),
       body    := '{}'::jsonb
     )
-    WHERE get_vault_setting('challenge_progress_updater_url') IS NOT NULL
+    WHERE get_setting('challenge_progress_updater_url') IS NOT NULL
   $$
 );
-
--- ── 6. ecosystem-digest-sender daily (08:00) ──────────────────────────────────
--- Before: current_setting('app.settings.ecosystem_digest_url')
--- After:  get_vault_setting('ecosystem_digest_url')
 
 SELECT cron.schedule(
   'daily-ecosystem-digest',
   '0 8 * * *',
   $$
     SELECT net.http_post(
-      url     := get_vault_setting('ecosystem_digest_url'),
+      url     := get_setting('ecosystem_digest_url'),
       headers := jsonb_build_object(
         'Content-Type',  'application/json',
-        'Authorization', 'Bearer ' || get_vault_setting('evaluator_secret')
+        'Authorization', 'Bearer ' || get_setting('evaluator_secret')
       ),
       body    := '{"frequency":"daily"}'::jsonb
     )
-    WHERE get_vault_setting('ecosystem_digest_url') IS NOT NULL
+    WHERE get_setting('ecosystem_digest_url') IS NOT NULL
   $$
 );
-
--- ── 7. ecosystem-digest-sender weekly (lunes 08:00) ──────────────────────────
 
 SELECT cron.schedule(
   'weekly-ecosystem-digest',
   '0 8 * * 1',
   $$
     SELECT net.http_post(
-      url     := get_vault_setting('ecosystem_digest_url'),
+      url     := get_setting('ecosystem_digest_url'),
       headers := jsonb_build_object(
         'Content-Type',  'application/json',
-        'Authorization', 'Bearer ' || get_vault_setting('evaluator_secret')
+        'Authorization', 'Bearer ' || get_setting('evaluator_secret')
       ),
       body    := '{"frequency":"weekly"}'::jsonb
     )
-    WHERE get_vault_setting('ecosystem_digest_url') IS NOT NULL
+    WHERE get_setting('ecosystem_digest_url') IS NOT NULL
   $$
 );
-
--- ── 8. exports-file-cleanup (diario 03:30) ───────────────────────────────────
--- Before: current_setting('app.settings.exports_cleanup_url')
--- After:  get_vault_setting('exports_cleanup_url')
 
 SELECT cron.schedule(
   'exports-file-cleanup',
   '30 3 * * *',
   $$
     SELECT net.http_post(
-      url     := get_vault_setting('exports_cleanup_url'),
+      url     := get_setting('exports_cleanup_url'),
       headers := jsonb_build_object(
         'Content-Type',  'application/json',
-        'Authorization', 'Bearer ' || get_vault_setting('evaluator_secret')
+        'Authorization', 'Bearer ' || get_setting('evaluator_secret')
       ),
       body    := '{}'::jsonb
     )
-    WHERE get_vault_setting('exports_cleanup_url') IS NOT NULL
+    WHERE get_setting('exports_cleanup_url') IS NOT NULL
   $$
 );
-
--- ── Verify scheduled jobs ─────────────────────────────────────────────────────
--- SELECT jobname, schedule, command FROM cron.job ORDER BY jobname;

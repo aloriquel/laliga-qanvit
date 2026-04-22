@@ -1,41 +1,37 @@
--- Migration 0026: Vault helper function for DB triggers and pg_cron jobs
--- Supabase Cloud blocks ALTER DATABASE SET app.settings.* (permission denied).
--- This migration creates a SECURITY DEFINER helper that reads from Vault instead.
---
--- PREREQUISITES (do these BEFORE applying this migration):
---   1. Supabase Vault is enabled by default on Supabase Cloud — no action needed.
---   2. Insert the 7 secrets via Dashboard → Project Settings → Vault (see docs).
---      SQL alternative: SELECT vault.create_secret('<value>', '<name>', '<description>');
---
--- The migration itself only creates infrastructure. It does NOT insert secret values.
+-- Migration 0026: Private settings table + accessor function
+-- Replaces Vault approach (extension not available on this Supabase plan).
+-- Stores edge function URLs and secrets in a schema inaccessible to
+-- anon/authenticated roles; exposed only via a SECURITY DEFINER function.
 
--- ── Vault extension (already enabled on Supabase Cloud — idempotent) ─────────
-create extension if not exists "vault" with schema vault;
+-- ── Private schema (inaccessible to anon/authenticated) ──────────────────────
+CREATE SCHEMA IF NOT EXISTS _private;
+REVOKE ALL ON SCHEMA _private FROM anon, authenticated, public;
+GRANT USAGE ON SCHEMA _private TO postgres, service_role;
 
--- ── Helper function: reads a named secret from vault.decrypted_secrets ────────
--- SECURITY DEFINER runs as the owner (postgres), which has SELECT on vault.decrypted_secrets.
--- Triggers and pg_cron jobs call this function; they don't need direct vault access.
-create or replace function public.get_vault_setting(p_name text)
-returns text
-language plpgsql
-security definer
-stable                  -- secret values don't change mid-transaction
-set search_path = public, vault
-as $$
-declare
-  v_value text;
-begin
-  select decrypted_secret into v_value
-  from vault.decrypted_secrets
-  where name = p_name
-  limit 1;
-  return v_value;   -- returns NULL if name not found (triggers handle this gracefully)
-end;
+-- ── Settings table ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS _private.settings (
+  key   text PRIMARY KEY,
+  value text NOT NULL
+);
+
+REVOKE ALL ON _private.settings FROM anon, authenticated, public;
+GRANT ALL ON _private.settings TO postgres, service_role;
+
+-- ── SECURITY DEFINER accessor ─────────────────────────────────────────────────
+-- Triggers and pg_cron jobs call this. They don't need direct _private access.
+CREATE OR REPLACE FUNCTION public.get_setting(p_key text)
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = _private, public
+AS $$
+  SELECT value FROM _private.settings WHERE key = p_key LIMIT 1;
 $$;
 
--- Only postgres and service_role need this — never expose to authenticated/anon
-grant execute on function public.get_vault_setting(text) to postgres, service_role;
+-- Only postgres and service_role; never anon/authenticated
+GRANT EXECUTE ON FUNCTION public.get_setting(text) TO postgres, service_role;
+REVOKE EXECUTE ON FUNCTION public.get_setting(text) FROM anon, authenticated, public;
 
--- ── Verify (run after applying to confirm vault access works) ─────────────────
--- SELECT get_vault_setting('evaluator_url');    -- should return NULL until you add secrets
--- SELECT get_vault_setting('evaluator_secret'); -- same
+-- ── Verify (run after applying) ───────────────────────────────────────────────
+-- SELECT get_setting('evaluator_url');  -- returns NULL until you INSERT values
