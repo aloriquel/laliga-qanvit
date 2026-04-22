@@ -85,7 +85,7 @@ export default function PrivacyToggles({ startup }: { startup: Startup }) {
       try {
         const res = await fetch("/api/startup/enable-deck-preview", { method: "POST" });
         if (res.ok) {
-          setDeckFeedback("Generando thumbnails... Tarda ~45s");
+          setDeckFeedback("Preview activado. Se renderiza en el perfil público.");
         } else {
           const json = await res.json();
           setDeckFeedback(json.error ?? "Error al activar el preview.");
