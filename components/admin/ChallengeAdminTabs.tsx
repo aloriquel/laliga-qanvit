@@ -15,7 +15,7 @@ type Challenge = {
   prize_structure: unknown;
   duration_days: number;
   created_at: string;
-  votes?: { count: number }[];
+  votes?: { id: string }[];
   progress?: { org_id: string; count: number }[];
 };
 
@@ -103,7 +103,7 @@ export default function ChallengeAdminTabs({ challenges }: { challenges: Challen
             </thead>
             <tbody className="divide-y divide-border-soft">
               {filtered.map((c) => {
-                const voteCount = (c.votes ?? []).reduce((s, v) => s + (v.count ?? 0), 0);
+                const voteCount = (c.votes ?? []).length;
                 return (
                   <tr key={c.id} className="hover:bg-brand-lavender/20">
                     <td className="px-4 py-3">
