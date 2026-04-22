@@ -9,7 +9,7 @@ export default function TerminosPage() {
   return (
     <>
       <h1>Términos de servicio</h1>
-      <p className="text-sm text-ink-secondary">Última actualización: abril 2025</p>
+      <p className="text-sm text-ink-secondary">Última actualización: 22 de abril de 2026</p>
 
       <h2>1. Aceptación</h2>
       <p>
@@ -60,8 +60,15 @@ export default function TerminosPage() {
 
       <h2>9. Jurisdicción y ley aplicable</h2>
       <p>
-        Estos términos se rigen por la legislación española. Para cualquier controversia, las partes se someten a los Juzgados y Tribunales de Jerez de la Frontera (Cádiz), con renuncia expresa a cualquier otro fuero.
+        Estos términos se rigen por la legislación española. Para cualquier controversia, las partes se someten a los Juzgados y Tribunales de Jaén, con renuncia expresa a cualquier otro fuero.
       </p>
+
+      <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
+        Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}
+        <a href="mailto:privacy@qanvit.com" className="text-brand-navy font-semibold">privacy@qanvit.com</a>
+        {" "}o al responsable de protección de datos:{" "}
+        <a href="mailto:contact@fqsource.com" className="text-brand-navy font-semibold">contact@fqsource.com</a>
+      </div>
     </>
   );
 }

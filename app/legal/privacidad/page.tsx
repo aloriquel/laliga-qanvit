@@ -9,13 +9,13 @@ export default function PrivacidadPage() {
   return (
     <>
       <h1>Política de privacidad</h1>
-      <p className="text-sm text-ink-secondary">Última actualización: abril 2025</p>
+      <p className="text-sm text-ink-secondary">Última actualización: 22 de abril de 2026</p>
 
       <h2>1. Responsable del tratamiento</h2>
       <p>
         <strong>FQ Source Technologies, S.L.</strong> (en adelante, «Qanvit»)<br />
-        CIF: en trámite de inscripción<br />
-        Dirección: Jerez de la Frontera, Cádiz, España<br />
+        CIF: B24788796<br />
+        Dirección: Calle Fuente de Don Diego, nº15, 4º I, 23001 Jaén, España<br />
         Email de contacto: <a href="mailto:hola@qanvit.com">hola@qanvit.com</a><br />
         Email del DPO: <a href="mailto:dpo@qanvit.com">dpo@qanvit.com</a>
       </p>
@@ -85,6 +85,13 @@ export default function PrivacidadPage() {
       <p>
         Ver la <a href="/legal/cookies">política de cookies</a> para el detalle de cookies técnicas y analíticas.
       </p>
+
+      <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
+        Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}
+        <a href="mailto:privacy@qanvit.com" className="text-brand-navy font-semibold">privacy@qanvit.com</a>
+        {" "}o al responsable de protección de datos:{" "}
+        <a href="mailto:contact@fqsource.com" className="text-brand-navy font-semibold">contact@fqsource.com</a>
+      </div>
     </>
   );
 }

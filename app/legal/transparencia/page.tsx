@@ -43,7 +43,7 @@ export default async function TransparenciaPage() {
 
       <h2>Quiénes somos</h2>
       <p>
-        Somos <strong>FQ Source Technologies, S.L.</strong> (Qanvit), una startup española fundada en Jerez de la Frontera por <strong>Arturo López Riquelme</strong> y equipo. Construimos agentes de IA para Corporate Venture e innovación abierta.
+        Somos <strong>FQ Source Technologies, S.L.</strong> (Qanvit), una startup española con sede en Jaén, fundada por <strong>Arturo López Riquelme</strong> y equipo. Construimos agentes de IA para Corporate Venture e innovación abierta.
       </p>
       <p>
         La Liga Qanvit es nuestra plataforma pública de evaluación de startups. Es el primer producto de cara a la comunidad emprendedora española y sirve a la vez como fuente de datos estructurados para nuestros agentes.
@@ -113,6 +113,23 @@ export default async function TransparenciaPage() {
         </>
       )}
 
+      <h2>Empresa responsable</h2>
+      <table>
+        <tbody>
+          <tr><td><strong>Razón social</strong></td><td>FQ Source Technologies, S.L.</td></tr>
+          <tr><td><strong>CIF</strong></td><td>B24788796</td></tr>
+          <tr><td><strong>Domicilio</strong></td><td>Calle Fuente de Don Diego, nº15, 4º I, 23001 Jaén, España</td></tr>
+          <tr><td><strong>Web matriz</strong></td><td><a href="https://www.fqsource.com" target="_blank" rel="noopener noreferrer">fqsource.com</a></td></tr>
+        </tbody>
+      </table>
+      <p>
+        La Liga Qanvit es una iniciativa de <strong>Qanvit</strong>, producto de FQ Source Technologies, S.L. especializado en agentes de IA para Corporate Venture. La empresa opera actualmente dos productos:
+      </p>
+      <ul>
+        <li><a href="https://www.fqsource.com" target="_blank" rel="noopener noreferrer">fqsource.com</a> — plataforma de IA para procurement industrial.</li>
+        <li><a href="https://www.qanvit.com" target="_blank" rel="noopener noreferrer">qanvit.com</a> — agentes de IA para Corporate Venture e innovación abierta.</li>
+      </ul>
+
       <h2>Nuestros compromisos</h2>
       <ul>
         <li>No venderemos datos de startups a terceros.</li>
@@ -126,6 +143,13 @@ export default async function TransparenciaPage() {
         ¿Preguntas? <a href="mailto:hola@qanvit.com" className="text-brand-navy font-semibold">hola@qanvit.com</a>
         {" "}·{" "}
         <Link href="/legal/faq-gdpr" className="text-brand-navy font-semibold">FAQ GDPR</Link>
+      </div>
+
+      <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
+        Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}
+        <a href="mailto:privacy@qanvit.com" className="text-brand-navy font-semibold">privacy@qanvit.com</a>
+        {" "}o al responsable de protección de datos:{" "}
+        <a href="mailto:contact@fqsource.com" className="text-brand-navy font-semibold">contact@fqsource.com</a>
       </div>
     </>
   );

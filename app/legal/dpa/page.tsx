@@ -9,7 +9,7 @@ export default function DpaPage() {
   return (
     <>
       <h1>Data Processing Agreement (DPA)</h1>
-      <p className="text-sm text-ink-secondary">Última actualización: abril 2025</p>
+      <p className="text-sm text-ink-secondary">Última actualización: 22 de abril de 2026</p>
 
       <div className="bg-brand-lavender rounded-lg p-4 text-sm text-ink-secondary mb-6">
         Este DPA aplica a las <strong>organizaciones del ecosistema</strong> (parques tecnológicos, clusters, aceleradoras y asociaciones) que accedan a datos de startups a través de La Liga Qanvit. Para startups individuales, ver la <a href="/legal/privacidad" className="text-brand-navy underline">Política de privacidad</a>.
@@ -76,6 +76,13 @@ export default function DpaPage() {
       <p>
         Para firmar el DPA con tu organización, escribe a <a href="mailto:dpo@qanvit.com">dpo@qanvit.com</a> indicando el nombre de la organización, CIF y persona de contacto responsable del tratamiento.
       </p>
+
+      <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
+        Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}
+        <a href="mailto:privacy@qanvit.com" className="text-brand-navy font-semibold">privacy@qanvit.com</a>
+        {" "}o al responsable de protección de datos:{" "}
+        <a href="mailto:contact@fqsource.com" className="text-brand-navy font-semibold">contact@fqsource.com</a>
+      </div>
     </>
   );
 }

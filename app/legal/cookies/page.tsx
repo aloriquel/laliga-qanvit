@@ -9,7 +9,7 @@ export default function CookiesPage() {
   return (
     <>
       <h1>Política de cookies</h1>
-      <p className="text-sm text-ink-secondary">Última actualización: abril 2025</p>
+      <p className="text-sm text-ink-secondary">Última actualización: 22 de abril de 2026</p>
 
       <p>
         Esta política explica qué cookies y tecnologías similares usa La Liga Qanvit, con qué finalidad y cómo puedes gestionarlas.
@@ -89,6 +89,13 @@ export default function CookiesPage() {
       <p>
         Ten en cuenta que deshabilitar cookies técnicas puede impedir el funcionamiento del Servicio.
       </p>
+
+      <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
+        Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}
+        <a href="mailto:privacy@qanvit.com" className="text-brand-navy font-semibold">privacy@qanvit.com</a>
+        {" "}o al responsable de protección de datos:{" "}
+        <a href="mailto:contact@fqsource.com" className="text-brand-navy font-semibold">contact@fqsource.com</a>
+      </div>
     </>
   );
 }

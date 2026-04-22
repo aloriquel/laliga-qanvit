@@ -9,14 +9,14 @@ export default function AvisoLegalPage() {
   return (
     <>
       <h1>Aviso legal</h1>
-      <p className="text-sm text-ink-secondary">Última actualización: abril 2025</p>
+      <p className="text-sm text-ink-secondary">Última actualización: 22 de abril de 2026</p>
 
       <h2>1. Datos de la empresa</h2>
       <table>
         <tbody>
           <tr><td><strong>Denominación social</strong></td><td>FQ Source Technologies, S.L.</td></tr>
-          <tr><td><strong>CIF</strong></td><td>En trámite de inscripción</td></tr>
-          <tr><td><strong>Domicilio</strong></td><td>Jerez de la Frontera, Cádiz, España</td></tr>
+          <tr><td><strong>CIF</strong></td><td>B24788796</td></tr>
+          <tr><td><strong>Domicilio</strong></td><td>Calle Fuente de Don Diego, nº15, 4º I, 23001 Jaén, España</td></tr>
           <tr><td><strong>Email de contacto</strong></td><td><a href="mailto:hola@qanvit.com">hola@qanvit.com</a></td></tr>
           <tr><td><strong>Web corporativa</strong></td><td><a href="https://www.qanvit.com" target="_blank" rel="noopener noreferrer">www.qanvit.com</a></td></tr>
         </tbody>
@@ -44,8 +44,15 @@ export default function AvisoLegalPage() {
 
       <h2>6. Ley aplicable</h2>
       <p>
-        Este aviso legal se rige por la legislación española. Cualquier controversia se someterá a los Juzgados y Tribunales de Jerez de la Frontera (Cádiz).
+        Este aviso legal se rige por la legislación española. Cualquier controversia se someterá a los Juzgados y Tribunales de Jaén.
       </p>
+
+      <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
+        Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}
+        <a href="mailto:privacy@qanvit.com" className="text-brand-navy font-semibold">privacy@qanvit.com</a>
+        {" "}o al responsable de protección de datos:{" "}
+        <a href="mailto:contact@fqsource.com" className="text-brand-navy font-semibold">contact@fqsource.com</a>
+      </div>
     </>
   );
 }
