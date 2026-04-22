@@ -7,7 +7,7 @@ import { AlertCircle, Mail } from "lucide-react";
 
 type State = "idle" | "loading" | "sent" | "error";
 
-export function LoginForm({ authError }: { authError?: string }) {
+export function LoginForm({ authError, next }: { authError?: string; next?: string }) {
   const t = useTranslations("auth.login");
   const [email, setEmail] = useState("");
   const [state, setState] = useState<State>(authError ? "error" : "idle");
@@ -25,7 +25,7 @@ export function LoginForm({ authError }: { authError?: string }) {
     const res = await fetch("/api/auth/send-magic-link", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim() }),
+      body: JSON.stringify({ email: email.trim(), ...(next ? { next } : {}) }),
     });
     const json = await res.json();
 
@@ -41,11 +41,12 @@ export function LoginForm({ authError }: { authError?: string }) {
 
   async function handleGoogle() {
     const supabase = createClient();
+    const callbackUrl = next
+      ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
+      : `${window.location.origin}/auth/callback`;
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { redirectTo: callbackUrl },
     });
   }
 
@@ -72,6 +73,11 @@ export function LoginForm({ authError }: { authError?: string }) {
 
   return (
     <div className="bg-brand-lavender rounded-2xl shadow-xl border border-white/10 p-8 flex flex-col gap-6">
+      {next === "/ecosistema/aplicar" && (
+        <div className="bg-brand-navy/10 border border-brand-navy/20 rounded-xl px-4 py-3 text-sm font-body text-brand-navy">
+          Para solicitar acceso como ecosistema, primero inicia sesión con tu email institucional. Te enviaremos un magic link.
+        </div>
+      )}
       <div className="text-center">
         <h1 className="font-sora font-bold text-2xl text-brand-navy">{t("title")}</h1>
         <p className="font-body text-ink-secondary text-sm mt-1">

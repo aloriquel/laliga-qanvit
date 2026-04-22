@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { auditSystemEvent } from "@/lib/admin/audit";
 import {
   sendEcosystemApplicationEmail,
@@ -10,19 +10,18 @@ import {
 export const runtime = "nodejs";
 
 const BodySchema = z.object({
-  name:        z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(100),
-  org_type:    z.enum(["science_park", "cluster", "innovation_association", "other"]),
-  website:     z.string().url("URL no válida").optional().or(z.literal("")),
-  about:       z.string().max(1000).optional(),
-  region:      z.string().max(100).optional(),
-  email_owner: z.string().email("Email no válido"),
+  name:     z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(100),
+  org_type: z.enum(["science_park", "cluster", "innovation_association", "other"]),
+  website:  z.string().url("URL no válida").optional().or(z.literal("")),
+  about:    z.string().max(1000).optional(),
+  region:   z.string().max(100).optional(),
 });
 
 const ORG_TYPE_PREFIX: Record<string, string> = {
-  science_park:          "SP",
-  cluster:               "CL",
+  science_park:           "SP",
+  cluster:                "CL",
   innovation_association: "IA",
-  other:                 "OT",
+  other:                  "OT",
 };
 
 function generateReferralCode(orgType: string): string {
@@ -33,6 +32,13 @@ function generateReferralCode(orgType: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  // Require authenticated user
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Debes iniciar sesión para solicitar acceso." }, { status: 401 });
+  }
+
   const rawBody = await req.json().catch(() => null);
   if (!rawBody) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
@@ -46,55 +52,45 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { name, org_type, website, about, region, email_owner } = parsed.data;
-
-  const supabase = createServiceClient();
+  const { name, org_type, website, about, region } = parsed.data;
+  const service = createServiceClient();
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://laliga.qanvit.com";
-  const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL ?? "liga@qanvit.com";
+  const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL ?? "holaqanvit@gmail.com";
 
-  // ── 1. Find or create profile for the applicant ───────────────────────────
-  let ownerId: string;
-
-  const { data: existingProfile } = await supabase
-    .from("profiles")
+  // Guard: one org per user
+  const { data: existing } = await service
+    .from("ecosystem_organizations")
     .select("id")
-    .eq("email", email_owner)
+    .eq("owner_id", user.id)
     .maybeSingle();
 
-  if (existingProfile) {
-    ownerId = existingProfile.id;
-  } else {
-    // Create auth user — the handle_new_user trigger creates the profiles row
-    const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
-      email: email_owner,
-      email_confirm: false,
-    });
-
-    if (createErr || !newUser?.user) {
-      console.error(JSON.stringify({
-        event: "ecosystem_apply_create_user_failed",
-        email: email_owner,
-        error: createErr?.message,
-      }));
-      return NextResponse.json(
-        { error: "No pudimos procesar tu solicitud. Por favor, inténtalo de nuevo." },
-        { status: 500 }
-      );
-    }
-
-    ownerId = newUser.user.id;
-
-    // Set role = 'ecosystem' for new accounts created via application flow
-    await supabase
-      .from("profiles")
-      .update({ role: "ecosystem" })
-      .eq("id", ownerId);
+  if (existing) {
+    return NextResponse.json(
+      { error: "Ya tienes una solicitud en proceso." },
+      { status: 409 }
+    );
   }
 
-  // ── 2. Generate unique referral code (retry on collision) ─────────────────
+  // Ensure the profile has ecosystem role
+  await service
+    .from("profiles")
+    .update({ role: "ecosystem" })
+    .eq("id", user.id)
+    .eq("role", "startup"); // only upgrade from startup, not from admin
+
+  // Get user email for notifications
+  const { data: profile } = await service
+    .from("profiles")
+    .select("email")
+    .eq("id", user.id)
+    .single();
+
+  const ownerEmail = profile?.email ?? user.email ?? "";
+
+  // Generate unique referral code (retry on collision)
   let referralCode = generateReferralCode(org_type);
   for (let attempt = 0; attempt < 5; attempt++) {
-    const { data: collision } = await supabase
+    const { data: collision } = await service
       .from("ecosystem_organizations")
       .select("id")
       .eq("referral_code", referralCode)
@@ -103,17 +99,17 @@ export async function POST(req: NextRequest) {
     referralCode = generateReferralCode(org_type);
   }
 
-  // ── 3. INSERT ecosystem_organizations ────────────────────────────────────
-  const { data: org, error: insertErr } = await supabase
+  // INSERT ecosystem_organizations
+  const { data: org, error: insertErr } = await service
     .from("ecosystem_organizations")
     .insert({
-      owner_id:     ownerId,
+      owner_id:      user.id,
       name,
       org_type,
-      website:      website || null,
-      about:        about   || null,
-      region:       region  || null,
-      is_verified:  false,
+      website:       website || null,
+      about:         about   || null,
+      region:        region  || null,
+      is_verified:   false,
       referral_code: referralCode,
     })
     .select("id")
@@ -121,80 +117,60 @@ export async function POST(req: NextRequest) {
 
   if (insertErr || !org) {
     console.error(JSON.stringify({
-      event:  "ecosystem_apply_insert_failed",
-      org:    name,
-      owner:  ownerId,
-      error:  insertErr?.message,
+      event: "ecosystem_apply_insert_failed",
+      org:   name,
+      owner: user.id,
+      error: insertErr?.message,
     }));
     return NextResponse.json(
-      { error: "Error al guardar tu solicitud. Por favor, escríbenos a liga@qanvit.com." },
+      { error: "Error al guardar tu solicitud. Por favor, escríbenos a holaqanvit@gmail.com." },
       { status: 500 }
     );
   }
 
   console.log(JSON.stringify({
-    event:   "ecosystem_application_received",
-    org_id:  org.id,
-    org:     name,
-    owner:   ownerId,
-    email:   email_owner,
+    event:  "ecosystem_application_received",
+    org_id: org.id,
+    org:    name,
+    owner:  user.id,
+    email:  ownerEmail,
   }));
 
-  // ── 4. Audit log (system event — no admin involved) ──────────────────────
+  // Audit log
   await auditSystemEvent({
     actionType: "ecosystem_application_received",
     targetType: "ecosystem_organization",
     targetId:   org.id,
-    payload:    { name, org_type, email_owner, region: region ?? null },
+    payload:    { name, org_type, region: region ?? null },
   }).catch((err) =>
     console.error(JSON.stringify({ event: "ecosystem_apply_audit_failed", error: String(err) }))
   );
 
-  // ── 5. Send emails (non-fatal) ────────────────────────────────────────────
-  const emailResults: string[] = [];
-
-  try {
-    await sendEcosystemApplicationEmail(email_owner, {
-      orgName:      name,
-      contactEmail: email_owner,
-    });
-    emailResults.push("applicant_ok");
-  } catch (err) {
-    emailResults.push(`applicant_err:${String(err)}`);
-    console.error(JSON.stringify({
-      event: "ecosystem_apply_applicant_email_failed",
-      org_id: org.id,
-      error: String(err),
-    }));
+  // Emails (non-fatal)
+  if (ownerEmail) {
+    try {
+      await sendEcosystemApplicationEmail(ownerEmail, { orgName: name, contactEmail: ownerEmail });
+    } catch (err) {
+      console.error(JSON.stringify({ event: "ecosystem_apply_applicant_email_failed", org_id: org.id, error: String(err) }));
+    }
   }
 
   try {
     await sendEcosystemApplicationAdminEmail(ADMIN_EMAIL, {
-      orgName:      name,
-      orgType:      org_type,
-      contactEmail: email_owner,
-      website:      website || undefined,
-      about:        about   || undefined,
-      region:       region  || undefined,
+      orgName:       name,
+      orgType:       org_type,
+      contactEmail:  ownerEmail,
+      website:       website || undefined,
+      about:         about   || undefined,
+      region:        region  || undefined,
       adminPanelUrl: `${APP_URL}/admin/ecosystem-applications`,
     });
-    emailResults.push("admin_ok");
   } catch (err) {
-    emailResults.push(`admin_err:${String(err)}`);
-    console.error(JSON.stringify({
-      event: "ecosystem_apply_admin_email_failed",
-      org_id: org.id,
-      error: String(err),
-    }));
+    console.error(JSON.stringify({ event: "ecosystem_apply_admin_email_failed", org_id: org.id, error: String(err) }));
   }
 
   return NextResponse.json(
-    {
-      success:       true,
-      org_id:        org.id,
-      referral_code: referralCode,
-      emails:        emailResults,
-    },
+    { success: true, org_id: org.id, referral_code: referralCode },
     { status: 201 }
   );
 }

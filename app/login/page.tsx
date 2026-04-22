@@ -11,13 +11,16 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string };
+  searchParams: { error?: string; next?: string };
 }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const next = typeof searchParams.next === "string" && searchParams.next.startsWith("/")
+    ? searchParams.next
+    : "/hub";
 
   if (user) {
-    redirect("/hub");
+    redirect(next);
   }
 
   return (
@@ -30,7 +33,7 @@ export default async function LoginPage({
           </span>
         </div>
 
-        <LoginForm authError={searchParams.error} />
+        <LoginForm authError={searchParams.error} next={next !== "/hub" ? next : undefined} />
       </div>
     </div>
   );
