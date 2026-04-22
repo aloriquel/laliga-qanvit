@@ -4,18 +4,18 @@ let initialized = false;
 
 export function initPostHog() {
   if (initialized || typeof window === "undefined") return;
-  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return;
+  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+  if (!key) return;
 
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
+  posthog.init(key, {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com",
     capture_pageview: true,
     capture_pageleave: true,
     persistence: "localStorage+cookie",
-    loaded(ph) {
-      if (process.env.NODE_ENV === "development") {
-        ph.debug();
-      }
-    },
+    // Stops POST /flags (401) and GET array/{key}/config (404) on invalid/deleted projects.
+    advanced_disable_decide: true,
+    // @ts-expect-error — runtime option added ~1.83, not yet reflected in type stubs
+    disable_remote_config: true,
   });
 
   initialized = true;
