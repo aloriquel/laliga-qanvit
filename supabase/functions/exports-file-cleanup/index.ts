@@ -13,12 +13,12 @@ serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  // Find exports that have expired (expires_at < now)
+  // Find exports that have expired (expires_at < now) and have a storage file
   const { data: expired, error: fetchErr } = await supabase
     .from("dataset_exports")
-    .select("id, file_path")
+    .select("id, storage_path")
     .lt("expires_at", new Date().toISOString())
-    .not("file_path", "is", null);
+    .not("storage_path", "is", null);
 
   if (fetchErr) {
     console.error("[exports-file-cleanup] fetch error:", fetchErr.message);
@@ -33,23 +33,26 @@ serve(async (req) => {
   const errors: string[] = [];
 
   for (const exp of expired) {
-    // Delete the file from Storage bucket 'exports'
-    const filePath = exp.file_path as string;
+    // storage_path is stored as "exports/{uuid}.json" — strip the bucket prefix for the remove call
+    const storageKey = (exp.storage_path as string).replace(/^exports\//, "");
+
     const { error: storageErr } = await supabase.storage
       .from("exports")
-      .remove([filePath]);
+      .remove([storageKey]);
 
     if (storageErr) {
-      console.error(`[exports-file-cleanup] storage remove ${filePath}:`, storageErr.message);
-      errors.push(filePath);
+      console.error(`[exports-file-cleanup] storage remove ${storageKey}:`, storageErr.message);
+      errors.push(storageKey);
       continue;
     }
 
-    // Delete the DB record
     await supabase.from("dataset_exports").delete().eq("id", exp.id);
     deleted++;
   }
 
   console.log(`[exports-file-cleanup] deleted ${deleted}/${expired.length} exports`);
-  return new Response(JSON.stringify({ ok: true, deleted, errors }));
+  return new Response(
+    JSON.stringify({ ok: errors.length === 0, deleted, errors }),
+    { headers: { "Content-Type": "application/json" } },
+  );
 });
