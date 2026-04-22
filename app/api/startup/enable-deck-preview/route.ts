@@ -30,28 +30,17 @@ export async function POST(req: NextRequest) {
     .update({ consent_public_deck: true })
     .eq("id", startup.id);
 
-  // Fetch deck + eval data BEFORE returning the response
-  const [{ data: deck }, { data: evalRow }] = await Promise.all([
-    supabase
-      .from("decks")
-      .select("id, startup_id")
-      .eq("startup_id", startup.id)
-      .eq("status", "evaluated")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single(),
-    supabase
-      .from("evaluations")
-      .select("score_total, assigned_division, assigned_vertical")
-      .eq("startup_id", startup.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single(),
-  ]);
+  // Get deck_id directly from the latest evaluation — evaluations always store deck_id.
+  // Avoids querying decks.created_at (column doesn't exist; decks uses uploaded_at).
+  const { data: evalRow } = await supabase
+    .from("evaluations")
+    .select("deck_id, score_total, assigned_division, assigned_vertical")
+    .eq("startup_id", startup.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  // Use waitUntil so Vercel keeps the Lambda alive after the response is sent.
-  // Plain fire-and-forget (no await) is cut off when the Lambda freezes post-response.
-  if (deck) {
+  if (evalRow?.deck_id) {
     const vercelUrl =
       process.env.VERCEL_API_URL ??
       process.env.NEXT_PUBLIC_APP_URL ??
@@ -62,19 +51,21 @@ export async function POST(req: NextRequest) {
       console.error("[enable-deck-preview] INTERNAL_WEBHOOK_SECRET not set — skipping thumbnail generation");
     } else {
       const webhookPayload = {
-        deck_id: deck.id,
+        deck_id: evalRow.deck_id,
         startup_id: startup.id,
-        overall_score: evalRow?.score_total ?? null,
-        division: evalRow?.assigned_division ?? startup.current_division ?? null,
-        vertical: evalRow?.assigned_vertical ?? startup.current_vertical ?? null,
+        overall_score: evalRow.score_total ?? null,
+        division: evalRow.assigned_division ?? startup.current_division ?? null,
+        vertical: evalRow.assigned_vertical ?? startup.current_vertical ?? null,
       };
 
       console.log("[enable-deck-preview] Firing thumbnail webhook", {
         url: `${vercelUrl}/api/internal/generate-deck-thumbnails`,
         startup_id: startup.id,
-        deck_id: deck.id,
+        deck_id: evalRow.deck_id,
       });
 
+      // waitUntil keeps the Lambda alive after the response is sent.
+      // Plain fire-and-forget is cut off when Vercel freezes the function post-response.
       waitUntil(
         fetch(`${vercelUrl}/api/internal/generate-deck-thumbnails`, {
           method: "POST",
@@ -98,11 +89,11 @@ export async function POST(req: NextRequest) {
       );
     }
   } else {
-    console.warn("[enable-deck-preview] No evaluated deck found for startup", startup.id);
+    console.warn("[enable-deck-preview] No evaluation with deck_id found for startup", startup.id);
   }
 
   return NextResponse.json({
-    generating: true,
+    generating: !!evalRow?.deck_id,
     expected_at: new Date(Date.now() + 45_000).toISOString(),
   });
 }
