@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
@@ -6,6 +6,7 @@ import type { Database } from "@/lib/supabase/types";
 import { Badge } from "@/components/ui/badge";
 import ClassificationCard from "@/components/league/ClassificationCard";
 import Link from "next/link";
+import EcosystemMomentumBadge from "@/components/ecosystem/EcosystemMomentumBadge";
 
 type Props = { params: { slug: string } };
 type StartupRow = Database["public"]["Tables"]["startups"]["Row"];
@@ -66,7 +67,8 @@ export default async function StartupPublicPage({ params }: Props) {
 
   if (!startup || !startup.consent_public_profile) notFound();
 
-  const [{ data: standing }, { data: profile }] = await Promise.all([
+  const service = createServiceClient();
+  const [{ data: standing }, { data: profile }, { data: momentumRow }] = await Promise.all([
     supabase
       .from("league_standings")
       .select("rank_national, rank_division, rank_division_vertical")
@@ -75,6 +77,11 @@ export default async function StartupPublicPage({ params }: Props) {
     user
       ? supabase.from("profiles").select("role").eq("id", user.id).single()
       : Promise.resolve({ data: null }),
+    (service as any)
+      .from("startup_momentum")
+      .select("momentum_score, up_count, down_count, distinct_voters, last_vote_at")
+      .eq("startup_id", startup.id)
+      .maybeSingle() as Promise<{ data: { momentum_score: number; up_count: number; down_count: number; distinct_voters: number; last_vote_at: string | null } | null }>,
   ]);
 
   // Timeline: only if show_public_timeline is ON
@@ -203,6 +210,17 @@ export default async function StartupPublicPage({ params }: Props) {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Community momentum — only if at least 1 voter */}
+        {momentumRow && momentumRow.distinct_voters > 0 && (
+          <div className="mb-6">
+            <EcosystemMomentumBadge
+              startupId={startup.id}
+              variant="full"
+              initialMomentum={momentumRow}
+            />
           </div>
         )}
 

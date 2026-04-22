@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { Search, Lock, ChevronDown } from "lucide-react";
-import { TIER_LIMITS } from "@/lib/ecosystem/points-helpers";
 import StartupDetailModal from "@/components/ecosystem/StartupDetailModal";
+import StartupVoteControl from "@/components/ecosystem/StartupVoteControl";
+import EcosystemMomentumBadge from "@/components/ecosystem/EcosystemMomentumBadge";
 import type { Database } from "@/lib/supabase/types";
 
 type Tier = Database["public"]["Enums"]["ecosystem_tier"];
@@ -15,6 +16,15 @@ type LeagueStanding = {
   current_score: number | null;
   rank_national: number | null;
   rank_division: number | null;
+};
+
+type VoteRecord = { vote_type: "up" | "down"; created_at: string };
+type MomentumData = {
+  momentum_score: number;
+  up_count: number;
+  down_count: number;
+  distinct_voters: number;
+  last_vote_at: string | null;
 };
 
 type Props = {
@@ -37,8 +47,31 @@ export default function StartupSearch({ orgId, tier }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
 
+  const [voteMap, setVoteMap] = useState<Record<string, VoteRecord | null>>({});
+  const [momentumMap, setMomentumMap] = useState<Record<string, MomentumData | null>>({});
+
   const canViewDetails = tier !== "rookie";
-  const limit = TIER_LIMITS[tier].startupDetailUnlocks;
+
+  // Fetch votes + momentum for all visible startups in one batch call
+  const batchFetchRef = useRef<AbortController | null>(null);
+  useEffect(() => {
+    const ids = results.map((r) => r.startup_id).filter(Boolean) as string[];
+    if (ids.length === 0) return;
+
+    batchFetchRef.current?.abort();
+    const ctrl = new AbortController();
+    batchFetchRef.current = ctrl;
+
+    fetch(`/api/ecosystem/votes/batch?startup_ids=${ids.join(",")}`, { signal: ctrl.signal })
+      .then((r) => r.json())
+      .then((d: { votes?: Record<string, VoteRecord | null>; momentum?: Record<string, MomentumData | null> }) => {
+        if (d.votes) setVoteMap((prev) => ({ ...prev, ...d.votes }));
+        if (d.momentum) setMomentumMap((prev) => ({ ...prev, ...d.momentum }));
+      })
+      .catch(() => null);
+
+    return () => ctrl.abort();
+  }, [results]);
 
   async function search(reset = true) {
     startSearch(async () => {
@@ -61,6 +94,21 @@ export default function StartupSearch({ orgId, tier }: Props) {
       }
     });
   }
+
+  function handleVoteCast(startupId: string, voteType: "up" | "down", momentumScore: number) {
+    setVoteMap((prev) => ({
+      ...prev,
+      [startupId]: { vote_type: voteType, created_at: new Date().toISOString() },
+    }));
+    setMomentumMap((prev) => ({
+      ...prev,
+      [startupId]: prev[startupId]
+        ? { ...prev[startupId]!, momentum_score: momentumScore }
+        : { momentum_score: momentumScore, up_count: voteType === "up" ? 1 : 0, down_count: voteType === "down" ? 1 : 0, distinct_voters: 1, last_vote_at: new Date().toISOString() },
+    }));
+  }
+
+  const selectedStartup = selectedId ? results.find((r) => r.startup_id === selectedId) : null;
 
   return (
     <div className="space-y-6">
@@ -122,37 +170,68 @@ export default function StartupSearch({ orgId, tier }: Props) {
                 <th className="text-left px-4 py-3 font-semibold text-brand-navy hidden md:table-cell">División</th>
                 <th className="text-right px-4 py-3 font-semibold text-brand-navy">Score</th>
                 <th className="text-right px-4 py-3 font-semibold text-brand-navy">#Nac</th>
+                <th className="text-center px-3 py-3 font-semibold text-brand-navy hidden lg:table-cell">Momentum</th>
+                <th className="text-center px-3 py-3 font-semibold text-brand-navy">Voto</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border-soft">
-              {results.map((s) => (
-                <tr key={s.startup_id} className="hover:bg-brand-lavender/30 transition-colors">
-                  <td className="px-4 py-3 font-medium text-brand-navy">{s.name}</td>
-                  <td className="px-4 py-3 text-ink-secondary hidden md:table-cell capitalize">
-                    {s.current_vertical?.replace(/_/g, " ") ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-ink-secondary hidden md:table-cell capitalize">
-                    {s.current_division ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-right font-sora font-bold text-brand-navy">
-                    {s.current_score?.toFixed(1) ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-right text-ink-secondary">#{s.rank_national ?? "—"}</td>
-                  <td className="px-4 py-3 text-right">
-                    {canViewDetails ? (
-                      <button
-                        onClick={() => s.startup_id && setSelectedId(s.startup_id)}
-                        className="text-brand-salmon text-xs font-semibold hover:underline"
-                      >
-                        Ver
-                      </button>
-                    ) : (
-                      <Lock size={14} className="text-ink-secondary ml-auto" />
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {results.map((s) => {
+                const sid = s.startup_id ?? "";
+                return (
+                  <tr key={sid} className="hover:bg-brand-lavender/30 transition-colors">
+                    <td className="px-4 py-3 font-medium text-brand-navy">{s.name}</td>
+                    <td className="px-4 py-3 text-ink-secondary hidden md:table-cell capitalize">
+                      {s.current_vertical?.replace(/_/g, " ") ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-ink-secondary hidden md:table-cell capitalize">
+                      {s.current_division ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right font-sora font-bold text-brand-navy">
+                      {s.current_score?.toFixed(1) ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right text-ink-secondary">
+                      #{s.rank_national ?? "—"}
+                    </td>
+                    <td className="px-3 py-3 text-center hidden lg:table-cell">
+                      {sid ? (
+                        <EcosystemMomentumBadge
+                          startupId={sid}
+                          variant="compact"
+                          initialMomentum={momentumMap[sid]}
+                        />
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      {sid ? (
+                        <StartupVoteControl
+                          startupId={sid}
+                          startupName={s.name ?? ""}
+                          currentOrgTier={tier}
+                          currentVote={voteMap[sid] ?? undefined}
+                          onVoteCast={(voteType, momentumScore) =>
+                            handleVoteCast(sid, voteType, momentumScore)
+                          }
+                        />
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {canViewDetails ? (
+                        <button
+                          onClick={() => sid && setSelectedId(sid)}
+                          className="text-brand-salmon text-xs font-semibold hover:underline whitespace-nowrap"
+                        >
+                          Ver →
+                        </button>
+                      ) : (
+                        <span title="Sube a Pro para ver el detalle completo">
+                          <Lock size={14} className="text-ink-secondary/40 ml-auto" />
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           <div className="px-4 py-3 border-t border-border-soft text-center">
@@ -171,11 +250,16 @@ export default function StartupSearch({ orgId, tier }: Props) {
         </div>
       )}
 
-      {selectedId && (
+      {selectedId && selectedStartup && (
         <StartupDetailModal
           startupId={selectedId}
+          startupName={selectedStartup.name ?? ""}
           orgId={orgId}
           tier={tier}
+          currentVote={voteMap[selectedId] ?? null}
+          onVoteCast={(voteType, momentumScore) =>
+            handleVoteCast(selectedId, voteType, momentumScore)
+          }
           onClose={() => setSelectedId(null)}
         />
       )}

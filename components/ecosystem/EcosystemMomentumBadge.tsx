@@ -15,30 +15,22 @@ type Momentum = {
 type Props = {
   startupId: string;
   variant: "compact" | "full";
+  initialMomentum?: Momentum | null;
 };
 
-export default function EcosystemMomentumBadge({ startupId, variant }: Props) {
-  const [momentum, setMomentum] = useState<Momentum | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function EcosystemMomentumBadge({ startupId, variant, initialMomentum }: Props) {
+  const [momentum, setMomentum] = useState<Momentum | null>(initialMomentum ?? null);
+  const [loading, setLoading] = useState(initialMomentum === undefined);
 
+  // Only autofetch if no initial data was provided by the parent
   useEffect(() => {
-    fetch(`/api/ecosystem/votes?startup_id=${startupId}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.vote === undefined && d.momentum) setMomentum(d.momentum);
-      })
-      .catch(() => null)
-      .finally(() => setLoading(false));
-  }, [startupId]);
-
-  // Fetch from public_startup_momentum (public endpoint)
-  useEffect(() => {
+    if (initialMomentum !== undefined) return;
     fetch(`/api/public/startup-momentum/${startupId}`)
       .then((r) => r.json())
       .then((d) => { if (d) setMomentum(d); })
       .catch(() => null)
       .finally(() => setLoading(false));
-  }, [startupId]);
+  }, [startupId, initialMomentum]);
 
   if (loading) return <span className="inline-block w-10 h-5 bg-gray-100 rounded-full animate-pulse" />;
   if (!momentum) return <span className="font-body text-xs text-ink-secondary/40">sin votos</span>;

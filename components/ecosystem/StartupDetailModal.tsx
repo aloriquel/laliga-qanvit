@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { X, ExternalLink } from "lucide-react";
 import type { Database } from "@/lib/supabase/types";
+import EcosystemMomentumBadge from "@/components/ecosystem/EcosystemMomentumBadge";
+import StartupVoteControl from "@/components/ecosystem/StartupVoteControl";
 
 type Tier = Database["public"]["Enums"]["ecosystem_tier"];
 
@@ -20,16 +22,21 @@ type StartupDetail = {
   feedback_summary: string | null;
 };
 
+type VoteRecord = { vote_type: "up" | "down"; created_at: string };
+
 type Props = {
   startupId: string;
+  startupName: string;
   orgId: string;
   tier: Tier;
+  currentVote?: VoteRecord | null;
+  onVoteCast?: (voteType: "up" | "down", momentumScore: number) => void;
   onClose: () => void;
 };
 
 const APP_QANVIT_URL = process.env.NEXT_PUBLIC_APP_QANVIT_URL ?? "https://app.qanvit.com";
 
-export default function StartupDetailModal({ startupId, tier, onClose }: Props) {
+export default function StartupDetailModal({ startupId, startupName, tier, currentVote, onVoteCast, onClose }: Props) {
   const [detail, setDetail] = useState<StartupDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -112,6 +119,9 @@ export default function StartupDetailModal({ startupId, tier, onClose }: Props) 
                 )}
               </div>
 
+              {/* Momentum */}
+              <EcosystemMomentumBadge startupId={startupId} variant="full" />
+
               {/* Feedback summary — pro/elite only */}
               {tier !== "rookie" && detail.feedback_summary && (
                 <div className="bg-brand-lavender rounded-xl p-4">
@@ -119,6 +129,18 @@ export default function StartupDetailModal({ startupId, tier, onClose }: Props) 
                   <p className="font-body text-sm text-brand-navy">{detail.feedback_summary}</p>
                 </div>
               )}
+
+              {/* Vote */}
+              <div className="border-t border-border-soft pt-4">
+                <p className="font-body text-xs text-ink-secondary mb-2">Tu voto sobre esta startup</p>
+                <StartupVoteControl
+                  startupId={startupId}
+                  startupName={startupName || detail.name}
+                  currentOrgTier={tier}
+                  currentVote={currentVote ?? undefined}
+                  onVoteCast={onVoteCast}
+                />
+              </div>
 
               {/* CTA to app.qanvit.com */}
               <div className="border-t border-border-soft pt-4">
@@ -128,7 +150,7 @@ export default function StartupDetailModal({ startupId, tier, onClose }: Props) 
                   rel="noopener noreferrer"
                   className="block w-full text-center bg-brand-salmon text-brand-navy font-semibold font-body text-sm px-4 py-3 rounded-xl hover:bg-brand-salmon/90 transition-colors"
                 >
-                  ¿Quieres lanzar un reto con {detail.name}? → Gestiónalo en app.qanvit.com
+                  Más datos sobre {detail.name} → app.qanvit.com
                 </a>
               </div>
             </>
