@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { FilterContextBar } from "@/components/league/FilterContextBar";
+import LeaderboardRow from "@/components/league/LeaderboardRow";
 
 export const revalidate = 60; // ISR per unique URL
 
@@ -10,13 +11,6 @@ const DIVISION_NAMES: Record<string, string> = {
   seed:     "Seed",
   growth:   "Growth",
   elite:    "Elite",
-};
-
-const DIVISION_LABELS: Record<string, string> = {
-  ideation: "🥚 Ideation",
-  seed:     "🌱 Seed",
-  growth:   "🚀 Growth",
-  elite:    "👑 Elite",
 };
 
 const VERTICAL_FULL: Record<string, string> = {
@@ -46,19 +40,6 @@ const VERTICAL_SHORT: Record<string, string> = {
   cybersecurity:            "Cyber",
 };
 
-// Labels shown in the table rows (full but abbreviated when needed)
-const VERTICAL_TABLE: Record<string, string> = {
-  deeptech_ai:              "Deeptech & AI",
-  robotics_automation:      "Robotics",
-  mobility:                 "Mobility",
-  energy_cleantech:         "Energy",
-  agrifood:                 "AgriFood",
-  healthtech_medtech:       "HealthTech",
-  industrial_manufacturing: "Industrial",
-  space_aerospace:          "Space",
-  materials_chemistry:      "Materials",
-  cybersecurity:            "Cybersecurity",
-};
 
 type PageProps = {
   searchParams: { division?: string; vertical?: string };
@@ -168,12 +149,13 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
         {/* Table */}
         <div className="bg-white rounded-card shadow-card border border-border-soft overflow-hidden">
           {/* Table header */}
-          <div className="bg-brand-navy/5 px-6 py-3 grid grid-cols-[3rem_1fr_auto_auto_auto] gap-4 text-xs font-semibold text-ink-secondary uppercase tracking-wider">
+          <div className="bg-brand-navy/5 px-6 py-3 grid grid-cols-[3rem_1fr_auto_auto_auto_20px] gap-4 text-xs font-semibold text-ink-secondary uppercase tracking-wider">
             <span>{t("rank")}</span>
             <span>{t("startup")}</span>
             <span className="hidden lg:block">{t("division")}</span>
             <span className="hidden md:block">{t("vertical")}</span>
             <span>{t("score")}</span>
+            <span />
           </div>
 
           {!hasData ? (
@@ -184,62 +166,7 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
             </div>
           ) : (
             standings!.map((row, idx) => (
-              <div
-                key={row.startup_id ?? idx}
-                className="px-6 py-4 grid grid-cols-[3rem_1fr_auto_auto_auto] gap-4 items-center border-t border-border-soft hover:bg-brand-lavender/30 transition-colors"
-              >
-                {/* Rank */}
-                <span className="font-mono text-sm font-medium text-ink-secondary">
-                  #{row.rank_national}
-                </span>
-
-                {/* Startup */}
-                <div className="flex items-center gap-3 min-w-0">
-                  {row.logo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={row.logo_url}
-                      alt={`Logo de ${row.name ?? ""}`}
-                      className="h-9 w-9 rounded-full object-cover border border-border-soft flex-shrink-0"
-                    />
-                  ) : (
-                    <div className="h-9 w-9 rounded-full bg-brand-lavender flex items-center justify-center text-brand-navy font-sora font-bold text-sm flex-shrink-0">
-                      {row.name?.charAt(0) ?? "?"}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="font-sora font-semibold text-sm text-brand-navy truncate">
-                      {row.name ?? "—"}
-                    </p>
-                    {row.one_liner && (
-                      <p className="font-body text-xs text-ink-secondary truncate">
-                        {row.one_liner}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* División */}
-                <span className="hidden lg:block font-body text-xs text-ink-secondary whitespace-nowrap">
-                  {row.current_division
-                    ? (DIVISION_LABELS[row.current_division] ?? row.current_division)
-                    : "—"}
-                </span>
-
-                {/* Vertical */}
-                <span className="hidden md:block font-body text-xs text-ink-secondary whitespace-nowrap">
-                  {row.current_vertical
-                    ? (VERTICAL_TABLE[row.current_vertical] ?? row.current_vertical)
-                    : "—"}
-                </span>
-
-                {/* Score */}
-                <span className="font-mono font-medium text-sm text-brand-navy tabular-nums">
-                  {row.current_score != null
-                    ? Number(row.current_score).toFixed(0)
-                    : "—"}
-                </span>
-              </div>
+              <LeaderboardRow key={row.startup_id ?? idx} row={row} />
             ))
           )}
         </div>
