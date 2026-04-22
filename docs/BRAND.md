@@ -103,6 +103,9 @@ Las llaves curly son el sello de Qanvit. En La Liga se usan así:
 - "Como ningún otro"
 - "El futuro del emprendimiento"
 - Cualquier cosa con emoji corazón 💜 (sí otros emojis: 🥚🌱🚀👑🥇🥈🥉 para Divisiones y ranks)
+- "Gestiona tus retos" / "Propón un reto" / "Votar reto" (→ redirigir a app.qanvit.com)
+- "Contactar founder" / "Contacto directo" / "Lanza tu reto" (→ redirigir a app.qanvit.com)
+- "Colabora con startups" (sin contexto) / "pipeline" en contexto ecosistema
 
 ## 5. Layout y espaciado
 
@@ -167,11 +170,26 @@ Generar con `@vercel/og` server-side.
 - Para Divisiones: emojis + icono custom SVG en el brand pack del usuario.
 - Para Verticales: iconos custom dibujados en línea fina (style outline, stroke 1.5px). Si el usuario no tiene, empezar con Lucide equivalentes.
 
-## 8. Dark mode
+## 8. Separación La Liga vs app.qanvit.com
+
+La Liga Qanvit y app.qanvit.com son productos hermanos con roles distintos:
+
+| La Liga Qanvit | app.qanvit.com |
+|---|---|
+| Observar el ecosistema de startups españolas | Gestionar innovación abierta y retos |
+| Votar startups, ver rankings, recibir alertas | Lanzar retos, contactar startups, gestionar pipeline |
+| Acceso por contribución (gamificación) | Producto de pago (planes SaaS) |
+
+**Regla de copy**: cuando una funcionalidad o necesidad del usuario pertenece a app.qanvit.com, **NO omitirla ni ignorarla** — señalizarla activamente con un CTA:
+> "Para [lanzar retos / contactar startups / gestionar innovación abierta] → app.qanvit.com"
+
+El componente `CTAToAppQanvit` implementa estos CTA en 4 variantes (header, tile, inline, footer). Siempre con UTM params `?utm_source=laliga&utm_medium=cta&utm_campaign={variant}`.
+
+## 9. Dark mode
 
 V1 **no tiene dark mode**. El producto nace "dark feel" por default gracias al navy oscuro en muchas secciones (hero, header). Añadir dark mode explícito en V1.5 si hay demanda.
 
-## 9. Accesibilidad
+## 10. Accesibilidad
 
 - Ratio de contraste mínimo AA (4.5:1 body, 3:1 grandes).
 - Focus states visibles siempre (ring `brand-salmon`).
@@ -179,7 +197,7 @@ V1 **no tiene dark mode**. El producto nace "dark feel" por default gracias al n
 - Atajos de teclado en el leaderboard (flechas para filtros).
 - Respeto a `prefers-reduced-motion` en animaciones.
 
-## 10. Tokens Tailwind (snippet listo)
+## 11. Tokens Tailwind (snippet listo)
 
 Añadir a `tailwind.config.ts`:
 

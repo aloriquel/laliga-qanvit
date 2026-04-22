@@ -56,6 +56,7 @@ create type ecosystem_tier as enum ('rookie', 'pro', 'elite');
 create type points_event_type as enum (
   'startup_referred_signup',
   'startup_referred_top10',
+  'startup_referred_phase_up',
   'feedback_validated',
   'vertical_proposed_accepted',
   'admin_grant',
@@ -590,6 +591,47 @@ create trigger trg_deck_pipeline
   execute function trigger_evaluator_pipeline();
 ```
 
+### 3.13 `startup_votes`
+
+Votos up/down que las orgs del ecosistema emiten sobre startups. Append-only.
+
+```sql
+create table startup_votes (
+  id uuid primary key default gen_random_uuid(),
+  startup_id uuid not null references startups(id) on delete cascade,
+  org_id uuid not null references ecosystem_organizations(id) on delete cascade,
+  user_id uuid references profiles(id) on delete set null,
+  vote_type text not null check (vote_type in ('up', 'down')),
+  weight smallint not null check (weight between 1 and 3),  -- server-side via trigger
+  tier_at_vote ecosystem_tier not null,
+  reason text,
+  created_at timestamptz not null default now()
+);
+-- No UPDATE/DELETE RLS policies → votes are immutable for regular users
+```
+
+### 3.14 `startup_momentum` (materialized view)
+
+Resumen rolling 90 días del momentum de cada startup según los votos. Refrescada cada 30 min.
+
+```sql
+create materialized view startup_momentum as
+select
+  startup_id,
+  sum(case when vote_type = 'up' then weight else 0 end)   as up_weighted,
+  sum(case when vote_type = 'down' then weight else 0 end)  as down_weighted,
+  sum(case when vote_type = 'up' then weight else -weight end) as momentum_score,
+  count(*) filter (where vote_type = 'up')   as up_count,
+  count(*) filter (where vote_type = 'down') as down_count,
+  count(distinct org_id) as distinct_voters,
+  max(created_at) as last_vote_at
+from startup_votes
+where created_at >= now() - interval '90 days'
+group by startup_id;
+
+create unique index on startup_momentum(startup_id);
+```
+
 ## 6. Seed data (mínimo)
 
 ```sql
@@ -600,3 +642,15 @@ on conflict (id) do update set role = 'admin';
 ```
 
 (Las verticales y divisiones son enums, no necesitan seed data.)
+
+## 7. ADR-2026-04-22: Eliminación del módulo de retos comunitarios
+
+**Contexto**: El módulo de retos comunitarios (`challenges`, `challenge_votes`, `challenge_progress`) y el canal de contacto directo (`contact_requests`) diseñados en Prompts #3-5 canibalizaban `app.qanvit.com`, el producto de pago de Qanvit para gestión de innovación abierta.
+
+**Decisión**: Teardown completo de esas tablas en migración 0030 (archivadas en `archive.*` antes del DROP). Reemplazado por el módulo `startup_votes` + `startup_momentum` (migración 0031), que mantiene el engagement del ecosistema en modo "observar y apostar" sin ofrecer gestión de retos.
+
+**Consecuencias**:
+- `consent_direct_contact` column **se conserva en DB** (no se DROP) para compatibilidad con datos históricos. No se expone en UI.
+- Eventos de puntos legacy (`challenge_*`) se marcan con `event_type_deprecated=true` en `ecosystem_points_log`.
+- Tier Elite ya no desbloquea contacto directo. Desbloquea voto ×3, early access, elite badge, dataset export y sesión Qanvit.
+- Todo CTA relacionado con retos o contacto apunta a `app.qanvit.com` con UTM params.

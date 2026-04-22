@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const { data: startup } = await supabase
     .from("startups")
-    .select("id, name, location_region, founded_year, website, consent_direct_contact")
+    .select("id, name, location_region, founded_year, website")
     .eq("id", params.id)
     .maybeSingle();
 
@@ -59,7 +59,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     region: startup.location_region,
     founded_year: startup.founded_year,
     website: startup.website,
-    consent_direct_contact: startup.consent_direct_contact,
     feedback_summary: feedbackSummary,
   });
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, ExternalLink, Send } from "lucide-react";
+import { X, ExternalLink } from "lucide-react";
 import type { Database } from "@/lib/supabase/types";
 
 type Tier = Database["public"]["Enums"]["ecosystem_tier"];
@@ -17,7 +17,6 @@ type StartupDetail = {
   region: string | null;
   founded_year: number | null;
   website: string | null;
-  consent_direct_contact: boolean;
   feedback_summary: string | null;
 };
 
@@ -28,12 +27,11 @@ type Props = {
   onClose: () => void;
 };
 
-export default function StartupDetailModal({ startupId, orgId, tier, onClose }: Props) {
+const APP_QANVIT_URL = process.env.NEXT_PUBLIC_APP_QANVIT_URL ?? "https://app.qanvit.com";
+
+export default function StartupDetailModal({ startupId, tier, onClose }: Props) {
   const [detail, setDetail] = useState<StartupDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [contactMsg, setContactMsg] = useState("");
-  const [sending, setSending] = useState(false);
-  const [contactSent, setContactSent] = useState(false);
 
   useEffect(() => {
     fetch(`/api/ecosystem/startup-detail/${startupId}`)
@@ -41,18 +39,6 @@ export default function StartupDetailModal({ startupId, orgId, tier, onClose }: 
       .then((d) => { setDetail(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, [startupId]);
-
-  async function sendContact() {
-    if (!contactMsg.trim()) return;
-    setSending(true);
-    const res = await fetch("/api/ecosystem/contact-request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ startup_id: startupId, message: contactMsg }),
-    });
-    setSending(false);
-    if (res.ok) setContactSent(true);
-  }
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
@@ -134,35 +120,17 @@ export default function StartupDetailModal({ startupId, orgId, tier, onClose }: 
                 </div>
               )}
 
-              {/* Contact — elite only */}
-              {tier === "elite" && detail.consent_direct_contact && (
-                <div className="border-t border-border-soft pt-4">
-                  <p className="font-body text-sm font-semibold text-brand-navy mb-2">Contactar startup</p>
-                  {contactSent ? (
-                    <p className="font-body text-sm text-green-600 bg-green-50 rounded-xl px-4 py-3">
-                      Solicitud enviada. La startup recibirá tu mensaje.
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      <textarea
-                        value={contactMsg}
-                        onChange={(e) => setContactMsg(e.target.value)}
-                        placeholder="Escribe tu mensaje..."
-                        rows={3}
-                        className="w-full px-3 py-2 rounded-xl border border-border-soft font-body text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-salmon/30"
-                      />
-                      <button
-                        onClick={sendContact}
-                        disabled={sending || !contactMsg.trim()}
-                        className="flex items-center gap-2 px-4 py-2 bg-brand-salmon text-brand-navy rounded-xl font-semibold text-sm font-body hover:bg-brand-salmon/90 disabled:opacity-50 transition-colors"
-                      >
-                        <Send size={14} />
-                        {sending ? "Enviando..." : "Enviar"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* CTA to app.qanvit.com */}
+              <div className="border-t border-border-soft pt-4">
+                <a
+                  href={`${APP_QANVIT_URL}?utm_source=laliga&utm_medium=cta&utm_campaign=startup_modal&utm_content=${encodeURIComponent(detail.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center bg-brand-salmon text-brand-navy font-semibold font-body text-sm px-4 py-3 rounded-xl hover:bg-brand-salmon/90 transition-colors"
+                >
+                  ¿Quieres lanzar un reto con {detail.name}? → Gestiónalo en app.qanvit.com
+                </a>
+              </div>
             </>
           )}
         </div>

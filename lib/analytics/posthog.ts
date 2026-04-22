@@ -46,8 +46,7 @@ export type AnalyticsEvent =
   | { event: "share_card_download"; props: { slug: string } }
   | { event: "ecosystem_application_submit" }
   | { event: "ecosystem_tier_unlocked"; props: { tier: number } }
-  | { event: "challenge_proposed"; props: { challenge_type: string } }
-  | { event: "challenge_voted"; props: { challenge_id: string } }
+  | { event: "startup_vote_cast"; props: { startup_id: string; vote_type: "up" | "down"; tier: string } }
   | { event: "feedback_validated"; props: { startup_id: string; positive: boolean } }
   | { event: "admin_action"; props: { action_type: string; target_type: string } };
 

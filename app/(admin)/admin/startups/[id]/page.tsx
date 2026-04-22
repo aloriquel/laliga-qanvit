@@ -16,7 +16,7 @@ export default async function StartupDetailAdminPage({ params }: Props) {
     .select(`
       id, name, slug, website, one_liner,
       current_division, current_vertical, current_score,
-      is_public, consent_public_profile, consent_internal_use, consent_direct_contact,
+      is_public, consent_public_profile, consent_internal_use,
       created_at, location_region
     `)
     .eq("id", params.id)
@@ -105,7 +105,6 @@ export default async function StartupDetailAdminPage({ params }: Props) {
         initial={{
           consent_public_profile: startup.consent_public_profile,
           consent_internal_use: startup.consent_internal_use,
-          consent_direct_contact: startup.consent_direct_contact ?? false,
           is_public: startup.is_public,
         }}
       />

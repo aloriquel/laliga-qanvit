@@ -4,9 +4,6 @@ import {
   ecosystemRejectedEmail,
   ecosystemInfoRequestedEmail,
   evaluationCompleteEmail,
-  contactRequestToStartupEmail,
-  contactRequestAcceptedEmail,
-  challengePrizeEmail,
   dataExportReadyEmail,
   alertNotificationEmail,
   ecosystemNewStartupAlertEmail,
@@ -52,21 +49,6 @@ export async function sendEcosystemInfoRequestedEmail(to: string, params: { orgN
 
 export async function sendEvaluationCompleteEmail(to: string, params: Parameters<typeof evaluationCompleteEmail>[0]): Promise<SendResult> {
   const { subject, html } = evaluationCompleteEmail(params);
-  return send(to, subject, html);
-}
-
-export async function sendContactRequestToStartupEmail(to: string, params: Parameters<typeof contactRequestToStartupEmail>[0]): Promise<SendResult> {
-  const { subject, html } = contactRequestToStartupEmail(params);
-  return send(to, subject, html);
-}
-
-export async function sendContactRequestAcceptedEmail(to: string, params: Parameters<typeof contactRequestAcceptedEmail>[0]): Promise<SendResult> {
-  const { subject, html } = contactRequestAcceptedEmail(params);
-  return send(to, subject, html);
-}
-
-export async function sendChallengePrizeEmail(to: string, params: Parameters<typeof challengePrizeEmail>[0]): Promise<SendResult> {
-  const { subject, html } = challengePrizeEmail(params);
   return send(to, subject, html);
 }
 

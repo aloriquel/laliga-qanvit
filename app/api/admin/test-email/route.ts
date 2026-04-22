@@ -7,9 +7,6 @@ import {
   sendEcosystemRejectedEmail,
   sendEcosystemInfoRequestedEmail,
   sendEvaluationCompleteEmail,
-  sendContactRequestToStartupEmail,
-  sendContactRequestAcceptedEmail,
-  sendChallengePrizeEmail,
   sendDataExportReadyEmail,
   sendAlertNotificationEmail,
   sendEcosystemNewStartupAlertEmail,
@@ -23,9 +20,6 @@ const TEMPLATE_TYPES = [
   "ecosystem_welcome",
   "ecosystem_rejected",
   "ecosystem_info_requested",
-  "contact_request_to_startup",
-  "contact_request_accepted",
-  "challenge_winner",
   "data_export_ready",
   "alert_notification",
   "ecosystem_new_startup_alert",
@@ -102,29 +96,6 @@ async function dispatchTestEmail(type: TemplateType, to: string, appUrl: string)
     case "ecosystem_info_requested":
       return sendEcosystemInfoRequestedEmail(to, { orgName: "Org Demo" });
 
-    case "contact_request_to_startup":
-      return sendContactRequestToStartupEmail(to, {
-        startupName: "Startup Demo",
-        orgName: "Parque Tecnológico Demo",
-        message: "Hola, estamos interesados en conocer más sobre vuestra solución para aplicarla en nuestro parque tecnológico.",
-        respondUrl: `${appUrl}/api/contact-request/respond-page?token=test-token-12345`,
-      });
-
-    case "contact_request_accepted":
-      return sendContactRequestAcceptedEmail(to, {
-        orgName: "Parque Tecnológico Demo",
-        startupName: "Startup Demo",
-        founderEmail: "founder@startupdemo.com",
-      });
-
-    case "challenge_winner":
-      return sendChallengePrizeEmail(to, {
-        startupName: "Org Demo",
-        challengeTitle: "Reto Deeptech Febrero 2026",
-        rank: 1,
-        points: 500,
-      });
-
     case "data_export_ready":
       return sendDataExportReadyEmail(to, {
         scope: "full",
@@ -156,9 +127,6 @@ async function dispatchTestEmail(type: TemplateType, to: string, appUrl: string)
         newStartups: [
           { name: "Startup Demo", slug: "startup-demo", division: "Seed", vertical: "Deeptech & AI" },
           { name: "Robotica SL", slug: "robotica-sl", division: "Growth", vertical: "Robotics & Automation" },
-        ],
-        activeChallenges: [
-          { title: "Reto Deeptech Q2 2026", status: "active" },
         ],
       });
   }

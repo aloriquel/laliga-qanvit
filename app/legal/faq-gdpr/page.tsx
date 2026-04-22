@@ -37,7 +37,7 @@ const FAQ = [
   },
   {
     q: "¿El ecosistema puede acceder a mi información sin que yo lo sepa?",
-    a: "No. Las organizaciones del ecosistema solo acceden a los datos que tú hayas marcado explícitamente como públicos. Para que una organización pueda contactarte directamente, debes activar la opción 'Acepto contacto directo' desde Visibilidad.",
+    a: "No. Las organizaciones del ecosistema solo acceden a los datos que tú hayas marcado explícitamente como públicos: nombre, score, división y vertical. El contenido de tu deck nunca es visible para el ecosistema.",
   },
   {
     q: "¿Cómo contacto al DPO?",

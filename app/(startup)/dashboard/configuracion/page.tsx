@@ -16,7 +16,7 @@ export default async function ConfiguracionPage() {
 
   const { data: startup } = await supabase
     .from("startups")
-    .select("id, is_public, consent_public_profile, show_public_timeline, consent_direct_contact, notification_email_enabled, notification_frequency")
+    .select("id, is_public, consent_public_profile, show_public_timeline, notification_email_enabled, notification_frequency")
     .eq("owner_id", user.id)
     .single();
 

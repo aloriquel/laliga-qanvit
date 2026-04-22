@@ -14,7 +14,6 @@ export const EVENT_LABELS: Partial<Record<PointsEvent, string>> = {
   startup_referred_top10:    "Referral top-10 vertical",
   startup_referred_phase_up: "Referral sube de fase",
   feedback_validated:        "Validación enviada",
-  challenge_winner:          "Premio en reto",
 };
 
 export function tierFromPoints(points: number): Tier {
@@ -35,7 +34,7 @@ export function pointsToNextTier(points: number): { next: Tier | null; remaining
 
 // Tier-based access gates
 export const TIER_LIMITS = {
-  rookie: { csvRowsPerMonth: 0,   contactRequestsPerMonth: 0,  startupDetailUnlocks: 5  },
-  pro:    { csvRowsPerMonth: 100, contactRequestsPerMonth: 5,  startupDetailUnlocks: 50 },
-  elite:  { csvRowsPerMonth: 500, contactRequestsPerMonth: 25, startupDetailUnlocks: 999 },
-} satisfies Record<Tier, { csvRowsPerMonth: number; contactRequestsPerMonth: number; startupDetailUnlocks: number }>;
+  rookie: { csvRowsPerMonth: 0,   startupDetailUnlocks: 5,   voteWeight: 1 },
+  pro:    { csvRowsPerMonth: 100, startupDetailUnlocks: 50,  voteWeight: 2 },
+  elite:  { csvRowsPerMonth: 500, startupDetailUnlocks: 999, voteWeight: 3 },
+} satisfies Record<Tier, { csvRowsPerMonth: number; startupDetailUnlocks: number; voteWeight: number }>;

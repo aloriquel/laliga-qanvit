@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { href: "/admin/deck-errors", label: "Deck errors" },
   { href: "/admin/evaluations", label: "Evaluaciones" },
   { href: "/admin/evaluation-appeals", label: "Impugnaciones" },
-  { href: "/admin/challenges", label: "Retos" },
+  { href: "/admin/votes", label: "Votos" },
   { href: "/admin/startups", label: "Startups" },
   { href: "/admin/metrics", label: "Métricas" },
   { href: "/admin/data-export", label: "Export datos" },

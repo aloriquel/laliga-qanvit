@@ -6,7 +6,6 @@ import { auditAction } from "@/lib/admin/audit";
 const ALLOWED_CONSENT_FIELDS = [
   "consent_public_profile",
   "consent_internal_use",
-  "consent_direct_contact",
   "is_public",
 ] as const;
 
@@ -47,7 +46,7 @@ export async function POST(
   // Read current value for audit trail
   const { data: startup } = await service
     .from("startups")
-    .select("consent_public_profile, consent_internal_use, consent_direct_contact, is_public, current_score, current_division")
+    .select("consent_public_profile, consent_internal_use, is_public, current_score, current_division")
     .eq("id", startupId)
     .single();
 

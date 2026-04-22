@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { ArrowRight, Trophy, Star, Zap } from "lucide-react";
+import { ArrowRight, Trophy, Star, ThumbsUp } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import type { Metadata } from "next";
@@ -35,7 +35,7 @@ export default async function EcosistemaLandingPage() {
   const CARDS = [
     { icon: ArrowRight, title: t("card1_title"), body: t("card1_body") },
     { icon: Trophy, title: t("card2_title"), body: t("card2_body") },
-    { icon: Zap, title: t("card3_title"), body: t("card3_body") },
+    { icon: ThumbsUp, title: t("card3_title"), body: t("card3_body") },
   ];
 
   return (

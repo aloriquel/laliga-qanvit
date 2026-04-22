@@ -153,7 +153,7 @@
     "dashboard_title": "Dashboard ecosistema",
     "points": "Puntos",
     "tier": "Tier",
-    "challenges": "Retos",
+    "votes": "Votos",
     "alerts": "Alertas",
     "referral": "Referral",
     "config": "Configuración"
@@ -237,8 +237,8 @@
     "card1_body": "Solicitáis acceso y lo aprobamos en 24-48 h. Recibís un código de referral único y acceso al dashboard. Empezáis como Rookie y subís de tier cuanto más contribuís.",
     "card2_title": "Sistema de puntos",
     "card2_body": "Tres tiers: 🥉 Rookie, 🥈 Pro y 🥇 Elite. Cada tier desbloquea más filtros, más datos del evaluador y reportes exclusivos por vertical.",
-    "card3_title": "Retos del mes",
-    "card3_body": "Cada mes publicamos retos comunitarios — refiere startups, valida feedback, completa tu perfil — y los mejores ecosistemas suben en el ranking.",
+    "card3_title": "Vota startups, mejora tu scouting",
+    "card3_body": "Vota las startups que crees que van a subir. La Liga mide tu Scouting Eye: cuántas de tus apuestas aciertan. Los mejores scouts desbloquean datos exclusivos.",
     "cta_apply": "Aplicar al ecosistema",
     "cta_dashboard": "Ir a mi dashboard"
   },

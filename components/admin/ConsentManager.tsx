@@ -3,12 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-type ConsentField = "consent_public_profile" | "consent_internal_use" | "consent_direct_contact" | "is_public";
+type ConsentField = "consent_public_profile" | "consent_internal_use" | "is_public";
 
 type ConsentValues = {
   consent_public_profile: boolean;
   consent_internal_use: boolean;
-  consent_direct_contact: boolean;
   is_public: boolean;
 };
 
@@ -27,11 +26,6 @@ const FIELDS: { key: ConsentField; label: string; description: string }[] = [
     key: "consent_internal_use",
     label: "Uso interno",
     description: "Permite a Qanvit usar el feedback anonimizado para mejorar el evaluador.",
-  },
-  {
-    key: "consent_direct_contact",
-    label: "Contacto directo",
-    description: "Permite que ecosistemas verificados contacten directamente con la startup.",
   },
   {
     key: "is_public",
