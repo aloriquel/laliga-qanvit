@@ -84,7 +84,9 @@
       "Bash(curl -s -o /dev/null -w '%{http_code}' -X POST https://api.supabase.com/v1/projects/ongwrbdypbusnwlclqjg/database/query -H 'Authorization: Bearer sbp_c5e0832631a7c24a2455cdfa7597ccd548f7d8d1' -H 'Content-Type: application/json' -d '{\"query\":\"select 1\"}')",
       "Bash(cmdkey /list)",
       "WebFetch(domain:www.fqsource.com)",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(node -e \"const {pdfToPng} = require\\('pdf-to-png-converter'\\); console.log\\('ok'\\)\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/next/package.json'\\).version\\)\")"
     ]
   }
 }
