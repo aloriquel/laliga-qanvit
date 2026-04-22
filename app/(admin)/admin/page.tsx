@@ -12,7 +12,7 @@ export default async function AdminHomePage() {
     supabase.from("metrics_summary").select("*").maybeSingle(),
     supabase
       .from("admin_audit_log")
-      .select("id, action_type, target_type, target_id, reason, created_at, admin:profiles(email)")
+      .select("id, admin_id, action_type, target_type, target_id, reason, created_at, admin:profiles!admin_id(email, full_name)")
       .order("created_at", { ascending: false })
       .limit(20),
   ]);
@@ -117,7 +117,7 @@ export default async function AdminHomePage() {
                       {row.target_type} {row.target_id ? `· ${row.target_id.slice(0, 8)}…` : ""}
                     </td>
                     <td className="px-4 py-2.5 text-ink-secondary hidden lg:table-cell">
-                      {(row.admin as { email?: string } | null)?.email ?? "—"}
+                      {(() => { const a = row.admin as { email?: string; full_name?: string | null } | null; return a?.full_name ?? a?.email ?? row.admin_id.slice(0, 8) ?? "—"; })()}
                     </td>
                     <td className="px-4 py-2.5 text-ink-secondary whitespace-nowrap">
                       {new Date(row.created_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}

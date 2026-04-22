@@ -13,7 +13,7 @@ export default async function AuditLogPage({
 
   let query = supabase
     .from("admin_audit_log")
-    .select("id, action_type, target_type, target_id, reason, payload, created_at, admin:profiles(email, full_name)", { count: "exact" })
+    .select("id, admin_id, action_type, target_type, target_id, reason, payload, created_at, admin:profiles!admin_id(email, full_name)", { count: "exact" })
     .order("created_at", { ascending: false })
     .range((page - 1) * perPage, page * perPage - 1);
 
@@ -58,7 +58,7 @@ export default async function AuditLogPage({
                   {log.reason ?? "—"}
                 </td>
                 <td className="px-4 py-2.5 text-ink-secondary hidden xl:table-cell text-xs">
-                  {(log.admin as { email?: string; full_name?: string | null } | null)?.full_name ?? (log.admin as { email?: string } | null)?.email ?? "—"}
+                  {(() => { const a = log.admin as { email?: string; full_name?: string | null } | null; return a?.full_name ?? a?.email ?? log.admin_id?.slice(0, 8) ?? "—"; })()}
                 </td>
                 <td className="px-4 py-2.5 text-ink-secondary whitespace-nowrap text-xs">
                   {new Date(log.created_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
