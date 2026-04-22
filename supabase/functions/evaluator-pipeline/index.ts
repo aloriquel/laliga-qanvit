@@ -134,6 +134,34 @@ serve(async (req) => {
       }
     }
 
+    // ── STEP 14: Fire-and-forget thumbnail generation ─────────────────────
+    const { data: startupFull } = await db
+      .from("startups")
+      .select("consent_public_deck, current_division, current_vertical")
+      .eq("id", deck.startup_id)
+      .single();
+
+    if (startupFull?.consent_public_deck) {
+      const vercelUrl = Deno.env.get("VERCEL_API_URL") ?? "";
+      const secret = Deno.env.get("INTERNAL_WEBHOOK_SECRET") ?? "";
+      fetch(`${vercelUrl}/api/internal/generate-deck-thumbnails`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Webhook-Secret": secret,
+        },
+        body: JSON.stringify({
+          deck_id: deck.id,
+          startup_id: deck.startup_id,
+          overall_score: evaluation.score_total,
+          division: assignedDivision ?? startupFull.current_division,
+          vertical: assignedVertical ?? startupFull.current_vertical,
+        }),
+      }).catch((err: unknown) =>
+        console.error(JSON.stringify({ deck_id: deckId, step: "thumbnail_webhook", ok: false, error: String(err) }))
+      );
+    }
+
     return new Response(
       JSON.stringify({ ok: true, evaluation_id: evaluationId, duration_ms: Date.now() - pipelineStart }),
       { status: 200, headers: { "Content-Type": "application/json" } }

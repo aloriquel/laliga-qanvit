@@ -14,9 +14,10 @@ export default async function ConfiguracionPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/play");
 
-  const { data: startup } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: startup } = await (supabase as any)
     .from("startups")
-    .select("id, is_public, consent_public_profile, show_public_timeline, notification_email_enabled, notification_frequency")
+    .select("id, is_public, consent_public_profile, consent_public_deck, show_public_timeline, notification_email_enabled, notification_frequency")
     .eq("owner_id", user.id)
     .single();
 

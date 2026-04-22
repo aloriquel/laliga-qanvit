@@ -9,6 +9,7 @@ import Link from "next/link";
 import EcosystemMomentumBadge from "@/components/ecosystem/EcosystemMomentumBadge";
 import PublicStrengthsHighlights from "@/components/public/PublicStrengthsHighlights";
 import PublicTopDimensions from "@/components/public/PublicTopDimensions";
+import DeckPreviewCarousel from "@/components/public/DeckPreviewCarousel";
 import { getPublicProfileData, getTopDimensions } from "@/lib/public/profile-helpers";
 
 type Props = { params: { slug: string } };
@@ -166,6 +167,11 @@ export default async function StartupPublicPage({ params }: Props) {
 
         {/* Top scoring dimensions */}
         <PublicTopDimensions dimensions={topDimensions} />
+
+        {/* Deck preview carousel */}
+        {(startup as any).consent_public_deck && (
+          <DeckPreviewCarousel startupId={startup.id} />
+        )}
 
         {/* Eval summary + next actions */}
         {evalTimeline.length > 0 && evalTimeline[0].summary && (

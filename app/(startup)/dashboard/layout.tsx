@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import { ConsentGateModal } from "@/components/auth/ConsentGateModal";
 import { ensureProfile } from "@/lib/auth/ensure-profile";
+import DeckConsentWizard from "@/components/startup/DeckConsentWizard";
 import type { Database } from "@/lib/supabase/types";
 
 type StartupRow = Database["public"]["Tables"]["startups"]["Row"];
@@ -31,9 +32,26 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const needsConsent = !profile?.consented_at;
 
+  // Conditions for DeckConsentWizard
+  const { count: approvedEvalCount } = await supabase
+    .from("evaluations")
+    .select("id", { count: "exact", head: true })
+    .eq("startup_id", startup.id)
+    .not("score_total", "is", null);
+
+  const hasApprovedEval = (approvedEvalCount ?? 0) > 0;
+
   return (
     <DashboardShell unreadAlerts={unreadCount ?? 0} startupName={startup.name}>
       <ConsentGateModal show={needsConsent} />
+      <DeckConsentWizard
+        userId={user.id}
+        startupId={startup.id}
+        hasApprovedEval={hasApprovedEval}
+        seenWizard={(profile as any)?.seen_deck_consent_wizard ?? false}
+        consentPublicProfile={(startup as any).consent_public_profile ?? false}
+        consentPublicDeck={(startup as any).consent_public_deck ?? false}
+      />
       {children}
     </DashboardShell>
   );
