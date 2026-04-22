@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getTierWeight, formatMomentum } from "../votes-helpers";
+import { getTierWeight, formatMomentum } from "../votes-utils";
 
 describe("getTierWeight", () => {
   it("returns 1 for rookie", () => {

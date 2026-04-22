@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { formatMomentum } from "@/lib/ecosystem/votes-helpers";
+import { formatMomentum } from "@/lib/ecosystem/votes-utils";
 
 type Momentum = {
   momentum_score: number;
