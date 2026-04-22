@@ -3,7 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 // pdf-to-png-converter and sharp use native .node binaries — dynamic import prevents
 // webpack from statically traversing and failing on the binary at build time.
 type PdfToPng = typeof import("pdf-to-png-converter")["pdfToPng"];
-type Sharp = typeof import("sharp");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SharpMod = any;
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -60,9 +61,9 @@ async function buildWatermarkBuffer(
 async function processSlide(
   pngBuffer: Buffer,
   watermarkText: string,
-  sharp: Sharp
+  sharp: SharpMod
 ): Promise<Buffer> {
-  const sharpFn = sharp.default ?? (sharp as unknown as Sharp["default"]);
+  const sharpFn = sharp.default ?? sharp;
   const img = sharpFn(pngBuffer);
   const meta = await img.metadata();
   const origW = meta.width ?? MAX_WIDTH;
@@ -138,7 +139,7 @@ export async function POST(req: NextRequest) {
   // Dynamic imports — prevents webpack from following native .node binary at build time
   const [{ pdfToPng }, sharpMod] = await Promise.all([
     import("pdf-to-png-converter") as Promise<{ pdfToPng: PdfToPng }>,
-    import("sharp") as Promise<Sharp>,
+    import("sharp") as Promise<SharpMod>,
   ]);
 
   // ── Download PDF ──────────────────────────────────────────────────────────
@@ -216,7 +217,7 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
-    const sharpFn = sharpMod.default ?? (sharpMod as unknown as Sharp["default"]);
+    const sharpFn = sharpMod.default ?? sharpMod;
     const meta = await sharpFn(processed).metadata();
     const storagePath = `${startup_id}/${deck_id}/slide-${slideNumber}.png`;
 
