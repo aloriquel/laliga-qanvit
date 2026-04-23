@@ -60,10 +60,9 @@ export async function PATCH(req: NextRequest) {
   if (!startup) return NextResponse.json({ error: "Startup not found" }, { status: 404 });
 
   // ── Update ────────────────────────────────────────────────────────────────
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: dbErr } = await (supabase as any)
+  const { error: dbErr } = await supabase
     .from("startups")
-    .update({ region_ca: ca, region_province: province })
+    .update({ region_ca: ca as CaId | null, region_province: province })
     .eq("id", startup.id);
 
   if (dbErr) {

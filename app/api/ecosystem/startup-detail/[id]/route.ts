@@ -24,8 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: "Upgrade to Pro to view startup details" }, { status: 403 });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: startup } = await (supabase as any)
+  const { data: startup } = await supabase
     .from("startups")
     .select("id, name, logo_url, location_region, region_ca, region_province, founded_year, website")
     .eq("id", params.id)
