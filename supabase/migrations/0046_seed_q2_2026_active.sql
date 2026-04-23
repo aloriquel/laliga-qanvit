@@ -5,9 +5,10 @@
 -- Siembra batch_participations para startups con evaluaciones en Q2.
 -- ─────────────────────────────────────────────────────────────────────────────
 
--- 1. Batch 0 termina antes de que empiece Q2 (winter offset +01:00)
+-- 1. Batch 0: recortar ends_at a fin de Q1 y archivar definitivamente
 UPDATE batches
-SET ends_at = '2026-03-31 23:59:59+01:00'::timestamptz
+SET ends_at = '2026-03-31 23:59:59+01:00'::timestamptz,
+    status  = 'archived'
 WHERE slug = 'batch-0-historico';
 
 -- 2. Insertar Q2 2026 como activo
@@ -68,7 +69,7 @@ ON CONFLICT (batch_id, startup_id) DO UPDATE
 --        starts_at AT TIME ZONE 'Europe/Madrid' AS starts_madrid,
 --        ends_at   AT TIME ZONE 'Europe/Madrid' AS ends_madrid
 -- FROM batches ORDER BY starts_at;
--- -- Esperado: batch-0-historico (closed, hasta 2026-03-31), q2-2026 (active), q3-2026 (upcoming)
+-- -- Esperado: batch-0-historico (archived, hasta 2026-03-31), q2-2026 (active), q3-2026 (upcoming)
 
 -- Participaciones Q2:
 -- SELECT b.slug, count(*) AS startups
