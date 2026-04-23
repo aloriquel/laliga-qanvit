@@ -76,19 +76,11 @@ export default async function StartupPublicPage({ params }: Props) {
     user
       ? supabase.from("profiles").select("role").eq("id", user.id).single()
       : Promise.resolve({ data: null }),
-    (service as any)
+    service
       .from("startup_momentum")
       .select("momentum_score, up_count, down_count, distinct_voters, last_vote_at")
       .eq("startup_id", startup.id)
-      .maybeSingle() as Promise<{
-        data: {
-          momentum_score: number;
-          up_count: number;
-          down_count: number;
-          distinct_voters: number;
-          last_vote_at: string | null;
-        } | null;
-      }>,
+      .maybeSingle(),
   ]);
 
   let evalTimeline: EvaluationRow[] = [];
@@ -149,18 +141,18 @@ export default async function StartupPublicPage({ params }: Props) {
         </div>
 
         {/* Region + funding badges */}
-        {(startup.region_ca || (startup as any).funding_stage || (startup as any).is_raising) && (
+        {(startup.region_ca || startup.funding_stage || startup.is_raising) && (
           <div className="flex flex-wrap justify-center gap-2 mb-4 -mt-4">
-            {(startup.region_ca as string | null) && (
+            {startup.region_ca && (
               <StartupRegionBadge
                 regionCa={startup.region_ca as CaId}
-                regionProvince={startup.region_province as string | null}
+                regionProvince={startup.region_province}
                 variant="full"
               />
             )}
-            <FundingStageBadge stage={(startup as any).funding_stage} />
-            {(startup.consent_public_profile as boolean | null) && (
-              <RaisingBadge isRaising={(startup as any).is_raising === true} />
+            <FundingStageBadge stage={startup.funding_stage} />
+            {startup.consent_public_profile && (
+              <RaisingBadge isRaising={startup.is_raising === true} />
             )}
           </div>
         )}
@@ -173,12 +165,18 @@ export default async function StartupPublicPage({ params }: Props) {
         )}
 
         {/* Community momentum */}
-        {momentumData && momentumData.distinct_voters > 0 && (
+        {momentumData && (momentumData.distinct_voters ?? 0) > 0 && (
           <div className="mb-6">
             <EcosystemMomentumBadge
               startupId={startup.id}
               variant="full"
-              initialMomentum={momentumData}
+              initialMomentum={{
+                momentum_score: momentumData.momentum_score ?? 0,
+                up_count: momentumData.up_count ?? 0,
+                down_count: momentumData.down_count ?? 0,
+                distinct_voters: momentumData.distinct_voters ?? 0,
+                last_vote_at: momentumData.last_vote_at,
+              }}
             />
           </div>
         )}
@@ -190,7 +188,7 @@ export default async function StartupPublicPage({ params }: Props) {
         <PublicTopDimensions dimensions={topDimensions} />
 
         {/* Deck preview carousel */}
-        {(startup as any).consent_public_deck && (
+        {startup.consent_public_deck && (
           <DeckPreviewCarousel startupId={startup.id} />
         )}
 

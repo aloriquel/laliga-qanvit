@@ -32,8 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const service = createServiceClient();
 
   // Fetch discrepancy
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: discrepancy } = await (service as any)
+  const { data: discrepancy } = await service
     .from("admin_evaluator_discrepancies")
     .select("id, startup_id, status")
     .eq("id", params.id)
@@ -49,8 +48,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     action === "override"            ? "overridden_by_admin" :
     "dismissed";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: updateErr } = await (service as any)
+  const { error: updateErr } = await service
     .from("admin_evaluator_discrepancies")
     .update({
       status: newStatus,
@@ -65,8 +63,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   // If override: update startup's funding_stage + current_division
   if (action === "override" && override_stage && isFundingStage(override_stage)) {
     const newDivision = getDivisionFromFundingStage(override_stage);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (service as any)
+    await service
       .from("startups")
       .update({
         funding_stage: override_stage,

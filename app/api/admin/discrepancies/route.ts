@@ -20,8 +20,7 @@ export async function GET(req: NextRequest) {
   const perPage  = Math.min(50, Number(sp.get("per_page") ?? 20));
 
   const service = createServiceClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query = (service as any)
+  let query = service
     .from("admin_evaluator_discrepancies")
     .select("*, startup:startups(name, slug)", { count: "exact" })
     .order("created_at", { ascending: false })

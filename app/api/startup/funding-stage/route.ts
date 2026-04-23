@@ -6,6 +6,9 @@ import {
   getDivisionFromFundingStage,
   type FundingStage,
 } from "@/lib/funding-stage";
+import type { Database } from "@/lib/supabase/types";
+
+type StartupsUpdate = Database["public"]["Tables"]["startups"]["Update"];
 
 export async function PATCH(req: NextRequest) {
   const prefix = "[startup-funding-stage]";
@@ -65,20 +68,18 @@ export async function PATCH(req: NextRequest) {
   }
 
   // Build update payload
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updatePayload: any = {
+  const updatePayload: StartupsUpdate = {
     funding_stage: stage,
     funding_stage_inferred: false,
   };
   if (stage !== null) {
-    updatePayload.current_division = newDivision;
+    updatePayload.current_division = newDivision as StartupsUpdate["current_division"];
   }
   if (is_raising !== undefined) {
-    updatePayload.is_raising = is_raising;
+    updatePayload.is_raising = is_raising as boolean;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: dbErr } = await (supabase as any)
+  const { error: dbErr } = await supabase
     .from("startups")
     .update(updatePayload)
     .eq("id", startup.id);

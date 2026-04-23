@@ -22,8 +22,7 @@ export default async function DiscrepanciasAdminPage({
   const page = Number(searchParams.page ?? 1);
   const perPage = 20;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query = (supabase as any)
+  let query = supabase
     .from("admin_evaluator_discrepancies")
     .select(
       "id, startup_id, declared_funding_stage, suspected_funding_stage, severity, evaluator_reasoning, status, created_at, startup:startups(name, slug)",
@@ -38,8 +37,7 @@ export default async function DiscrepanciasAdminPage({
   const { data: rows, count, error } = await query;
 
   // Count pending for badge display
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { count: pendingCount } = await (supabase as any)
+  const { count: pendingCount } = await supabase
     .from("admin_evaluator_discrepancies")
     .select("id", { count: "exact", head: true })
     .eq("status", "pending");

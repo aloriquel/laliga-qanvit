@@ -30,6 +30,12 @@ export type PublicProfile = {
     show_public_timeline: boolean;
     consent_public_profile: boolean;
     is_public: boolean;
+    // Added in 0036/0037
+    region_ca: string | null;
+    region_province: string | null;
+    consent_public_deck: boolean;
+    funding_stage: string | null;
+    is_raising: boolean;
   };
   evaluation: PublicEvaluation | null;
   highlights: string[];
