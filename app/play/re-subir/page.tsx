@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import type { Database } from "@/lib/supabase/types";
-import { getRateLimitUnlockDate } from "@/lib/decks/upload-core";
+import { getActiveBatch, DECK_UPLOAD_LIMIT_PER_BATCH } from "@/lib/batches";
 import ResubirForm from "./ResubirForm";
 
 export const metadata: Metadata = { title: "Re-subir deck — La Liga Qanvit" };
@@ -23,18 +24,24 @@ export default async function ResubirPage() {
 
   if (!startup) redirect("/play");
 
-  // Check rate limit
-  const { data: lastDeck } = await supabase
-    .from("decks")
-    .select("uploaded_at")
-    .eq("startup_id", startup.id)
-    .neq("status", "archived")
-    .order("uploaded_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const serviceClient = createServiceClient();
+  const activeBatch = await getActiveBatch();
 
-  const canResubmit = !lastDeck || new Date() >= getRateLimitUnlockDate(lastDeck.uploaded_at);
-  const unlockDate = lastDeck ? getRateLimitUnlockDate(lastDeck.uploaded_at) : null;
+  let deckCount = 0;
+  if (activeBatch) {
+    const { data: participation } = await serviceClient
+      .from("batch_participations")
+      .select("deck_uploads_count")
+      .eq("batch_id", activeBatch.id)
+      .eq("startup_id", startup.id)
+      .maybeSingle();
+    deckCount = participation?.deck_uploads_count ?? 0;
+  }
+
+  const canResubmit = !!activeBatch && deckCount < DECK_UPLOAD_LIMIT_PER_BATCH;
+  const batchEndsAt = activeBatch
+    ? new Date(activeBatch.ends_at).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })
+    : null;
 
   return (
     <div className="bg-brand-lavender min-h-screen py-16">
@@ -47,15 +54,23 @@ export default async function ResubirPage() {
           Esto archivará tu evaluación actual y lanzará una nueva. Tu posición puede cambiar.
         </p>
 
-        {!canResubmit && unlockDate ? (
+        {!activeBatch ? (
           <div className="bg-white rounded-card border border-border-soft p-8 text-center">
-            <p className="font-sora font-bold text-brand-navy text-lg mb-2">Aún no puedes re-subir</p>
+            <p className="font-sora font-bold text-brand-navy text-lg mb-2">No hay batch activo</p>
             <p className="font-body text-ink-secondary text-sm">
-              Podrás re-subir tu deck el{" "}
-              <span className="font-semibold text-brand-navy">
-                {unlockDate.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}
-              </span>
-              .
+              Espera al inicio del próximo batch para re-subir tu deck.
+            </p>
+          </div>
+        ) : !canResubmit ? (
+          <div className="bg-white rounded-card border border-border-soft p-8 text-center">
+            <p className="font-sora font-bold text-brand-navy text-lg mb-2">Límite de subidas alcanzado</p>
+            <p className="font-body text-ink-secondary text-sm">
+              Has usado las <span className="font-semibold text-brand-navy">{DECK_UPLOAD_LIMIT_PER_BATCH}/{DECK_UPLOAD_LIMIT_PER_BATCH} subidas</span> del batch{" "}
+              <span className="font-semibold text-brand-navy">{activeBatch.display_name}</span>.
+              {batchEndsAt && (
+                <> Podrás re-subir a partir del siguiente batch (finaliza el{" "}
+                  <span className="font-semibold text-brand-navy">{batchEndsAt}</span>).</>
+              )}
             </p>
             <a
               href="/dashboard"
@@ -65,7 +80,14 @@ export default async function ResubirPage() {
             </a>
           </div>
         ) : (
-          <ResubirForm startupId={startup.id} currentOneLiner={startup.one_liner ?? ""} />
+          <>
+            <div className="mb-6 flex items-center gap-2">
+              <span className="font-mono text-xs bg-brand-navy/10 text-brand-navy px-3 py-1 rounded-full font-semibold">
+                {deckCount}/{DECK_UPLOAD_LIMIT_PER_BATCH} subidas usadas · {activeBatch.display_name}
+              </span>
+            </div>
+            <ResubirForm startupId={startup.id} currentOneLiner={startup.one_liner ?? ""} />
+          </>
         )}
       </div>
     </div>

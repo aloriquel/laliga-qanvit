@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { validateAndUploadDeck } from "@/lib/decks/upload-core";
+import { getActiveBatch } from "@/lib/batches";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
     // Verify ownership (admins can upload to any startup)
     const { data: startup, error: startupError } = await supabase
       .from("startups")
-      .select("id, owner_id")
+      .select("id, owner_id, current_score")
       .eq("id", startupId)
       .single();
 
@@ -47,16 +48,26 @@ export async function POST(req: NextRequest) {
 
     const serviceClient = createServiceClient();
 
+    // Fetch active batch (non-blocking for admins who skip the guard)
+    const activeBatch = await getActiveBatch();
+
     const result = await validateAndUploadDeck({
       file,
       startupId,
       serviceClient,
       userClient: supabase,
-      skipRateLimit: isAdmin,
+      skipBatchGuard: isAdmin,
+      activeBatch,
     });
 
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
+      const body: Record<string, unknown> = { error: result.error };
+      if (result.limitReached) {
+        body.limit_reached = true;
+        body.deck_count = result.deckCount;
+        body.limit = result.limit;
+      }
+      return NextResponse.json(body, { status: result.status });
     }
 
     // Update startup consents
@@ -67,6 +78,34 @@ export async function POST(req: NextRequest) {
         consent_internal_use: consentInternalUse,
       })
       .eq("id", startupId);
+
+    // UPSERT batch_participations for tracking deck uploads per batch
+    if (activeBatch) {
+      const { data: existing } = await serviceClient
+        .from("batch_participations")
+        .select("id, deck_uploads_count")
+        .eq("batch_id", activeBatch.id)
+        .eq("startup_id", startupId)
+        .maybeSingle();
+
+      if (existing) {
+        await serviceClient
+          .from("batch_participations")
+          .update({
+            deck_uploads_count: existing.deck_uploads_count + 1,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id);
+      } else {
+        await serviceClient.from("batch_participations").insert({
+          batch_id: activeBatch.id,
+          startup_id: startupId,
+          baseline_score: startup.current_score ?? null,
+          deck_uploads_count: 1,
+          participated_via: "deck_nuevo",
+        });
+      }
+    }
 
     // Apply referral if cookie present and startup has no referrer yet
     const refCode = req.cookies.get("qvt_ref")?.value;

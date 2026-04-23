@@ -5,8 +5,8 @@ import type { Database } from "@/lib/supabase/types";
 import ClassificationCard from "@/components/league/ClassificationCard";
 import DashboardShareButton from "./DashboardShareButton";
 import { renderAlertText, alertIcon } from "@/lib/dashboard/alert-text";
-import { getRateLimitUnlockDate } from "@/lib/decks/upload-core";
-import { formatDistanceToNow } from "./date-utils";
+import { getActiveBatch, DECK_UPLOAD_LIMIT_PER_BATCH } from "@/lib/batches";
+import { createServiceClient } from "@/lib/supabase/server";
 
 type EvaluationRow = Database["public"]["Tables"]["evaluations"]["Row"];
 type StartupRow = Database["public"]["Tables"]["startups"]["Row"];
@@ -62,18 +62,20 @@ export default async function DashboardHomePage() {
     .order("created_at", { ascending: false })
     .limit(5) as { data: AlertRow[] | null };
 
-  // Last non-archived deck for rate limit check
-  const { data: lastDeck } = await supabase
-    .from("decks")
-    .select("uploaded_at, status")
-    .eq("startup_id", startup.id)
-    .neq("status", "archived")
-    .order("uploaded_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const canResubmit = !lastDeck || new Date() >= getRateLimitUnlockDate(lastDeck.uploaded_at);
-  const unlockDate = lastDeck ? getRateLimitUnlockDate(lastDeck.uploaded_at) : null;
+  // Batch-based resubmit check
+  const serviceClient = createServiceClient();
+  const activeBatch = await getActiveBatch();
+  let deckCountInBatch = 0;
+  if (activeBatch) {
+    const { data: participation } = await serviceClient
+      .from("batch_participations")
+      .select("deck_uploads_count")
+      .eq("batch_id", activeBatch.id)
+      .eq("startup_id", startup.id)
+      .maybeSingle();
+    deckCountInBatch = participation?.deck_uploads_count ?? 0;
+  }
+  const canResubmit = !!activeBatch && deckCountInBatch < DECK_UPLOAD_LIMIT_PER_BATCH;
 
   const scoreDelta = latestEval && prevEval
     ? Number(latestEval.score_total) - Number(prevEval.score_total)
@@ -216,8 +218,17 @@ export default async function DashboardHomePage() {
       {/* ── Re-subir deck ── */}
       <section className="mb-8">
         <div className="bg-white rounded-card border border-border-soft p-6">
-          <h2 className="font-sora font-bold text-lg text-brand-navy mb-2">Re-subir deck</h2>
-          {canResubmit ? (
+          <div className="flex items-center justify-between mb-2 gap-3 flex-wrap">
+            <h2 className="font-sora font-bold text-lg text-brand-navy">Re-subir deck</h2>
+            {activeBatch && (
+              <span className="font-mono text-xs bg-brand-navy/8 text-brand-navy px-2.5 py-1 rounded-full">
+                {deckCountInBatch}/{DECK_UPLOAD_LIMIT_PER_BATCH} subidas · {activeBatch.display_name}
+              </span>
+            )}
+          </div>
+          {!activeBatch ? (
+            <p className="font-body text-sm text-ink-secondary">No hay batch activo. Espera al inicio del próximo.</p>
+          ) : canResubmit ? (
             <div className="flex items-center justify-between gap-4">
               <p className="font-body text-sm text-ink-secondary">Tu próximo deck está listo para evaluarse.</p>
               <Link
@@ -228,24 +239,11 @@ export default async function DashboardHomePage() {
               </Link>
             </div>
           ) : (
-            <div>
-              <p className="font-body text-sm text-ink-secondary">
-                Podrás re-subir tu deck en{" "}
-                <span className="font-semibold text-brand-navy">
-                  {unlockDate ? formatDistanceToNow(unlockDate) : "unos días"}.
-                </span>
-              </p>
-              <div className="mt-3 h-1.5 bg-brand-lavender rounded-full overflow-hidden">
-                {unlockDate && lastDeck && (
-                  <div
-                    className="h-full bg-brand-salmon rounded-full transition-all"
-                    style={{
-                      width: `${Math.min(100, ((Date.now() - new Date(lastDeck.uploaded_at).getTime()) / (7 * 24 * 60 * 60 * 1000)) * 100).toFixed(0)}%`,
-                    }}
-                  />
-                )}
-              </div>
-            </div>
+            <p className="font-body text-sm text-ink-secondary">
+              Has usado las <span className="font-semibold text-brand-navy">{DECK_UPLOAD_LIMIT_PER_BATCH}/{DECK_UPLOAD_LIMIT_PER_BATCH} subidas</span> del batch{" "}
+              <span className="font-semibold text-brand-navy">{activeBatch.display_name}</span>.
+              Podrás re-subir cuando empiece el siguiente batch.
+            </p>
           )}
         </div>
       </section>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { validateAndUploadDeck, RATE_LIMIT_DAYS, getRateLimitUnlockDate } from "@/lib/decks/upload-core";
+import { validateAndUploadDeck } from "@/lib/decks/upload-core";
+import { getActiveBatch, DECK_UPLOAD_LIMIT_PER_BATCH } from "@/lib/batches";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -23,10 +24,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "file is required" }, { status: 400 });
     }
 
-    // Get startup owned by this user
     const { data: startup } = await supabase
       .from("startups")
-      .select("id")
+      .select("id, current_score")
       .eq("owner_id", user.id)
       .single();
 
@@ -34,36 +34,46 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No startup found for this user" }, { status: 404 });
     }
 
-    // Rate limit check: look at last non-archived deck
-    const cutoff = new Date(Date.now() - RATE_LIMIT_DAYS * 24 * 60 * 60 * 1000).toISOString();
-    const { data: recentDeck } = await supabase
-      .from("decks")
-      .select("uploaded_at")
+    const serviceClient = createServiceClient();
+
+    // Batch-based rate limit: check submission count for this startup in active batch
+    const activeBatch = await getActiveBatch();
+    if (!activeBatch) {
+      return NextResponse.json(
+        { error: "No hay batch activo. Los decks solo pueden subirse durante un batch activo." },
+        { status: 503 }
+      );
+    }
+
+    const { data: participation } = await serviceClient
+      .from("batch_participations")
+      .select("id, deck_uploads_count")
+      .eq("batch_id", activeBatch.id)
       .eq("startup_id", startup.id)
-      .neq("status", "archived")
-      .gte("uploaded_at", cutoff)
-      .order("uploaded_at", { ascending: false })
-      .limit(1)
       .maybeSingle();
 
-    if (recentDeck) {
-      const unlock = getRateLimitUnlockDate(recentDeck.uploaded_at);
+    const deckCount = participation?.deck_uploads_count ?? 0;
+    if (deckCount >= DECK_UPLOAD_LIMIT_PER_BATCH) {
       return NextResponse.json(
-        { error: "Rate limit: only 1 deck every 7 days.", unlock_at: unlock.toISOString() },
+        {
+          error: `Has usado las ${DECK_UPLOAD_LIMIT_PER_BATCH} subidas de este batch. Podrás re-subir en el siguiente.`,
+          limit_reached: true,
+          deck_count: deckCount,
+          limit: DECK_UPLOAD_LIMIT_PER_BATCH,
+          batch_ends_at: activeBatch.ends_at,
+        },
         { status: 429 }
       );
     }
 
-    const serviceClient = createServiceClient();
-
-    // Archive the current active deck
+    // Archive current active decks
     await serviceClient
       .from("decks")
       .update({ status: "archived" })
       .eq("startup_id", startup.id)
       .neq("status", "archived");
 
-    // Update one-liner if changed
+    // Update one-liner if provided
     if (oneLiner !== null && oneLiner.trim() !== "") {
       await serviceClient
         .from("startups")
@@ -71,13 +81,13 @@ export async function POST(req: NextRequest) {
         .eq("id", startup.id);
     }
 
-    // Upload new deck (skip rate limit since we already checked)
+    // Upload new deck (guard already checked above)
     const result = await validateAndUploadDeck({
       file,
       startupId: startup.id,
       serviceClient,
       userClient: supabase,
-      skipRateLimit: true,
+      skipBatchGuard: true,
     });
 
     if (!result.ok) {
@@ -92,6 +102,26 @@ export async function POST(req: NextRequest) {
         consent_internal_use: consentInternalUse,
       })
       .eq("id", startup.id);
+
+    // Increment batch participation count
+    if (participation) {
+      await serviceClient
+        .from("batch_participations")
+        .update({
+          deck_uploads_count: participation.deck_uploads_count + 1,
+          participated_via: "deck_actualizado",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", participation.id);
+    } else {
+      await serviceClient.from("batch_participations").insert({
+        batch_id: activeBatch.id,
+        startup_id: startup.id,
+        baseline_score: startup.current_score ?? null,
+        deck_uploads_count: 1,
+        participated_via: "deck_nuevo",
+      });
+    }
 
     return NextResponse.json({ deck_id: result.deckId, status: "pending" }, { status: 201 });
   } catch (err) {
