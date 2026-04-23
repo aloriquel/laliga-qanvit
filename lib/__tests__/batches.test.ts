@@ -3,6 +3,8 @@ import {
   batchDisplayLabel,
   batchSlug,
   isPreLaunchBatch,
+  getTimeToDeadline,
+  getCountdownLabel,
   CURRENT_BATCH_STATUSES,
   DECK_UPLOAD_LIMIT_PER_BATCH,
   calculateNextBatchStart,
@@ -102,6 +104,80 @@ describe("isPreLaunchBatch", () => {
 
   it("returns false when winners_computed_at is null", () => {
     expect(isPreLaunchBatch({ ...base, winners_computed_at: null })).toBe(false);
+  });
+});
+
+describe("getTimeToDeadline", () => {
+  const now = new Date("2026-04-23T10:00:00Z");
+
+  it("returns days+hours for a future date", () => {
+    const target = new Date("2026-07-01T00:00:00Z"); // ~68d 14h later
+    const r = getTimeToDeadline(target, now);
+    expect(r.expired).toBe(false);
+    expect(r.days).toBe(68);
+    expect(r.hours).toBe(14);
+  });
+
+  it("returns expired:true for past dates", () => {
+    const target = new Date("2026-04-22T10:00:00Z");
+    const r = getTimeToDeadline(target, now);
+    expect(r.expired).toBe(true);
+    expect(r.days).toBe(0);
+    expect(r.hours).toBe(0);
+  });
+
+  it("treats now == target as expired", () => {
+    const r = getTimeToDeadline(now, now);
+    expect(r.expired).toBe(true);
+  });
+
+  it("accepts ISO string", () => {
+    const r = getTimeToDeadline("2026-07-01T00:00:00Z", now);
+    expect(r.days).toBe(68);
+  });
+});
+
+describe("getCountdownLabel", () => {
+  const preLaunch: Batch = {
+    id: "pre", slug: "pre-lanzamiento-2026", quarter: "Q0_HISTORICO", year: 2026,
+    display_name: "Pre-Lanzamiento",
+    starts_at: "2026-04-23T10:00:00Z",
+    ends_at: "2026-06-30T21:59:59Z",
+    status: "active", closed_at: null,
+    winners_computed_at: "1970-01-01T00:00:00Z",
+  };
+  const q3: Batch = {
+    id: "q3", slug: "q3-2026", quarter: "Q3", year: 2026,
+    display_name: "Q3 2026",
+    starts_at: "2099-07-01T00:00:00Z", // far future so expired=false
+    ends_at: "2099-09-30T23:00:00Z",
+    status: "upcoming", closed_at: null, winners_computed_at: null,
+  };
+
+  it("uses next batch for pre-launch", () => {
+    const l = getCountdownLabel(preLaunch, q3);
+    expect(l.sublabel).toContain("Q3 2026");
+    expect(l.is_urgent).toBe(false);
+    expect(l.label).toMatch(/\d+d \d+h/);
+  });
+
+  it("uses starts_at for upcoming", () => {
+    const l = getCountdownLabel(q3);
+    expect(l.sublabel).toContain("arranca");
+    expect(l.label).toMatch(/\d+d \d+h/);
+  });
+
+  it("uses ends_at for active (non-pre-launch)", () => {
+    const active: Batch = { ...q3, status: "active", ends_at: "2099-09-30T23:00:00Z" };
+    const l = getCountdownLabel(active);
+    expect(l.sublabel).toContain("cierra");
+  });
+
+  it("returns 'cerrado' for closed", () => {
+    const closed: Batch = { ...q3, status: "closed", closed_at: "2026-09-30T23:00:00Z" };
+    const l = getCountdownLabel(closed);
+    expect(l.label).toBe("cerrado");
+    expect(l.is_urgent).toBe(false);
   });
 });
 

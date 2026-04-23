@@ -4,6 +4,7 @@ import DashboardShell from "@/components/dashboard/DashboardShell";
 import { ConsentGateModal } from "@/components/auth/ConsentGateModal";
 import { ensureProfile } from "@/lib/auth/ensure-profile";
 import DeckConsentWizard from "@/components/startup/DeckConsentWizard";
+import WinnerCelebrationGate from "@/components/batches/WinnerCelebrationGate";
 import type { Database } from "@/lib/supabase/types";
 
 type StartupRow = Database["public"]["Tables"]["startups"]["Row"];
@@ -44,6 +45,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <DashboardShell unreadAlerts={unreadCount ?? 0} startupName={startup.name}>
       <ConsentGateModal show={needsConsent} />
+      <WinnerCelebrationGate />
       <DeckConsentWizard
         userId={user.id}
         startupId={startup.id}

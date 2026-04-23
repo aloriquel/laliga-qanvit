@@ -5,7 +5,14 @@ import { FilterContextBar } from "@/components/league/FilterContextBar";
 import LeaderboardRow from "@/components/league/LeaderboardRow";
 import { SPAIN_CA, getCaById, type CaId } from "@/lib/spain-regions";
 import Link from "next/link";
-import { getBatchForLeaderboard, isPreLaunchBatch } from "@/lib/batches";
+import {
+  getBatchForLeaderboard,
+  getNextUpcomingBatch,
+  hasAnyClosedBatchWithWinners,
+  isPreLaunchBatch,
+} from "@/lib/batches";
+import BatchHeader from "@/components/batches/BatchHeader";
+import LigaTabs from "@/components/batches/LigaTabs";
 
 export const revalidate = 60; // ISR per unique URL
 
@@ -62,9 +69,11 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 }
 
 export default async function LeaderboardPage({ searchParams }: PageProps) {
-  const [t, batch] = await Promise.all([
+  const [t, batch, nextBatch, showTabs] = await Promise.all([
     getTranslations("leaderboard"),
     getBatchForLeaderboard(searchParams.batch ?? null),
+    getNextUpcomingBatch(),
+    hasAnyClosedBatchWithWinners(),
   ]);
 
   const division = searchParams.division ?? null;
@@ -139,42 +148,11 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
   return (
     <div className="bg-brand-lavender min-h-screen py-16">
       <div className="container-brand">
-        {/* Batch context banner */}
-        {batch && isPreLaunchBatch(batch) && (
-          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-mono text-xs bg-amber-100 text-amber-700 font-semibold px-2.5 py-1 rounded-full">
-                Pre-Lanzamiento · Q3 2026 arranca el 1 de julio
-              </span>
-            </div>
-            <p className="font-body text-sm text-ink-secondary">
-              Ficha tu startup hoy para aparecer desde el primer día del primer batch oficial.
-            </p>
-          </div>
-        )}
-        {batch && batch.status !== "active" && !isPreLaunchBatch(batch) && (
-          <div className="mb-6 bg-brand-navy/8 border border-brand-navy/15 rounded-xl px-5 py-3 flex items-center gap-3">
-            <span className="font-mono text-xs text-brand-navy font-semibold uppercase tracking-wider">
-              {batch.status === "closed" ? "Histórico" : batch.display_name}
-            </span>
-            <p className="font-body text-sm text-ink-secondary">
-              Estás viendo los resultados del batch <span className="font-semibold text-brand-navy">{batch.display_name}</span>.{" "}
-              <Link href="/liga" className="underline underline-offset-2 hover:text-brand-navy transition-colors">
-                Ver ranking actual →
-              </Link>
-            </p>
-          </div>
-        )}
-        {batch && batch.status === "active" && !isPreLaunchBatch(batch) && (
-          <div className="mb-6 flex items-center gap-2">
-            <span className="font-mono text-xs bg-green-100 text-green-700 font-semibold px-2.5 py-1 rounded-full">
-              {batch.display_name} · en curso
-            </span>
-            <span className="font-body text-xs text-ink-secondary">
-              Finaliza el {new Date(batch.ends_at).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}
-            </span>
-          </div>
-        )}
+        {/* Tabs (only once ≥1 batch has winners) */}
+        {showTabs && <LigaTabs activeTab="actual" />}
+
+        {/* Batch header */}
+        {batch && <BatchHeader batch={batch} nextBatch={nextBatch} />}
 
         {/* Heading */}
         <div className="mb-10">

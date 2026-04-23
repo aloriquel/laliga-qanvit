@@ -15,6 +15,8 @@ import StartupRegionBadge from "@/components/ui/StartupRegionBadge";
 import FundingStageBadge from "@/components/ui/FundingStageBadge";
 import RaisingBadge from "@/components/ui/RaisingBadge";
 import type { CaId } from "@/lib/spain-regions";
+import ChampionBadge from "@/components/startup/ChampionBadge";
+import { getChampionBadgesForStartup } from "@/lib/batches";
 
 type Props = { params: { slug: string } };
 type EvaluationRow = Database["public"]["Tables"]["evaluations"]["Row"];
@@ -46,11 +48,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? rawDesc.length > 160 ? rawDesc.slice(0, 157) + "..." : rawDesc
     : undefined;
 
+  // If startup is a national champion in any closed batch, use the champion OG card.
+  const badges = await getChampionBadgesForStartup(startup.id);
+  const championBadge = badges.find((b) => b.category === "national_top1");
+  const ogImage = championBadge
+    ? `/api/og/batch/${championBadge.batch.slug}/champion/${startup.slug}`
+    : `/api/og/startup/${startup.slug}`;
+
   return {
     title: startup.name as string,
     description,
-    openGraph: { images: [`/api/og/startup/${startup.slug}`] },
-    twitter: { card: "summary_large_image", images: [`/api/og/startup/${startup.slug}`] },
+    openGraph: { images: [ogImage] },
+    twitter: { card: "summary_large_image", images: [ogImage] },
   };
 }
 
@@ -66,6 +75,7 @@ export default async function StartupPublicPage({ params }: Props) {
 
   const { startup, evaluation, highlights } = profileData;
   const topDimensions = evaluation ? getTopDimensions(evaluation.dimensions) : [];
+  const championBadges = await getChampionBadgesForStartup(startup.id);
 
   const [{ data: standing }, { data: profile }, { data: momentumData }] = await Promise.all([
     supabase
@@ -139,6 +149,15 @@ export default async function StartupPublicPage({ params }: Props) {
             interactive={false}
           />
         </div>
+
+        {/* Champion badges */}
+        {championBadges.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 mb-6 -mt-2">
+            {championBadges.map((b) => (
+              <ChampionBadge key={b.id} badge={b} />
+            ))}
+          </div>
+        )}
 
         {/* Region + funding badges */}
         {(startup.region_ca || startup.funding_stage || startup.is_raising) && (

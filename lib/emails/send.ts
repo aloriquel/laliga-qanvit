@@ -10,6 +10,7 @@ import {
   ecosystemDigestEmail,
   ecosystemApplicationEmail,
   ecosystemApplicationAdminEmail,
+  batchWinnerEmail,
   FROM,
 } from "./templates";
 
@@ -79,5 +80,10 @@ export async function sendEcosystemApplicationEmail(to: string, params: Paramete
 
 export async function sendEcosystemApplicationAdminEmail(to: string, params: Parameters<typeof ecosystemApplicationAdminEmail>[0]): Promise<SendResult> {
   const { subject, html } = ecosystemApplicationAdminEmail(params);
+  return send(to, subject, html);
+}
+
+export async function sendBatchWinnerEmail(to: string, params: Parameters<typeof batchWinnerEmail>[0]): Promise<SendResult> {
+  const { subject, html } = batchWinnerEmail(params);
   return send(to, subject, html);
 }

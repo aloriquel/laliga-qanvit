@@ -299,6 +299,45 @@ export function ecosystemDigestEmail(params: {
   };
 }
 
+// 16. Batch winner (one email per startup, consolidates multiple categories)
+export function batchWinnerEmail(params: {
+  startupName: string;
+  startupSlug: string;
+  batchDisplayName: string;
+  batchSlug: string;
+  categories: string[]; // pre-formatted labels, e.g. "🏆 Campeón Nacional"
+  finalScore: number;
+}) {
+  const categoriesHtml = params.categories
+    .map((c) => `<li style="margin:6px 0;font-size:14px;color:#22183a;font-weight:600;">${c}</li>`)
+    .join("");
+  const ogImage = `${APP_URL}/api/og/batch/${params.batchSlug}/champion/${params.startupSlug}`;
+  const profileUrl = `${APP_URL}/startup/${params.startupSlug}`;
+  return {
+    subject: `🏆 Habéis ganado en ${params.batchDisplayName}`,
+    html: wrap(`
+      <p style="font-size:18px;font-weight:700;margin-top:0;color:#22183a;">
+        ¡Felicidades, ${params.startupName}!
+      </p>
+      <p style="color:#6b5b8a;font-size:14px;line-height:1.6;">
+        Tu startup ha ganado en <strong>${params.batchDisplayName}</strong>:
+      </p>
+      <ul style="padding-left:20px;margin:8px 0 16px;">
+        ${categoriesHtml}
+      </ul>
+      <div style="background:white;border-radius:12px;padding:16px;margin:16px 0;text-align:center;border:1px solid #e5d8ea;">
+        <div style="font-family:'Sora',sans-serif;font-size:40px;font-weight:800;color:#f4a9aa;">${params.finalScore.toFixed(1)}</div>
+        <div style="font-size:12px;color:#6b5b8a;">Score final</div>
+      </div>
+      <img src="${ogImage}" alt="" style="width:100%;max-width:520px;border-radius:12px;margin:12px 0;" />
+      <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(profileUrl)}"
+         style="display:inline-block;background:#22183a;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;margin-top:8px;">
+        Compartir en LinkedIn →
+      </a>
+    `),
+  };
+}
+
 // 15. Magic link / OTP (fallback, Supabase handles this natively)
 export function magicLinkEmail(params: { email: string; link: string }) {
   return {

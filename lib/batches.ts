@@ -1,4 +1,4 @@
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
 // ── Pure helpers (safe to import anywhere) ────────────────────────────────────
@@ -125,6 +125,125 @@ export async function getDeckCountForStartupInBatch(
     .gte("uploaded_at", batchStartsAt)
     .lt("uploaded_at", batchEndsAt);
   return count ?? 0;
+}
+
+/** Pure countdown helper — days + hours remaining until a target date. */
+export function getTimeToDeadline(
+  targetDate: string | Date,
+  now: Date = new Date(),
+): { days: number; hours: number; expired: boolean } {
+  const target = typeof targetDate === 'string' ? new Date(targetDate) : targetDate;
+  const diffMs = target.getTime() - now.getTime();
+  if (diffMs <= 0) return { days: 0, hours: 0, expired: true };
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  return { days, hours, expired: false };
+}
+
+export type CountdownLabel = {
+  label: string;
+  sublabel: string | null;
+  target: string;
+  is_urgent: boolean;
+};
+
+function formatEsMadrid(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-ES', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+}
+
+/** Derives the countdown label/sublabel/target for a batch based on its status. */
+export function getCountdownLabel(
+  batch: Batch,
+  nextBatch?: Batch | null,
+): CountdownLabel {
+  const preLaunch = isPreLaunchBatch(batch);
+  if (preLaunch && nextBatch) {
+    const { days, hours, expired } = getTimeToDeadline(nextBatch.starts_at);
+    return {
+      label: expired ? 'en cierre…' : `${days}d ${hours}h`,
+      sublabel: `${nextBatch.display_name} arranca el ${formatEsMadrid(nextBatch.starts_at)}`,
+      target: nextBatch.starts_at,
+      is_urgent: !expired && days < 2,
+    };
+  }
+  if (batch.status === 'upcoming') {
+    const { days, hours, expired } = getTimeToDeadline(batch.starts_at);
+    return {
+      label: expired ? 'arrancando…' : `${days}d ${hours}h`,
+      sublabel: `${batch.display_name} arranca el ${formatEsMadrid(batch.starts_at)}`,
+      target: batch.starts_at,
+      is_urgent: !expired && days < 2,
+    };
+  }
+  if (batch.status === 'active') {
+    const { days, hours, expired } = getTimeToDeadline(batch.ends_at);
+    return {
+      label: expired ? 'en cierre…' : `${days}d ${hours}h`,
+      sublabel: `${batch.display_name} cierra el ${formatEsMadrid(batch.ends_at)}`,
+      target: batch.ends_at,
+      is_urgent: !expired && days < 2,
+    };
+  }
+  return {
+    label: 'cerrado',
+    sublabel: batch.closed_at ? `Cerrado el ${formatEsMadrid(batch.closed_at)}` : null,
+    target: batch.ends_at,
+    is_urgent: false,
+  };
+}
+
+/** True if at least one batch has been closed with winners computed. */
+export async function hasAnyClosedBatchWithWinners(): Promise<boolean> {
+  const service = createServiceClient();
+  const { count } = await service
+    .from('batch_winners')
+    .select('id', { count: 'exact', head: true });
+  return (count ?? 0) > 0;
+}
+
+export type ChampionBadgeData = {
+  id: string;
+  category: string;
+  segment_key: string | null;
+  final_score: number;
+  batch: {
+    slug: string;
+    display_name: string;
+    quarter: BatchQuarter;
+    year: number;
+    status: BatchStatus;
+  };
+};
+
+/** All public champion badges for a startup (only from closed/archived batches). */
+export async function getChampionBadgesForStartup(
+  startupId: string,
+): Promise<ChampionBadgeData[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from('batch_winners')
+    .select('id, category, segment_key, final_score, created_at, batches!inner(slug, display_name, quarter, year, status)')
+    .eq('startup_id', startupId)
+    .order('created_at', { ascending: false });
+  if (!data) return [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data as any[])
+    .filter((w) => ['closed', 'archived'].includes(w.batches.status))
+    .map((w) => ({
+      id: w.id,
+      category: w.category,
+      segment_key: w.segment_key,
+      final_score: Number(w.final_score),
+      batch: {
+        slug: w.batches.slug,
+        display_name: w.batches.display_name,
+        quarter: w.batches.quarter as BatchQuarter,
+        year: w.batches.year,
+        status: w.batches.status as BatchStatus,
+      },
+    }));
 }
 
 /** Next quarter start date for display purposes (pure computation). */
