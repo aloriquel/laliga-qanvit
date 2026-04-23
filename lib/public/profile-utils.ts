@@ -40,7 +40,7 @@ const MAX_HIGHLIGHT_CHARS = 80;
 
 function trimToWordBoundary(text: string, max: number): string {
   if (text.length <= max) return text;
-  return text.slice(0, max).replace(/\s+\S*$/, "").trim();
+  return text.slice(0, max).replace(/\s+\S*$/, "").trim().replace(/[,;:(]+$/, "");
 }
 
 export function selectHighlights(dimensions: Dimension[]): string[] {
