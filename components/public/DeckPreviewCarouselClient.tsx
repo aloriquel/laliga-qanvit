@@ -5,11 +5,37 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 const MAX_SLIDES = 5;
 const RENDER_SCALE = 1.5;
+const WM_FONT_SIZE = 13;
+const WM_PADDING = 5;
+const WM_MARGIN = 14;
 
 type Props = {
   pdfUrl: string;
   watermark: string;
 };
+
+/** Draws a watermark badge directly into canvas pixels — not a DOM overlay. */
+function paintWatermark(
+  ctx: CanvasRenderingContext2D,
+  canvasW: number,
+  canvasH: number,
+  text: string
+) {
+  ctx.save();
+  ctx.font = `${WM_FONT_SIZE}px sans-serif`;
+  const tw = ctx.measureText(text).width;
+  const bw = tw + WM_PADDING * 2;
+  const bh = WM_FONT_SIZE + WM_PADDING * 2;
+  const bx = canvasW - bw - WM_MARGIN;
+  const by = canvasH - bh - WM_MARGIN;
+
+  ctx.fillStyle = "rgba(0,0,0,0.4)";
+  ctx.fillRect(bx, by, bw, bh);
+
+  ctx.fillStyle = "rgba(255,255,255,0.65)";
+  ctx.fillText(text, bx + WM_PADDING, by + WM_FONT_SIZE + WM_PADDING - 2);
+  ctx.restore();
+}
 
 export default function DeckPreviewCarouselClient({ pdfUrl, watermark }: Props) {
   const [pages, setPages] = useState<string[]>([]);
@@ -37,11 +63,14 @@ export default function DeckPreviewCarouselClient({ pdfUrl, watermark }: Props) 
           const canvas = document.createElement("canvas");
           canvas.width = viewport.width;
           canvas.height = viewport.height;
-
           const ctx = canvas.getContext("2d");
           if (!ctx) continue;
 
           await page.render({ canvasContext: ctx, viewport }).promise;
+
+          // FASE 3: watermark baked into pixels — not a removable DOM overlay
+          paintWatermark(ctx, canvas.width, canvas.height, watermark);
+
           dataUrls.push(canvas.toDataURL("image/jpeg", 0.85));
         }
 
@@ -59,7 +88,7 @@ export default function DeckPreviewCarouselClient({ pdfUrl, watermark }: Props) 
     return () => {
       cancelled = true;
     };
-  }, [pdfUrl]);
+  }, [pdfUrl, watermark]);
 
   function scrollBy(dir: 1 | -1) {
     if (!scrollRef.current) return;
@@ -85,15 +114,17 @@ export default function DeckPreviewCarouselClient({ pdfUrl, watermark }: Props) 
   const active = activeModal !== null ? pages[activeModal] : null;
 
   return (
-    <div className="bg-white rounded-card border border-border-soft p-6 mb-6">
-      {/* Header */}
+    // FASE 4: user-select + drag disabled on the whole block
+    <div
+      className="bg-white rounded-card border border-border-soft p-6 mb-6"
+      style={{ userSelect: "none", WebkitUserSelect: "none" }}
+    >
       <div className="mb-4">
         <h2 className="font-sora font-bold text-lg text-brand-navy">
           Primeras {total} slide{total !== 1 ? "s" : ""} del deck
         </h2>
       </div>
 
-      {/* Carousel */}
       <div className="relative">
         {total > 1 && (
           <button
@@ -118,21 +149,19 @@ export default function DeckPreviewCarouselClient({ pdfUrl, watermark }: Props) 
               className="relative flex-none snap-start rounded-lg overflow-hidden border border-border-soft shadow-card cursor-zoom-in group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-salmon"
               style={{ width: "clamp(200px, 30vw, 340px)" }}
             >
-              {/* Slide number badge */}
-              <span className="absolute top-2 left-2 z-10 bg-brand-navy/70 text-white font-mono text-xs rounded px-1.5 py-0.5">
+              {/* Slide badge */}
+              <span className="absolute top-2 left-2 z-10 bg-brand-navy/70 text-white font-mono text-xs rounded px-1.5 py-0.5 pointer-events-none select-none">
                 {idx + 1}/{total}
               </span>
 
-              {/* CSS watermark badge */}
-              <span className="absolute bottom-2 right-2 z-10 bg-black/40 text-white/65 text-xs rounded px-2 py-0.5 font-sans pointer-events-none select-none">
-                {watermark}
-              </span>
-
+              {/* FASE 4: right-click and drag blocked on image */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={dataUrl}
                 alt={`Slide ${idx + 1} del deck`}
                 loading="lazy"
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
                 className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-200"
               />
             </button>
@@ -150,7 +179,6 @@ export default function DeckPreviewCarouselClient({ pdfUrl, watermark }: Props) 
         )}
       </div>
 
-      {/* Disclaimer */}
       <p className="font-body text-xs text-ink-secondary mt-3">
         Preview con marca de agua. Deck completo disponible con contacto directo con la startup.
       </p>
@@ -196,23 +224,20 @@ export default function DeckPreviewCarouselClient({ pdfUrl, watermark }: Props) 
           )}
 
           <div
-            className="max-w-4xl max-h-full relative"
+            className="max-w-4xl max-h-full"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-white font-mono text-xs text-center mb-2">
               {activeModal! + 1} / {total}
             </p>
-            <div className="relative">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={active}
-                alt={`Slide ${activeModal! + 1} — pantalla completa`}
-                className="max-w-full max-h-[85vh] object-contain rounded-lg"
-              />
-              <span className="absolute bottom-3 right-3 bg-black/40 text-white/65 text-xs rounded px-2 py-0.5 font-sans pointer-events-none select-none">
-                {watermark}
-              </span>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={active}
+              alt={`Slide ${activeModal! + 1} — pantalla completa`}
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+            />
           </div>
         </div>
       )}
