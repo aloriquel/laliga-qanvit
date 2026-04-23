@@ -30,8 +30,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (service as any).rpc("close_batch_and_assign_winners", {
+  const { error } = await service.rpc("close_batch_and_assign_winners", {
     target_batch_id: params.id,
   });
 
