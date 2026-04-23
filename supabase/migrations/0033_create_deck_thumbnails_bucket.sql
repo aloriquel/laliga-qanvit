@@ -15,9 +15,13 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- Service role puede subir y leer archivos (usado por el Server Component)
-CREATE POLICY IF NOT EXISTS "service_role_deck_thumbnails_all"
-  ON storage.objects
-  FOR ALL
-  TO service_role
-  USING (bucket_id = 'deck-thumbnails')
-  WITH CHECK (bucket_id = 'deck-thumbnails');
+DO $$
+BEGIN
+  CREATE POLICY "service_role_deck_thumbnails_all"
+    ON storage.objects
+    FOR ALL
+    TO service_role
+    USING (bucket_id = 'deck-thumbnails')
+    WITH CHECK (bucket_id = 'deck-thumbnails');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
