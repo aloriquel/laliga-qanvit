@@ -5,12 +5,14 @@ import { X, ExternalLink } from "lucide-react";
 import type { Database } from "@/lib/supabase/types";
 import EcosystemMomentumBadge from "@/components/ecosystem/EcosystemMomentumBadge";
 import StartupVoteControl from "@/components/ecosystem/StartupVoteControl";
+import StartupAvatar from "@/components/ui/StartupAvatar";
 
 type Tier = Database["public"]["Enums"]["ecosystem_tier"];
 
 type StartupDetail = {
   id: string;
   name: string;
+  logo_url?: string | null;
   vertical: string;
   division: string;
   score: number;
@@ -51,9 +53,14 @@ export default function StartupDetailModal({ startupId, startupName, tier, curre
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-soft sticky top-0 bg-white z-10">
-          <h2 className="font-sora font-bold text-brand-navy text-lg">
-            {loading ? "Cargando..." : detail?.name ?? "Startup"}
-          </h2>
+          <div className="flex items-center gap-3">
+            {detail && (
+              <StartupAvatar startup={detail} size="sm" />
+            )}
+            <h2 className="font-sora font-bold text-brand-navy text-lg">
+              {loading ? "Cargando..." : detail?.name ?? "Startup"}
+            </h2>
+          </div>
           <button onClick={onClose} className="text-ink-secondary hover:text-brand-navy transition-colors">
             <X size={20} />
           </button>

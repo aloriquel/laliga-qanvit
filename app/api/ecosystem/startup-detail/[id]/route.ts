@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const { data: startup } = await supabase
     .from("startups")
-    .select("id, name, location_region, founded_year, website")
+    .select("id, name, logo_url, location_region, founded_year, website")
     .eq("id", params.id)
     .maybeSingle();
 
@@ -51,6 +51,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json({
     id: startup.id,
     name: startup.name,
+    logo_url: startup.logo_url ?? null,
     vertical: standing?.current_vertical ?? "",
     division: standing?.current_division ?? "",
     score: standing?.current_score ?? 0,

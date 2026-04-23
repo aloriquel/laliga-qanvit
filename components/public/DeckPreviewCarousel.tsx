@@ -120,7 +120,7 @@ async function generateTrimmedPreview(supabase: any, previewPath: string, storag
       { length: Math.min(srcDoc.getPageCount(), MAX_PAGES) },
       (_, i) => i
     );
-    const copied = await trimDoc.copyPagesFrom(srcDoc, indices);
+    const copied = await trimDoc.copyPages(srcDoc, indices);
     copied.forEach((p) => trimDoc.addPage(p));
 
     const trimBytes = await trimDoc.save();

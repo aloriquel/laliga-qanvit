@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import PrivacyToggles from "./PrivacyToggles";
 import NotificationSettings from "./NotificationSettings";
 import DeleteAccountSection from "./DeleteAccountSection";
+import LogoSection from "./LogoSection";
 
 export const metadata: Metadata = { title: "Configuración — Dashboard" };
 export const revalidate = 0;
@@ -17,7 +18,7 @@ export default async function ConfiguracionPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: startup } = await (supabase as any)
     .from("startups")
-    .select("id, is_public, consent_public_profile, consent_public_deck, show_public_timeline, notification_email_enabled, notification_frequency")
+    .select("id, name, logo_url, is_public, consent_public_profile, consent_public_deck, show_public_timeline, notification_email_enabled, notification_frequency")
     .eq("owner_id", user.id)
     .single();
 
@@ -26,6 +27,20 @@ export default async function ConfiguracionPage() {
   return (
     <div className="pb-20 md:pb-0 max-w-2xl">
       <h1 className="font-sora font-bold text-2xl text-brand-navy mb-8">Configuración</h1>
+
+      {/* Logo de la startup */}
+      <section className="mb-8" id="logo">
+        <h2 className="font-sora font-semibold text-lg text-brand-navy mb-1">Logo de la startup</h2>
+        <p className="font-body text-sm text-ink-secondary mb-4">
+          Aparece en el leaderboard, tu perfil público y las cartas compartibles.
+        </p>
+        <LogoSection
+          initialLogoUrl={startup.logo_url ?? null}
+          startupName={startup.name ?? "Startup"}
+        />
+      </section>
+
+      <div className="border-t border-border-soft my-6" />
 
       {/* Privacy */}
       <section className="mb-8">

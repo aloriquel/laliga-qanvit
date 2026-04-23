@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { buildStartupHref } from "@/lib/league/url-helpers";
+import StartupAvatar from "@/components/ui/StartupAvatar";
 
 export type LeaderboardRowData = {
   startup_id: string | null;
@@ -52,18 +53,11 @@ export default function LeaderboardRow({ row }: Props) {
 
       {/* Startup */}
       <div className="flex items-center gap-3 min-w-0">
-        {row.logo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={row.logo_url}
-            alt={`Logo de ${row.name ?? ""}`}
-            className="h-9 w-9 rounded-full object-cover border border-border-soft flex-shrink-0"
-          />
-        ) : (
-          <div className="h-9 w-9 rounded-full bg-brand-lavender flex items-center justify-center text-brand-navy font-sora font-bold text-sm flex-shrink-0">
-            {row.name?.charAt(0) ?? "?"}
-          </div>
-        )}
+        <StartupAvatar
+          startup={{ name: row.name ?? "?", logo_url: row.logo_url }}
+          size={36}
+          style={{ border: "1px solid var(--color-border-soft, #e5d8ea)" }}
+        />
         <div className="min-w-0">
           <p className="font-sora font-semibold text-sm text-brand-navy truncate group-hover:text-brand-navy/80 transition-colors">
             {row.name ?? "—"}

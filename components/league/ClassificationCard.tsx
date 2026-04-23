@@ -2,6 +2,7 @@
 
 import { motion, useMotionValue, useTransform, useSpring, useReducedMotion } from "framer-motion";
 import { useRef } from "react";
+import StartupAvatar from "@/components/ui/StartupAvatar";
 import { cn } from "@/lib/utils";
 
 const DIVISION_COLORS: Record<string, string> = {
@@ -166,32 +167,15 @@ export default function ClassificationCard({ startup, ranking, size = "lg", inte
         {/* Main content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 pt-8 pb-6">
           {/* Logo */}
-          <div
-            className="rounded-full overflow-hidden bg-white flex items-center justify-center"
+          <StartupAvatar
+            startup={startup}
+            size={size === "md" ? 48 : size === "lg" ? 88 : 120}
+            priority={size === "lg" || size === "xl"}
             style={{
-              width: size === "md" ? 48 : size === "lg" ? 88 : 120,
-              height: size === "md" ? 48 : size === "lg" ? 88 : 120,
               border: "3px solid #f4a9aa",
-              flexShrink: 0,
               marginBottom: size === "md" ? 4 : 8,
             }}
-          >
-            {startup.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={startup.logo_url}
-                alt={startup.name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              <span
-                className="font-sora font-extrabold text-brand-navy"
-                style={{ fontSize: size === "md" ? 20 : size === "lg" ? 36 : 52 }}
-              >
-                {startup.name.charAt(0)}
-              </span>
-            )}
-          </div>
+          />
 
           {/* Name */}
           <p

@@ -90,8 +90,25 @@ export default async function DashboardHomePage() {
         .slice(0, 3)
     : [];
 
+  const hasLogo = !!(startup as unknown as { logo_url?: string | null }).logo_url;
+
   return (
     <div className="pb-20 md:pb-0">
+      {/* ── Logo onboarding banner ── */}
+      {!hasLogo && (
+        <div className="mb-6 flex items-center justify-between gap-4 bg-brand-lavender border border-border-soft rounded-2xl px-5 py-4">
+          <p className="font-body text-sm text-brand-navy">
+            <span className="font-semibold">Añade el logo de tu startup</span> para que te reconozcan en el leaderboard y en las cartas compartibles.
+          </p>
+          <a
+            href="/dashboard/configuracion#logo"
+            className="flex-shrink-0 font-body text-sm font-semibold text-brand-navy bg-white border border-border-soft rounded-xl px-4 py-2 hover:bg-brand-lavender/60 transition-colors"
+          >
+            Subir logo →
+          </a>
+        </div>
+      )}
+
       {/* ── Hero card ── */}
       <section className="mb-8">
         {latestEval ? (

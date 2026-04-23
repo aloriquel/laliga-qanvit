@@ -66,7 +66,7 @@ export default function DeckPreviewCarouselClient({ pdfUrl, watermark }: Props) 
           const ctx = canvas.getContext("2d");
           if (!ctx) continue;
 
-          await page.render({ canvasContext: ctx, viewport }).promise;
+          await page.render({ canvas, canvasContext: ctx, viewport }).promise;
 
           // FASE 3: watermark baked into pixels — not a removable DOM overlay
           paintWatermark(ctx, canvas.width, canvas.height, watermark);
