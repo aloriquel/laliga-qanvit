@@ -75,36 +75,34 @@ type ToggleProps = {
 
 export function IsRaisingToggle({ value, onChange, disabled = false }: ToggleProps) {
   return (
-    <div className="flex flex-col gap-2">
-      <label className="flex items-start gap-3 cursor-pointer group">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={value}
-          disabled={disabled}
-          onClick={() => onChange(!value)}
+    <div className="flex items-start justify-between gap-6">
+      <div className="min-w-0">
+        <p className={cn("font-body text-sm font-semibold", disabled ? "text-ink-secondary" : "text-brand-navy")}>
+          ¿Estás levantando ronda ahora mismo?
+        </p>
+        <p className="font-body text-xs text-ink-secondary mt-0.5 leading-relaxed">
+          Si activas esta opción, aparecerá un badge &ldquo;Levantando ronda&rdquo; en tu perfil público (solo si Perfil público está activado).
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={value}
+        disabled={disabled}
+        onClick={() => onChange(!value)}
+        className={cn(
+          "flex-shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-salmon focus:ring-offset-2",
+          value ? "bg-brand-navy" : "bg-gray-200",
+          disabled && "opacity-50 cursor-not-allowed"
+        )}
+      >
+        <span
           className={cn(
-            "flex-shrink-0 mt-0.5 w-10 h-6 rounded-full border-2 transition-colors relative",
-            value ? "bg-brand-navy border-brand-navy" : "bg-white border-border-soft",
-            disabled && "opacity-50 cursor-not-allowed"
+            "inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform",
+            value ? "translate-x-5" : "translate-x-0.5"
           )}
-        >
-          <span
-            className={cn(
-              "absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform",
-              value ? "translate-x-4" : "translate-x-0.5"
-            )}
-          />
-        </button>
-        <div>
-          <p className="font-body text-sm font-semibold text-brand-navy">
-            ¿Estás levantando ronda ahora mismo?
-          </p>
-          <p className="font-body text-xs text-ink-secondary mt-0.5 leading-relaxed">
-            Si activas esta opción, aparecerá un badge &ldquo;Levantando ronda&rdquo; en tu perfil público (solo si Perfil público está activado).
-          </p>
-        </div>
-      </label>
+        />
+      </button>
     </div>
   );
 }
