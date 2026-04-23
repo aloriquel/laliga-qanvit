@@ -31,61 +31,30 @@ export default async function DeckPreviewCarousel({ startupId }: Props) {
 
   if (!deck?.storage_path) return null;
 
-  // Preview path is keyed by deck_id — naturally invalidated when startup uploads a new deck.
   const previewPath = `${startupId}/${evalRow.deck_id}/preview-${MAX_PAGES}-pages.pdf`;
 
-  // Lightweight existence check — avoids re-processing on every page render.
-  const { data: fileList } = await supabase.storage
-    .from(PREVIEW_BUCKET)
-    .list(`${startupId}/${evalRow.deck_id}`);
+  // ── Try to serve the trimmed preview PDF (privacy layer 1) ────────────────
+  const previewUrl = await getOrCreatePreviewUrl(
+    supabase,
+    previewPath,
+    deck.storage_path as string
+  );
 
-  const previewExists = fileList?.some((f) => f.name === `preview-${MAX_PAGES}-pages.pdf`);
+  // ── Fallback: sign the original PDF if trim failed (e.g. bucket not ready) ─
+  // Privacy still maintained by: (a) 1h signed URL TTL, (b) private decks bucket,
+  // (c) canvas watermark baked in pixels, (d) client renders max 5 pages.
+  const pdfUrl =
+    previewUrl ??
+    (await signOriginalPdf(supabase, deck.storage_path as string));
 
-  if (!previewExists) {
-    // Download original from private decks bucket
-    const { data: fileData, error: dlErr } = await supabase.storage
-      .from("decks")
-      .download(deck.storage_path as string);
+  if (!pdfUrl) return null;
 
-    if (dlErr || !fileData) {
-      console.error("[DeckPreviewCarousel] PDF download failed:", dlErr?.message);
-      return null;
-    }
-
-    try {
-      const srcBytes = new Uint8Array(await fileData.arrayBuffer());
-      const srcDoc = await PDFDocument.load(srcBytes, { ignoreEncryption: true });
-      const trimDoc = await PDFDocument.create();
-
-      const indices = Array.from(
-        { length: Math.min(srcDoc.getPageCount(), MAX_PAGES) },
-        (_, i) => i
-      );
-      const copied = await trimDoc.copyPagesFrom(srcDoc, indices);
-      copied.forEach((p) => trimDoc.addPage(p));
-
-      const trimBytes = await trimDoc.save();
-
-      const { error: ulErr } = await supabase.storage
-        .from(PREVIEW_BUCKET)
-        .upload(previewPath, trimBytes, { contentType: "application/pdf", upsert: true });
-
-      if (ulErr) {
-        console.error("[DeckPreviewCarousel] Preview upload failed:", ulErr.message);
-        return null;
-      }
-    } catch (err) {
-      console.error("[DeckPreviewCarousel] PDF trim failed:", err);
-      return null;
-    }
+  if (!previewUrl) {
+    console.warn(
+      "[DeckPreviewCarousel] Falling back to original PDF — apply migration 0033 to enable 5-page trim.",
+      { startupId, deck_id: evalRow.deck_id }
+    );
   }
-
-  // Signed URL from trimmed preview — not from original deck.
-  const { data: signed } = await supabase.storage
-    .from(PREVIEW_BUCKET)
-    .createSignedUrl(previewPath, 3600);
-
-  if (!signed?.signedUrl) return null;
 
   const watermark = [
     "La Liga Qanvit",
@@ -96,7 +65,86 @@ export default async function DeckPreviewCarousel({ startupId }: Props) {
     .filter(Boolean)
     .join(" · ");
 
-  return (
-    <DeckPreviewCarouselClient pdfUrl={signed.signedUrl} watermark={watermark} />
-  );
+  return <DeckPreviewCarouselClient pdfUrl={pdfUrl} watermark={watermark} />;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getOrCreatePreviewUrl(supabase: any, previewPath: string, storagePath: string) {
+  try {
+    // Lightweight check — avoid re-processing on every render.
+    const folder = previewPath.split("/").slice(0, -1).join("/");
+    const fileName = previewPath.split("/").pop()!;
+    const { data: fileList, error: listErr } = await supabase.storage
+      .from(PREVIEW_BUCKET)
+      .list(folder);
+
+    if (listErr) {
+      // Bucket probably doesn't exist yet
+      return null;
+    }
+
+    const exists = (fileList as Array<{ name: string }>)?.some((f) => f.name === fileName);
+
+    if (!exists) {
+      const generated = await generateTrimmedPreview(supabase, previewPath, storagePath);
+      if (!generated) return null;
+    }
+
+    const { data: signed } = await supabase.storage
+      .from(PREVIEW_BUCKET)
+      .createSignedUrl(previewPath, 3600);
+
+    return signed?.signedUrl ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function generateTrimmedPreview(supabase: any, previewPath: string, storagePath: string) {
+  try {
+    const { data: fileData, error: dlErr } = await supabase.storage
+      .from("decks")
+      .download(storagePath);
+
+    if (dlErr || !fileData) {
+      console.error("[DeckPreviewCarousel] PDF download failed:", dlErr?.message);
+      return false;
+    }
+
+    const srcBytes = new Uint8Array(await (fileData as Blob).arrayBuffer());
+    const srcDoc = await PDFDocument.load(srcBytes, { ignoreEncryption: true });
+    const trimDoc = await PDFDocument.create();
+
+    const indices = Array.from(
+      { length: Math.min(srcDoc.getPageCount(), MAX_PAGES) },
+      (_, i) => i
+    );
+    const copied = await trimDoc.copyPagesFrom(srcDoc, indices);
+    copied.forEach((p) => trimDoc.addPage(p));
+
+    const trimBytes = await trimDoc.save();
+
+    const { error: ulErr } = await supabase.storage
+      .from(PREVIEW_BUCKET)
+      .upload(previewPath, trimBytes, { contentType: "application/pdf", upsert: true });
+
+    if (ulErr) {
+      console.error("[DeckPreviewCarousel] Preview upload failed:", ulErr.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("[DeckPreviewCarousel] PDF trim failed:", err);
+    return false;
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function signOriginalPdf(supabase: any, storagePath: string) {
+  const { data: signed } = await supabase.storage
+    .from("decks")
+    .createSignedUrl(storagePath, 3600);
+  return signed?.signedUrl ?? null;
 }
