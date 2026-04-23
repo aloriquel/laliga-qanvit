@@ -12,6 +12,8 @@ import PublicTopDimensions from "@/components/public/PublicTopDimensions";
 import DeckPreviewCarousel from "@/components/public/DeckPreviewCarousel";
 import { getPublicProfileData, getTopDimensions } from "@/lib/public/profile-helpers";
 import StartupRegionBadge from "@/components/ui/StartupRegionBadge";
+import FundingStageBadge from "@/components/ui/FundingStageBadge";
+import RaisingBadge from "@/components/ui/RaisingBadge";
 import type { CaId } from "@/lib/spain-regions";
 
 type Props = { params: { slug: string } };
@@ -146,14 +148,20 @@ export default async function StartupPublicPage({ params }: Props) {
           />
         </div>
 
-        {/* Region badge */}
-        {startup.region_ca && (
-          <div className="flex justify-center mb-4 -mt-4">
-            <StartupRegionBadge
-              regionCa={startup.region_ca as CaId}
-              regionProvince={startup.region_province as string | null}
-              variant="full"
-            />
+        {/* Region + funding badges */}
+        {(startup.region_ca || (startup as any).funding_stage || (startup as any).is_raising) && (
+          <div className="flex flex-wrap justify-center gap-2 mb-4 -mt-4">
+            {(startup.region_ca as string | null) && (
+              <StartupRegionBadge
+                regionCa={startup.region_ca as CaId}
+                regionProvince={startup.region_province as string | null}
+                variant="full"
+              />
+            )}
+            <FundingStageBadge stage={(startup as any).funding_stage} />
+            {(startup.consent_public_profile as boolean | null) && (
+              <RaisingBadge isRaising={(startup as any).is_raising === true} />
+            )}
           </div>
         )}
 

@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/admin/ecosystem-organizations", label: "Organizaciones" },
   { href: "/admin/deck-errors", label: "Deck errors" },
   { href: "/admin/evaluations", label: "Evaluaciones" },
+  { href: "/admin/discrepancias", label: "Discrepancias" },
   { href: "/admin/evaluation-appeals", label: "Impugnaciones" },
   { href: "/admin/votes", label: "Votos" },
   { href: "/admin/startups", label: "Startups" },

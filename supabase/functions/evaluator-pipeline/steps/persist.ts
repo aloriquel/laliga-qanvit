@@ -1,6 +1,7 @@
 import { getServiceClient } from "../_shared/supabase.ts";
 import { calculateWeightedScore, scoreToPhase, type Phase } from "../_shared/weights.ts";
 import { estimateCost } from "../_shared/openai.ts";
+import { getDivisionFromFundingStageDeno } from "../_shared/funding-stage.ts";
 import type { ClassifyOutput } from "./classify.ts";
 import type { EvaluateOutput } from "./evaluate.ts";
 import type { EmbeddedChunk } from "./embed_chunks.ts";
@@ -16,6 +17,7 @@ type PersistArgs = {
   chunks: EmbeddedChunk[];
   embeddingTokens: number;
   pipelineStartMs: number;
+  fundingStage: string | null;
 };
 
 export type PersistResult = {
@@ -27,11 +29,20 @@ export type PersistResult = {
 export async function persistResults(args: PersistArgs): Promise<PersistResult> {
   const db = getServiceClient();
 
-  // Determine final division (score override if diverges from classifier)
+  // Determine final division:
+  // - If startup declared funding_stage → use that mapping (primary source per PROMPT_11)
+  // - Otherwise fall back to score-derived phase (pre-PROMPT_11 behaviour)
   const classifierPhase = args.classification.detected_phase as Phase;
   const computedScore = calculateWeightedScore(args.evaluation.scores, classifierPhase);
   const scorePhase = scoreToPhase(computedScore);
-  const assignedDivision = scorePhase;
+
+  let assignedDivision: Phase;
+  if (args.fundingStage) {
+    const mapped = getDivisionFromFundingStageDeno(args.fundingStage) as Phase | null;
+    assignedDivision = mapped ?? scorePhase;
+  } else {
+    assignedDivision = scorePhase;
+  }
   const assignedVertical = args.classification.detected_vertical;
 
   // Log divergence in feedback.notes if classifier ≠ score phase
@@ -110,6 +121,27 @@ export async function persistResults(args: PersistArgs): Promise<PersistResult> 
   }, { onConflict: "deck_id,prompt_version,rubric_version" });
 
   if (evalError) throw new Error(`evaluations upsert: ${evalError.message}`);
+
+  // --- INSERT discrepancy if evaluator flagged one ---
+  const discrepancy = args.evaluation.funding_stage_discrepancy;
+  if (args.fundingStage && discrepancy && discrepancy.suspected_stage && discrepancy.severity) {
+    const { error: discErr } = await db
+      .from("admin_evaluator_discrepancies" as never)
+      .insert({
+        startup_id: args.startupId,
+        evaluation_id: evaluationId,
+        declared_funding_stage: args.fundingStage,
+        suspected_funding_stage: discrepancy.suspected_stage,
+        severity: discrepancy.severity,
+        evaluator_reasoning: discrepancy.reasoning ?? "",
+        status: "pending",
+      } as never);
+    if (discErr) {
+      console.error(JSON.stringify({ deck_id: args.deckId, step: "discrepancy_insert", ok: false, error: discErr.message }));
+    } else {
+      console.log(JSON.stringify({ deck_id: args.deckId, step: "discrepancy_insert", ok: true, severity: discrepancy.severity }));
+    }
+  }
 
   // --- UPDATE decks: status='evaluated', raw_text, page_count, language ---
   const { error: deckUpdateError } = await db

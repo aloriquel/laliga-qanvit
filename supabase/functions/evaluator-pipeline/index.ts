@@ -8,6 +8,7 @@ import { evaluateWithRetry } from "./steps/evaluate.ts";
 import { persistResults } from "./steps/persist.ts";
 import { notifyStartup } from "./steps/notify.ts";
 import type { Phase } from "./_shared/weights.ts";
+import { getFundingStageLabelDeno, getDivisionFromFundingStageDeno } from "./_shared/funding-stage.ts";
 
 serve(async (req) => {
 
@@ -41,11 +42,19 @@ serve(async (req) => {
 
     const { data: startup, error: startupError } = await db
       .from("startups")
-      .select("id, name, slug")
+      .select("id, name, slug, funding_stage")
       .eq("id", deck.startup_id)
       .single();
 
     if (startupError || !startup) throw new Error(`Startup not found: ${startupError?.message}`);
+
+    // Build funding stage context for evaluator prompt
+    const fundingStage = (startup as any).funding_stage as string | null;
+    const fundingStageLabel = getFundingStageLabelDeno(fundingStage);
+    const fundingDivision = getDivisionFromFundingStageDeno(fundingStage);
+    const fundingStageContext = fundingStageLabel
+      ? `[CONTEXTO DE LA STARTUP]\n- Fase declarada por la startup: ${fundingStageLabel}\n- División resultante: ${fundingDivision ?? "desconocida"}\n\nAl scorear, usa esta fase declarada como referencia. NO reasignes división automáticamente basándote en el deck — respeta la autodeclaración.\n\nSi detectas discrepancia GRAVE entre la fase declarada y lo que ves en el deck (ejemplo: declara Serie A pero el deck muestra solo MVP sin clientes, o declara pre-seed pero el deck muestra $5M ARR y 50 empleados), incluye en tu respuesta el campo "funding_stage_discrepancy" con:\n{\n  "suspected_stage": "<la fase que tú inferirías>",\n  "severity": "low|medium|high",\n  "reasoning": "<explicación breve>"\n}\n\nSi no hay discrepancia significativa, omite ese campo.`
+      : "";
 
     // Get owner email for notification
     const { data: profile } = await db
@@ -93,6 +102,7 @@ serve(async (req) => {
       deckText: text,
       phase: classification.detected_phase as Phase,
       vertical: classification.detected_vertical,
+      fundingStageContext,
     });
     console.log(JSON.stringify({
       deck_id: deckId, step: "evaluate", ok: true,
@@ -112,6 +122,7 @@ serve(async (req) => {
       chunks: embeddedChunks,
       embeddingTokens,
       pipelineStartMs: pipelineStart,
+      fundingStage,
     });
     console.log(JSON.stringify({ deck_id: deckId, step: "persist", ok: true, evaluation_id: evaluationId, duration_ms: Date.now() - pipelineStart }));
 

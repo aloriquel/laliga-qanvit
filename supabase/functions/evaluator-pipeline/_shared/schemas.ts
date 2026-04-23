@@ -31,6 +31,12 @@ const DimensionFeedbackSchema = z.object({
   evidence_quotes: z.array(z.string()).min(1),
 });
 
+const FundingStageDiscrepancySchema = z.object({
+  suspected_stage: z.string(),
+  severity: z.enum(["low", "medium", "high"]),
+  reasoning: z.string(),
+});
+
 export const EvaluationResultSchema = z.object({
   scores: z.object({
     problem: z.number().min(0).max(100),
@@ -53,6 +59,7 @@ export const EvaluationResultSchema = z.object({
   }),
   summary: z.string(),
   next_actions: z.array(z.string()).min(1).max(5),
+  funding_stage_discrepancy: FundingStageDiscrepancySchema.nullable().optional(),
 });
 
 export type EvaluationResult = z.infer<typeof EvaluationResultSchema>;
@@ -132,6 +139,16 @@ export const evaluationToolSchema = {
       },
       summary: { type: "string" },
       next_actions: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 5 },
+      funding_stage_discrepancy: {
+        type: "object",
+        nullable: true,
+        properties: {
+          suspected_stage: { type: "string" },
+          severity: { type: "string", enum: ["low", "medium", "high"] },
+          reasoning: { type: "string" },
+        },
+        required: ["suspected_stage", "severity", "reasoning"],
+      },
     },
     required: ["scores", "score_total", "feedback", "summary", "next_actions"],
   },

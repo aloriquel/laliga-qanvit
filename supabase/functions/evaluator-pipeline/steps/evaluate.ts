@@ -31,6 +31,7 @@ type EvaluateArgs = {
   deckText: string;
   phase: Phase;
   vertical: string;
+  fundingStageContext?: string | null;
 };
 
 async function callModel(
@@ -39,7 +40,7 @@ async function callModel(
 ): Promise<{ result: EvaluationResult; tokens_input: number; tokens_output: number }> {
   const client = getAnthropicClient();
   const weightsJson = JSON.stringify(DIVISION_WEIGHTS[args.phase], null, 2);
-  const systemPrompt = buildEvaluatorSystemPrompt(args.phase, args.vertical, weightsJson);
+  const systemPrompt = buildEvaluatorSystemPrompt(args.phase, args.vertical, weightsJson, args.fundingStageContext);
   const userPrompt = buildEvaluatorUserPrompt(args.deckText);
 
   let totalInputTokens = 0;

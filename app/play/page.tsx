@@ -7,7 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Upload, ChevronRight, AlertCircle } from "lucide-react";
 import RegionSelector from "@/components/ui/RegionSelector";
+import { FundingStageSelector, IsRaisingToggle } from "@/components/ui/FundingStageSelector";
 import type { CaId } from "@/lib/spain-regions";
+import type { FundingStage } from "@/lib/funding-stage";
 
 type Step = 0 | 1;
 
@@ -28,6 +30,8 @@ export default function PlayPage() {
   const [isNewStartup, setIsNewStartup] = useState(false);
   const [form, setForm] = useState<StartupFormData>({ name: "", website: "", oneLiner: "" });
   const [region, setRegion] = useState<RegionValue>({ ca: null, province: null });
+  const [fundingStage, setFundingStage] = useState<FundingStage | null>(null);
+  const [isRaising, setIsRaising] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const [consentEval, setConsentEval] = useState(false);
@@ -98,12 +102,20 @@ export default function PlayPage() {
         setStartupId(created!.id);
         setIsNewStartup(true);
 
-        // Save region for new startup if provided
+        // Save region for new startup
         if (region.ca && region.province) {
           await fetch("/api/startup/region", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ region_ca: region.ca, region_province: region.province }),
+          });
+        }
+        // Save funding stage for new startup
+        if (fundingStage) {
+          await fetch("/api/startup/funding-stage", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ funding_stage: fundingStage, is_raising: isRaising }),
           });
         }
       }
@@ -153,6 +165,7 @@ export default function PlayPage() {
 
   const STEPS = [t("step_startup"), t("step_deck")];
   const regionComplete = region.ca !== null && region.province !== null;
+  const stageComplete = fundingStage !== null;
 
   return (
     <div className="bg-brand-lavender min-h-screen py-16">
@@ -242,17 +255,39 @@ export default function PlayPage() {
                 />
               </div>
 
+              {/* Fase de financiación — obligatorio */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1 mb-1">
+                  <span className="font-body text-sm font-semibold text-brand-navy">
+                    ¿En qué fase está tu startup?
+                  </span>
+                  <span className="text-red-500">*</span>
+                </div>
+                <p className="font-body text-xs text-ink-secondary mb-2">
+                  Determina tu división en la liga. Podrás cambiarlo desde el dashboard.
+                </p>
+                <FundingStageSelector
+                  value={fundingStage}
+                  onChange={setFundingStage}
+                  required={true}
+                  showDescriptions={false}
+                />
+              </div>
+
+              {/* ¿Levantando ronda? */}
+              <IsRaisingToggle value={isRaising} onChange={setIsRaising} />
+
               <button
                 type="submit"
-                disabled={loading || !form.name.trim() || !regionComplete}
+                disabled={loading || !form.name.trim() || !regionComplete || !stageComplete}
                 className="mt-2 bg-brand-navy text-white font-semibold rounded-xl px-6 py-3 font-body flex items-center justify-center gap-2 hover:bg-brand-navy/90 transition-colors disabled:opacity-50"
               >
                 {loading ? t("saving") : t("next")}
                 <ChevronRight className="h-4 w-4" />
               </button>
-              {!regionComplete && form.name.trim() && (
+              {(!regionComplete || !stageComplete) && form.name.trim() && (
                 <p className="font-body text-xs text-ink-secondary text-center -mt-2">
-                  Selecciona tu CA y provincia para continuar.
+                  {!regionComplete ? "Selecciona tu CA y provincia" : "Selecciona tu fase de financiación"} para continuar.
                 </p>
               )}
             </form>

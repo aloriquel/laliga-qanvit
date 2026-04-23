@@ -42,6 +42,8 @@ export function buildClassifierUserPrompt(deckText: string): string {
 export const EVALUATOR_SYSTEM_PROMPT_TEMPLATE = `Eres un evaluador senior de startups con 15 años de experiencia en VC e innovación abierta en España.
 Acabas de leer un deck de una startup que ha sido clasificada como FASE={{PHASE}} y VERTICAL={{VERTICAL}}.
 
+{{FUNDING_STAGE_CONTEXT}}
+
 Tu tarea: evaluar la startup en 7 dimensiones y producir feedback accionable.
 
 LAS 7 DIMENSIONES (cada una 0-100):
@@ -70,12 +72,15 @@ Responde SOLO con la tool_use submit_evaluation.`;
 export function buildEvaluatorSystemPrompt(
   phase: string,
   vertical: string,
-  weightsJson: string
+  weightsJson: string,
+  fundingStageContext?: string | null
 ): string {
+  const fsContext = fundingStageContext ?? "";
   return EVALUATOR_SYSTEM_PROMPT_TEMPLATE
     .replace(/{{PHASE}}/g, phase)
     .replace(/{{VERTICAL}}/g, vertical)
-    .replace(/{{WEIGHTS_JSON}}/g, weightsJson);
+    .replace(/{{WEIGHTS_JSON}}/g, weightsJson)
+    .replace(/{{FUNDING_STAGE_CONTEXT}}/g, fsContext);
 }
 
 export function buildEvaluatorUserPrompt(deckText: string): string {

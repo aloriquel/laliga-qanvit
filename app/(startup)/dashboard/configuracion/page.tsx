@@ -6,7 +6,9 @@ import NotificationSettings from "./NotificationSettings";
 import DeleteAccountSection from "./DeleteAccountSection";
 import LogoSection from "./LogoSection";
 import RegionSection from "./RegionSection";
+import FundingSection from "./FundingSection";
 import type { CaId } from "@/lib/spain-regions";
+import type { FundingStage } from "@/lib/funding-stage";
 
 export const metadata: Metadata = { title: "Configuración — Dashboard" };
 export const revalidate = 0;
@@ -17,9 +19,10 @@ export default async function ConfiguracionPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/play");
 
-  const { data: startup } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: startup } = await (supabase as any)
     .from("startups")
-    .select("id, name, logo_url, is_public, consent_public_profile, consent_public_deck, show_public_timeline, notification_email_enabled, notification_frequency, region_ca, region_province")
+    .select("id, name, logo_url, is_public, consent_public_profile, consent_public_deck, show_public_timeline, notification_email_enabled, notification_frequency, region_ca, region_province, funding_stage, funding_stage_inferred, is_raising")
     .eq("owner_id", user.id)
     .single();
 
@@ -52,6 +55,21 @@ export default async function ConfiguracionPage() {
         <RegionSection
           initialCa={(startup.region_ca as CaId | null) ?? null}
           initialProvince={(startup.region_province as string | null) ?? null}
+        />
+      </section>
+
+      <div className="border-t border-border-soft my-6" />
+
+      {/* Fase de financiación */}
+      <section className="mb-8" id="funding-stage">
+        <h2 className="font-sora font-semibold text-lg text-brand-navy mb-1">Fase de financiación</h2>
+        <p className="font-body text-sm text-ink-secondary mb-4">
+          Fuente primaria para asignar tu división en la liga. Solo tú puedes confirmarlo.
+        </p>
+        <FundingSection
+          initialFundingStage={(startup.funding_stage as FundingStage | null) ?? null}
+          initialIsRaising={(startup.is_raising as boolean) ?? false}
+          initialInferred={(startup.funding_stage_inferred as boolean) ?? false}
         />
       </section>
 

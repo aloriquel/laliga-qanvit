@@ -323,7 +323,46 @@ export const EvaluationResultSchema = z.object({
 });
 ```
 
-## 8. Calibración y evolución del rubric
+## 8. Fase declarada vs inferida (PROMPT_11)
+
+### 8.1 Fuente primaria de la división
+
+Desde PROMPT_11, la división de una startup la determina su `funding_stage` autodeclarado, **no el evaluador**. El mapeo es:
+
+| funding_stage   | división    |
+|---|---|
+| pre_seed        | Ideation    |
+| seed            | Seed        |
+| series_a        | Growth      |
+| series_b/c/d+   | Elite       |
+| bootstrapped    | Seed (por defecto; ver §8.3) |
+
+El evaluator recibe este contexto en el system prompt y **no reasigna división** basándose en el deck.
+
+### 8.2 Detección de discrepancias
+
+El evaluator SÍ detecta discrepancias graves entre la fase declarada y las señales del deck. Si detecta una, devuelve el campo opcional `funding_stage_discrepancy`:
+
+```json
+{
+  "suspected_stage": "seed",
+  "severity": "high",
+  "reasoning": "El deck declara Serie A pero no muestra clientes ni revenue. Sin PMF validado."
+}
+```
+
+Umbrales para reportar:
+- **high**: la divergencia invalida la declaración (ej. declara Series A pero deck es MVP sin clientes).
+- **medium**: señales ambiguas o deck incompleto en área clave.
+- **low**: discrepancia menor, posible matiz contextual.
+
+Todas las discrepancias se insertan en `admin_evaluator_discrepancies` para revisión manual.
+
+### 8.3 Bootstrapped y override de división
+
+Si una startup declara `bootstrapped` pero ya está en Growth o Elite (el evaluator la subió en iteraciones anteriores), el sistema respeta la división más alta. Esto evita que declarar bootstrapped retrogradar startups con traction probada.
+
+## 9. Calibración y evolución del rubric
 
 - **Golden set**: 20 decks representativos (5 por división) con scoring manual de Arturo + expert panel. Se re-corre al cambiar prompts para detectar drift.
 - **Métrica de calidad**: correlación entre score humano y score LLM. Objetivo: Pearson >0.75.
