@@ -119,7 +119,10 @@
       "Bash(where.exe claude *)",
       "Read(//mnt/c/Users/1t12d/AppData/Roaming/**)",
       "Bash(npx @anthropic-ai/claude-code --version)",
-      "Bash(npx @anthropic-ai/claude-code mcp add --scope project --transport http supabase \"https://mcp.supabase.com/mcp?project_ref=ongwrbdypbusnwlclqjg\")"
+      "Bash(npx @anthropic-ai/claude-code mcp add --scope project --transport http supabase \"https://mcp.supabase.com/mcp?project_ref=ongwrbdypbusnwlclqjg\")",
+      "Bash(node -e \"const r=require\\('child_process'\\);r.execSync\\('npm root -g',{encoding:'utf8'}\\).trim\\(\\) && console.log\\(r.execSync\\('npm root -g',{encoding:'utf8'}\\).trim\\(\\)\\)\")",
+      "PowerShell(Get-Command npx)",
+      "PowerShell(& npx @anthropic-ai/claude-code --version)"
     ]
   }
 }
