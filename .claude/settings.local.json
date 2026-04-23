@@ -95,7 +95,21 @@
       "Bash(node -e \"const fs = require\\('fs'\\); const buf = fs.readFileSync\\('lib/supabase/types.ts'\\); const txt = buf.toString\\('utf16le'\\); const lines = txt.split\\('\\\\n'\\); lines.forEach\\(\\(l,i\\) => { if\\(l.toLowerCase\\(\\).includes\\('logo'\\)\\) console.log\\(i+1, l.trim\\(\\)\\); }\\);\")",
       "Bash(node -e \" const fs = require\\('fs'\\); const buf = fs.readFileSync\\('lib/supabase/types.ts'\\); const txt = buf.toString\\('utf16le'\\); const lines = txt.split\\('\\\\n'\\); lines.forEach\\(\\(l,i\\) => { if\\(l.includes\\('logo_storage'\\) || l.includes\\('logo_updated'\\) || l.includes\\('startup_id'\\) && i > 500 && i < 560\\) { console.log\\(i+1, l.trim\\(\\)\\); } }\\); \")",
       "Bash(node -e \"const j = require\\('jimp'\\); console.log\\(Object.keys\\(j\\).slice\\(0,10\\)\\);\")",
-      "Bash(iconv -f UTF-16 -t UTF-8 /c/Users/1t12d/github/laliga-qanvit/lib/supabase/types.ts)"
+      "Bash(iconv -f UTF-16 -t UTF-8 /c/Users/1t12d/github/laliga-qanvit/lib/supabase/types.ts)",
+      "Bash(git checkout *)",
+      "PowerShell(git show c5c461d:lib/supabase/types.ts | Out-File -FilePath lib/supabase/types.ts -Encoding utf8 -Force; \\(Get-Content lib/supabase/types.ts -Raw\\).Substring\\(0, 60\\))",
+      "PowerShell(git show c5c461d:lib/supabase/types.ts | Out-File -FilePath lib/supabase/types_restored.ts -Encoding utf8 -Force; if \\($?\\) { \"Written OK, size: $\\(\\(Get-Item lib/supabase/types_restored.ts\\).Length\\)\" } else { \"Failed\" })",
+      "PowerShell($content = git show c5c461d:lib/supabase/types.ts; [System.IO.File]::WriteAllText\\(\"$PWD\\\\lib\\\\supabase\\\\types.ts\", $content, [System.Text.Encoding]::UTF8\\); \"Done, size: $\\(\\(Get-Item lib/supabase/types.ts\\).Length\\)\")",
+      "PowerShell($content = git show c5c461d:lib/supabase/types.ts; $bytes = [System.Text.Encoding]::UTF8.GetBytes\\($content\\); $fs = [System.IO.File]::Open\\(\"$PWD\\\\lib\\\\supabase\\\\types.ts\", [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::ReadWrite\\); $fs.Write\\($bytes, 0, $bytes.Length\\); $fs.Close\\(\\); \"Done, bytes written: $\\($bytes.Length\\)\")",
+      "PowerShell(Rename-Item lib/supabase/types.ts lib/supabase/types.ts.bak -Force 2>&1)",
+      "PowerShell($?)",
+      "PowerShell(Rename-Item \"lib/supabase/types.ts\" \"types_corrupted.ts\" -ErrorAction SilentlyContinue)",
+      "PowerShell(cmd /c \"copy /Y lib\\\\supabase\\\\types_restored.ts lib\\\\supabase\\\\types.ts\" 2>&1)",
+      "PowerShell(cmd /c \"replace lib\\\\supabase\\\\types_restored.ts lib\\\\supabase\\\\ /r\" 2>&1)",
+      "PowerShell($filePath = \\(Resolve-Path \"lib/supabase/types.ts\"\\).Path; Get-Process | ForEach-Object { try { $_.Modules | Where-Object { $_.FileName -eq $filePath } } catch {} } | Select ProcessName, Id 2>&1 | head -5)",
+      "Bash(handle64.exe \"lib/supabase/types.ts\")",
+      "Bash(handle.exe \"lib/supabase/types.ts\")",
+      "Bash(powershell.exe -Command ' $path = \\(Resolve-Path '\\\\''lib/supabase/types.ts'\\\\''\\).Path $procs = Get-Process foreach \\($p in $procs\\) { try { $handles = [System.Diagnostics.Process]::GetCurrentProcess\\(\\).Handle $ms = $p.Modules foreach \\($m in $ms\\) { if \\($m.FileName -eq $path\\) { Write-Host $p.Name $p.Id } } } catch {} } ')"
     ]
   }
 }
