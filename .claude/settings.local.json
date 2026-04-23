@@ -94,7 +94,8 @@
       "Bash(python3 -c \" content = open\\('lib/supabase/types.ts', 'rb'\\).read\\(\\).decode\\('utf-16-le', errors='ignore'\\) lines = content.split\\('\\\\n'\\) for i, line in enumerate\\(lines\\): if 'logo' in line.lower\\(\\) or 'startup' in line.lower\\(\\): print\\(f'{i+1}: {line}'\\) \")",
       "Bash(node -e \"const fs = require\\('fs'\\); const buf = fs.readFileSync\\('lib/supabase/types.ts'\\); const txt = buf.toString\\('utf16le'\\); const lines = txt.split\\('\\\\n'\\); lines.forEach\\(\\(l,i\\) => { if\\(l.toLowerCase\\(\\).includes\\('logo'\\)\\) console.log\\(i+1, l.trim\\(\\)\\); }\\);\")",
       "Bash(node -e \" const fs = require\\('fs'\\); const buf = fs.readFileSync\\('lib/supabase/types.ts'\\); const txt = buf.toString\\('utf16le'\\); const lines = txt.split\\('\\\\n'\\); lines.forEach\\(\\(l,i\\) => { if\\(l.includes\\('logo_storage'\\) || l.includes\\('logo_updated'\\) || l.includes\\('startup_id'\\) && i > 500 && i < 560\\) { console.log\\(i+1, l.trim\\(\\)\\); } }\\); \")",
-      "Bash(node -e \"const j = require\\('jimp'\\); console.log\\(Object.keys\\(j\\).slice\\(0,10\\)\\);\")"
+      "Bash(node -e \"const j = require\\('jimp'\\); console.log\\(Object.keys\\(j\\).slice\\(0,10\\)\\);\")",
+      "Bash(iconv -f UTF-16 -t UTF-8 /c/Users/1t12d/github/laliga-qanvit/lib/supabase/types.ts)"
     ]
   }
 }
