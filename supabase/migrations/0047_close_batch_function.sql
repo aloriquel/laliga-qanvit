@@ -1,11 +1,27 @@
 -- ── 0047_close_batch_function.sql ────────────────────────────────────────────
 -- Función close_batch_and_assign_winners(target_batch_id uuid).
--- Fórmula: final_score = eval_score + vote_bonus (vote_bonus capeado en +10).
---   vote_bonus = LEAST(up_votes_en_batch * 0.5, 10.0)
+--
+-- Fórmula 70/30 con normalización:
+--   avg_votes       = GREATEST(AVG(votes_up + votes_down) en el batch, 3.0)
+--   vote_score      = 100.0 × (votes_up − votes_down) / avg_votes
+--   final_prelim    = 0.7 × base_score + 0.3 × vote_score
+--   final_capped    = LEAST(final_prelim, base_score + 10)   -- cap +10
+--   vote_bonus      = final_capped − base_score              -- puede ser negativo
+--
+-- Verificación con baseline=60, votes_up=20, votes_down=0, avg_votes=4:
+--   vote_score   = 100 × 20/4 = 500
+--   final_prelim = 0.7×60 + 0.3×500 = 192
+--   final_capped = LEAST(192, 70) = 70   → vote_bonus = +10
+--
+-- Verificación con baseline=70, votes_up=0, votes_down=2, avg_votes=4:
+--   vote_score   = 100 × (−2)/4 = −50
+--   final_prelim = 0.7×70 + 0.3×(−50) = 34
+--   final_capped = LEAST(34, 80) = 34    → vote_bonus = −36
+--
 -- Rankings calculados: nacional, división, región CA, vertical.
--- batch_winners insertados para: nacional top3, división top1,
---   CA top1 y vertical top1 (solo si el segmento tiene >=5 startups).
--- Idempotente: borrar winners previos antes de reinsertar.
+-- batch_winners: nacional top3, división top1, CA top1, vertical top1
+--   (CA y vertical solo si el segmento tiene >=5 startups).
+-- Idempotente: borra winners previos antes de reinsertar.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION close_batch_and_assign_winners(target_batch_id uuid)
@@ -28,7 +44,12 @@ BEGIN
     RAISE EXCEPTION 'Batch % has status %; expected active or closed', target_batch_id, batch_rec.status;
   END IF;
 
-  -- ── 1. Calcular vote_bonus y final_score ────────────────────────────────
+  -- ── 1. Calcular vote_bonus y final_score (fórmula 70/30) ────────────────
+  --
+  -- batch_votes: votos por startup dentro de este batch
+  -- avg_batch:   promedio de (up+down) entre startups con votos, piso=3
+  -- computed:    vote_score_raw para cada startup evaluada en el batch
+  -- El UPDATE usa bp.baseline_score cuando no hay eval nueva en el batch.
   WITH batch_votes AS (
     SELECT
       startup_id,
@@ -38,6 +59,10 @@ BEGIN
     WHERE batch_id = target_batch_id
     GROUP BY startup_id
   ),
+  avg_batch AS (
+    SELECT GREATEST(AVG(up_count + down_count)::numeric, 3.0) AS avg_votes
+    FROM batch_votes
+  ),
   latest_evals AS (
     SELECT DISTINCT ON (startup_id)
       startup_id,
@@ -45,19 +70,36 @@ BEGIN
     FROM evaluations
     WHERE batch_id = target_batch_id
     ORDER BY startup_id, created_at DESC
+  ),
+  computed AS (
+    SELECT
+      le.startup_id,
+      COALESCE(bv.up_count,   0)::int                                   AS up_count,
+      COALESCE(bv.down_count, 0)::int                                   AS down_count,
+      le.score_total                                                     AS eval_score,
+      100.0 * (COALESCE(bv.up_count, 0) - COALESCE(bv.down_count, 0))::numeric
+        / (SELECT avg_votes FROM avg_batch)                              AS vote_score_raw
+    FROM latest_evals le
+    LEFT JOIN batch_votes bv ON bv.startup_id = le.startup_id
   )
   UPDATE batch_participations bp
   SET
-    votes_up    = COALESCE(bv.up_count,   0),
-    votes_down  = COALESCE(bv.down_count, 0),
-    vote_bonus  = LEAST(COALESCE(bv.up_count, 0)::numeric * 0.5, 10.0),
-    final_score = COALESCE(le.score_total, bp.baseline_score, 0.0)
-                  + LEAST(COALESCE(bv.up_count, 0)::numeric * 0.5, 10.0),
+    votes_up    = c.up_count,
+    votes_down  = c.down_count,
+    final_score = LEAST(
+                    0.7 * COALESCE(c.eval_score, bp.baseline_score, 0.0)
+                      + 0.3 * c.vote_score_raw,
+                    COALESCE(c.eval_score, bp.baseline_score, 0.0) + 10.0
+                  ),
+    vote_bonus  = LEAST(
+                    0.7 * COALESCE(c.eval_score, bp.baseline_score, 0.0)
+                      + 0.3 * c.vote_score_raw,
+                    COALESCE(c.eval_score, bp.baseline_score, 0.0) + 10.0
+                  ) - COALESCE(c.eval_score, bp.baseline_score, 0.0),
     updated_at  = now()
-  FROM latest_evals le
-  LEFT JOIN batch_votes bv ON bv.startup_id = le.startup_id
-  WHERE bp.batch_id    = target_batch_id
-    AND bp.startup_id  = le.startup_id;
+  FROM computed c
+  WHERE bp.batch_id   = target_batch_id
+    AND bp.startup_id = c.startup_id;
 
   -- ── 2. Ranking nacional ─────────────────────────────────────────────────
   WITH ranked AS (
@@ -196,21 +238,30 @@ END;
 $$;
 
 COMMENT ON FUNCTION close_batch_and_assign_winners(uuid) IS
-  'Cierra un batch: calcula final_score (eval + vote_bonus, cap +10), asigna
-   rankings (nacional/división/CA/vertical) e inserta batch_winners.
-   Idempotente — borra winners previos antes de reinsertar.
-   Llamado por rotate_batches() y por el endpoint admin /api/admin/batches/:id/close.';
+  'Cierra un batch con fórmula 70/30 normalizada.
+   final_score = LEAST(0.7*base + 0.3*vote_score, base+10)
+   donde vote_score = 100*(up-down)/avg_batch_votes (avg con piso=3).
+   Downvotes penalizan sin cap inferior. Cap de +10 solo al alza.
+   Idempotente — borra winners previos antes de reinsertar.';
 
 -- ── VERIFICACIÓN tras aplicar 0047 ───────────────────────────────────────────
 -- SELECT proname, pronargs FROM pg_proc WHERE proname = 'close_batch_and_assign_winners';
 -- -- Esperado: 1 fila con pronargs=1
 
--- Test en staging (cierra y reabre si es necesario — NO ejecutar en prod):
--- SELECT close_batch_and_assign_winners(
---   (SELECT id FROM batches WHERE slug = 'batch-0-historico')
--- );
--- SELECT category, segment_key, s.name, bw.final_score
--- FROM batch_winners bw
--- JOIN startups s ON s.id = bw.startup_id
--- WHERE bw.batch_id = (SELECT id FROM batches WHERE slug = 'batch-0-historico')
--- ORDER BY category, bw.final_score DESC;
+-- Verificación manual de la fórmula (sin persistir):
+-- WITH inputs(baseline, up, down, avg_v) AS (
+--   VALUES
+--     (60.0, 20, 0, 4.0),   -- espera final=70, vote_bonus=+10
+--     (70.0,  0, 2, 4.0)    -- espera final=34, vote_bonus=-36
+-- )
+-- SELECT
+--   baseline, up, down, avg_v,
+--   100.0*(up-down)/avg_v                                        AS vote_score,
+--   0.7*baseline + 0.3*(100.0*(up-down)/avg_v)                  AS final_prelim,
+--   LEAST(0.7*baseline + 0.3*(100.0*(up-down)/avg_v),
+--         baseline + 10)                                         AS final_capped,
+--   LEAST(0.7*baseline + 0.3*(100.0*(up-down)/avg_v),
+--         baseline + 10) - baseline                              AS vote_bonus
+-- FROM inputs;
+-- -- Esperado fila 1: vote_score=500, final_prelim=192, final_capped=70, vote_bonus=+10
+-- -- Esperado fila 2: vote_score=-50, final_prelim=34,  final_capped=34, vote_bonus=-36
