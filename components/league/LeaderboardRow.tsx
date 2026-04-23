@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { buildStartupHref } from "@/lib/league/url-helpers";
 import StartupAvatar from "@/components/ui/StartupAvatar";
+import StartupRegionBadge from "@/components/ui/StartupRegionBadge";
+import type { CaId } from "@/lib/spain-regions";
 
 export type LeaderboardRowData = {
   startup_id: string | null;
@@ -9,6 +11,8 @@ export type LeaderboardRowData = {
   slug: string;
   one_liner: string | null;
   logo_url: string | null;
+  region_ca: string | null;
+  region_province: string | null;
   current_division: string | null;
   current_vertical: string | null;
   current_score: number | null;
@@ -66,6 +70,13 @@ export default function LeaderboardRow({ row }: Props) {
             <p className="font-body text-xs text-ink-secondary truncate">
               {row.one_liner}
             </p>
+          )}
+          {row.region_ca && (
+            <StartupRegionBadge
+              regionCa={row.region_ca as CaId}
+              regionProvince={row.region_province}
+              variant="compact"
+            />
           )}
         </div>
       </div>
