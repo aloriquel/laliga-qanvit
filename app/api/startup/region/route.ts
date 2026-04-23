@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isValidProvinceForCa, CA_ID_SET, type CaId } from "@/lib/spain-regions";
 
@@ -73,7 +74,8 @@ export async function PATCH(req: NextRequest) {
   console.log(`${prefix} Region updated for startup ${startup.id}: ${ca} / ${province}`);
 
   const service = createServiceClient();
-  void service.rpc("admin_refresh_league_standings");
+  await service.rpc("admin_refresh_league_standings");
+  revalidatePath("/liga");
 
   return NextResponse.json({ region_ca: ca, region_province: province });
 }
