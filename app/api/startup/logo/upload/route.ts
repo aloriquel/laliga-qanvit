@@ -223,6 +223,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Error al guardar el logo." }, { status: 500 });
   }
 
+  // Refresh materialized view so the leaderboard picks up the new logo immediately
+  service.rpc("admin_refresh_league_standings").then(({ error }) => {
+    if (error) console.warn(`${prefix} standings refresh failed:`, error.message);
+  });
+
   console.log(`${prefix} Logo updated for startup`, startup.id, "→", storagePath);
   return NextResponse.json({ logo_url: logoUrl });
 }

@@ -51,6 +51,11 @@ export async function POST(_req: NextRequest) {
     return NextResponse.json({ error: "Error al eliminar el logo." }, { status: 500 });
   }
 
+  // Refresh materialized view so the leaderboard reflects the removed logo immediately
+  service.rpc("admin_refresh_league_standings").then(({ error }) => {
+    if (error) console.warn(`${prefix} standings refresh failed:`, error.message);
+  });
+
   console.log(`${prefix} Logo removed for startup`, startup.id);
   return NextResponse.json({ success: true });
 }
