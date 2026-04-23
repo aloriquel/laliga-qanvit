@@ -170,7 +170,7 @@ export default function ClassificationCard({ startup, ranking, size = "lg", inte
           <StartupAvatar
             startup={startup}
             size={size === "md" ? 48 : size === "lg" ? 88 : 120}
-            priority={size === "lg" || size === "xl"}
+            priority={size === "lg" || size === "share"}
             style={{
               border: "3px solid #f4a9aa",
               marginBottom: size === "md" ? 4 : 8,
