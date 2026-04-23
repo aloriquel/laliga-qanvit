@@ -42,8 +42,7 @@ export async function POST(req: NextRequest) {
 
   // Fetch pending celebrations (no email_sent_at yet)
   const { data: pending, error: fetchErr } = await service
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .from("batch_celebrations" as any)
+    .from("batch_celebrations")
     .select("id, startup_id, batch_id")
     .is("email_sent_at", null)
     .limit(50);
@@ -51,8 +50,7 @@ export async function POST(req: NextRequest) {
   if (fetchErr) {
     return NextResponse.json({ error: fetchErr.message }, { status: 500 });
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rows = (pending ?? []) as any[];
+  const rows = pending ?? [];
   if (rows.length === 0) {
     return NextResponse.json({ sent: 0, errors: 0, message: "No pending emails" });
   }
@@ -74,14 +72,13 @@ export async function POST(req: NextRequest) {
           .eq("id", row.batch_id)
           .maybeSingle(),
         service
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from("batch_winners" as any)
+          .from("batch_winners")
           .select("category, segment_key, final_score")
           .eq("batch_id", row.batch_id)
           .eq("startup_id", row.startup_id),
       ]);
 
-      if (!startup || !batch || !winners || (winners as unknown[]).length === 0) {
+      if (!startup || !batch || !winners || winners.length === 0) {
         throw new Error("Missing startup/batch/winners");
       }
 
@@ -90,10 +87,8 @@ export async function POST(req: NextRequest) {
       const to = authUser?.user?.email;
       if (!to) throw new Error("Owner email not found");
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const wArr = winners as any[];
-      const categories = wArr.map((w) => categoryLabel(w.category, w.segment_key));
-      const maxScore = Math.max(...wArr.map((w) => Number(w.final_score)), 0);
+      const categories = winners.map((w) => categoryLabel(w.category, w.segment_key));
+      const maxScore = Math.max(...winners.map((w) => Number(w.final_score)), 0);
 
       await sendBatchWinnerEmail(to, {
         startupName: startup.name,
@@ -105,8 +100,7 @@ export async function POST(req: NextRequest) {
       });
 
       await service
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("batch_celebrations" as any)
+        .from("batch_celebrations")
         .update({ email_sent_at: new Date().toISOString(), email_error: null })
         .eq("id", row.id);
       sent += 1;
@@ -114,8 +108,7 @@ export async function POST(req: NextRequest) {
       errors += 1;
       const msg = e instanceof Error ? e.message : String(e);
       await service
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("batch_celebrations" as any)
+        .from("batch_celebrations")
         .update({ email_error: msg })
         .eq("id", row.id);
     }

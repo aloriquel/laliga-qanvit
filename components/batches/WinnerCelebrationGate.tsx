@@ -18,8 +18,7 @@ export default async function WinnerCelebrationGate() {
   if (!startup) return null;
 
   const { data: celebration } = await service
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .from("batch_celebrations" as any)
+    .from("batch_celebrations")
     .select("batch_id")
     .eq("startup_id", startup.id)
     .is("seen_modal_at", null)
@@ -27,23 +26,20 @@ export default async function WinnerCelebrationGate() {
     .limit(1)
     .maybeSingle();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const celebRow = celebration as any;
-  if (!celebRow?.batch_id) return null;
+  if (!celebration?.batch_id) return null;
 
   const [{ data: batch }, { data: winnersRaw }] = await Promise.all([
-    service.from("batches").select("id, slug, display_name").eq("id", celebRow.batch_id).maybeSingle(),
+    service.from("batches").select("id, slug, display_name").eq("id", celebration.batch_id).maybeSingle(),
     service
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from("batch_winners" as any)
+      .from("batch_winners")
       .select("category, segment_key, final_score")
-      .eq("batch_id", celebRow.batch_id)
+      .eq("batch_id", celebration.batch_id)
       .eq("startup_id", startup.id),
   ]);
 
   if (!batch) return null;
 
-  const categories: WinnerCategory[] = ((winnersRaw ?? []) as unknown as WinnerCategory[]).map((w) => ({
+  const categories: WinnerCategory[] = (winnersRaw ?? []).map((w) => ({
     category: w.category,
     segment_key: w.segment_key,
     final_score: Number(w.final_score),

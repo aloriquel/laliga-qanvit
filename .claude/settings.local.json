@@ -122,11 +122,14 @@
       "Bash(npx @anthropic-ai/claude-code mcp add --scope project --transport http supabase \"https://mcp.supabase.com/mcp?project_ref=ongwrbdypbusnwlclqjg\")",
       "Bash(node -e \"const r=require\\('child_process'\\);r.execSync\\('npm root -g',{encoding:'utf8'}\\).trim\\(\\) && console.log\\(r.execSync\\('npm root -g',{encoding:'utf8'}\\).trim\\(\\)\\)\")",
       "PowerShell(Get-Command npx)",
-      "PowerShell(& npx @anthropic-ai/claude-code --version)"
+      "PowerShell(& npx @anthropic-ai/claude-code --version)",
+      "Bash(iconv -f UTF-16LE -t UTF-8 c:/Users/1t12d/github/laliga-qanvit/lib/supabase/types.ts)",
+      "Bash(iconv -f UTF-16 -t UTF-8 c:/Users/1t12d/github/laliga-qanvit/lib/supabase/types.ts)",
+      "PowerShell($c = Get-Content \"C:\\\\Users\\\\1t12d\\\\github\\\\laliga-qanvit\\\\lib\\\\supabase\\\\types.ts\" -Raw; Write-Host \"batch_celebrations: $\\(\\($c | Select-String -Pattern 'batch_celebrations' -AllMatches\\).Matches.Count\\)\"; Write-Host \"batch_winners: $\\(\\($c | Select-String -Pattern 'batch_winners' -AllMatches\\).Matches.Count\\)\"; Write-Host \"batches: $\\(\\($c | Select-String -Pattern '\\\\sbatches:' -AllMatches\\).Matches.Count\\)\")"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

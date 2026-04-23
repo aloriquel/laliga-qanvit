@@ -217,6 +217,14 @@ export type ChampionBadgeData = {
   };
 };
 
+type BatchJoinFields = {
+  slug: string;
+  display_name: string;
+  quarter: string;
+  year: number;
+  status: string;
+};
+
 /** All public champion badges for a startup (only from closed/archived batches). */
 export async function getChampionBadgesForStartup(
   startupId: string,
@@ -228,20 +236,25 @@ export async function getChampionBadgesForStartup(
     .eq('startup_id', startupId)
     .order('created_at', { ascending: false });
   if (!data) return [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data as any[])
-    .filter((w) => ['closed', 'archived'].includes(w.batches.status))
-    .map((w) => ({
+  return data
+    .map((w) => {
+      const b = w.batches as unknown as BatchJoinFields | null;
+      return b ? { w, b } : null;
+    })
+    .filter((x): x is { w: typeof data[number]; b: BatchJoinFields } =>
+      x !== null && ['closed', 'archived'].includes(x.b.status)
+    )
+    .map(({ w, b }) => ({
       id: w.id,
       category: w.category,
       segment_key: w.segment_key,
       final_score: Number(w.final_score),
       batch: {
-        slug: w.batches.slug,
-        display_name: w.batches.display_name,
-        quarter: w.batches.quarter as BatchQuarter,
-        year: w.batches.year,
-        status: w.batches.status as BatchStatus,
+        slug: b.slug,
+        display_name: b.display_name,
+        quarter: b.quarter as BatchQuarter,
+        year: b.year,
+        status: b.status as BatchStatus,
       },
     }));
 }

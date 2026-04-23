@@ -66,8 +66,7 @@ export default async function BatchResultsPage({ params }: Props) {
   const [{ data: winnersRaw }, { data: participationsRaw }, { count: participants }] =
     await Promise.all([
       service
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("batch_winners" as any)
+        .from("batch_winners")
         .select("category, segment_key, final_score, startup:startups!inner(id, name, slug, logo_url, current_division, current_vertical)")
         .eq("batch_id", batch.id),
       service
@@ -83,10 +82,8 @@ export default async function BatchResultsPage({ params }: Props) {
         .eq("batch_id", batch.id),
     ]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const winners = (winnersRaw ?? []) as any as WinnerJoined[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const participations = (participationsRaw ?? []) as any as ParticipationJoined[];
+  const winners = (winnersRaw ?? []) as unknown as WinnerJoined[];
+  const participations = (participationsRaw ?? []) as unknown as ParticipationJoined[];
 
   const nationalTop = (rank: number) => winners.find((w) => w.category === `national_top${rank}`);
   const top1 = nationalTop(1);

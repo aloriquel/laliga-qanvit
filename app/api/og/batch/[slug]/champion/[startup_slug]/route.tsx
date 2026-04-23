@@ -46,18 +46,15 @@ export async function GET(_req: Request, { params }: Props) {
     supabase.from("startups").select("id, name, logo_url").eq("slug", params.startup_slug).maybeSingle(),
   ]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const winners = batch && startup
     ? await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("batch_winners" as any)
+        .from("batch_winners")
         .select("category, segment_key, final_score")
         .eq("batch_id", batch.id)
         .eq("startup_id", startup.id)
     : { data: [] };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const wArr = (winners.data ?? []) as any[];
+  const wArr = winners.data ?? [];
   const pills = wArr.map((w) => categoryPill(w.category, w.segment_key));
   const score = wArr.length > 0 ? Math.max(...wArr.map((w) => Number(w.final_score))) : 0;
 

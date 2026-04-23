@@ -40,16 +40,14 @@ async function fetchClosedBatches(): Promise<ClosedBatch[]> {
           .select("id", { count: "exact", head: true })
           .eq("batch_id", b.id),
         service
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from("batch_winners" as any)
+          .from("batch_winners")
           .select("startup_id, startups!inner(name, slug, logo_url)")
           .eq("batch_id", b.id)
           .eq("category", "national_top1")
           .maybeSingle(),
       ]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const s = (top1 as any)?.startups ?? null;
+      const s = (top1?.startups ?? null) as unknown as { name: string; slug: string; logo_url: string | null } | null;
       return {
         id: b.id,
         slug: b.slug,

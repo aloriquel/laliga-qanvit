@@ -18,8 +18,7 @@ export async function PATCH(
   if (!startup) return NextResponse.json({ error: "No startup" }, { status: 404 });
 
   const { error } = await service
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .from("batch_celebrations" as any)
+    .from("batch_celebrations")
     .update({ seen_modal_at: new Date().toISOString() })
     .eq("batch_id", params.batch_id)
     .eq("startup_id", startup.id);

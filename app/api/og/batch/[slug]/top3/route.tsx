@@ -56,22 +56,21 @@ export async function GET(_req: Request, { params }: Props) {
     .eq("slug", params.slug)
     .maybeSingle();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: winnersRaw } = batch
     ? await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("batch_winners" as any)
+        .from("batch_winners")
         .select("category, final_score, startups!inner(name, logo_url)")
         .eq("batch_id", batch.id)
         .in("category", ["national_top1", "national_top2", "national_top3"])
     : { data: null };
 
   const byCategory = new Map<string, WinnerData>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  for (const w of (winnersRaw ?? []) as any[]) {
+  for (const w of winnersRaw ?? []) {
+    // startups is typed as a relation — Supabase returns it as a single object for !inner joins
+    const s = w.startups as unknown as { name: string; logo_url: string | null } | null;
     byCategory.set(w.category, {
-      name: w.startups?.name ?? "—",
-      logo_url: w.startups?.logo_url ?? null,
+      name: s?.name ?? "—",
+      logo_url: s?.logo_url ?? null,
       score: Number(w.final_score),
     });
   }
