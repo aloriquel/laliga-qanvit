@@ -16,8 +16,7 @@ export async function POST(_req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: startup } = await (supabase as any)
+  const { data: startup } = await supabase
     .from("startups")
     .select("id, logo_storage_path")
     .eq("owner_id", user.id)
@@ -30,8 +29,7 @@ export async function POST(_req: NextRequest) {
   const service = createServiceClient();
 
   // Delete from storage if path is known
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const storagePath = (startup as any).logo_storage_path as string | null;
+  const storagePath = startup.logo_storage_path;
   if (storagePath) {
     const { error: rmErr } = await service.storage.from(BUCKET).remove([storagePath]);
     if (rmErr) {
@@ -39,8 +37,7 @@ export async function POST(_req: NextRequest) {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: dbErr } = await (service as any)
+  const { error: dbErr } = await service
     .from("startups")
     .update({
       logo_url: null,
