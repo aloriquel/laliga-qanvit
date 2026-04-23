@@ -124,5 +124,9 @@
       "PowerShell(Get-Command npx)",
       "PowerShell(& npx @anthropic-ai/claude-code --version)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "supabase"
+  ],
+  "enableAllProjectMcpServers": true
 }
