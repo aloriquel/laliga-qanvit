@@ -6,6 +6,8 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Upload, ChevronRight, AlertCircle } from "lucide-react";
+import RegionSelector from "@/components/ui/RegionSelector";
+import type { CaId } from "@/lib/spain-regions";
 
 type Step = 0 | 1;
 
@@ -15,13 +17,17 @@ type StartupFormData = {
   oneLiner: string;
 };
 
+type RegionValue = { ca: CaId | null; province: string | null };
+
 export default function PlayPage() {
   const t = useTranslations("play");
   const ta = useTranslations("auth.login");
   const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [startupId, setStartupId] = useState<string | null>(null);
+  const [isNewStartup, setIsNewStartup] = useState(false);
   const [form, setForm] = useState<StartupFormData>({ name: "", website: "", oneLiner: "" });
+  const [region, setRegion] = useState<RegionValue>({ ca: null, province: null });
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const [consentEval, setConsentEval] = useState(false);
@@ -75,6 +81,7 @@ export default function PlayPage() {
           one_liner: form.oneLiner || null,
         }).eq("id", existing.id);
         setStartupId(existing.id);
+        setIsNewStartup(false);
       } else {
         const { data: created, error: createError } = await supabase
           .from("startups")
@@ -89,6 +96,16 @@ export default function PlayPage() {
           .single();
         if (createError) throw createError;
         setStartupId(created!.id);
+        setIsNewStartup(true);
+
+        // Save region for new startup if provided
+        if (region.ca && region.province) {
+          await fetch("/api/startup/region", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ region_ca: region.ca, region_province: region.province }),
+          });
+        }
       }
 
       setStep(1);
@@ -135,6 +152,7 @@ export default function PlayPage() {
   }
 
   const STEPS = [t("step_startup"), t("step_deck")];
+  const regionComplete = region.ca !== null && region.province !== null;
 
   return (
     <div className="bg-brand-lavender min-h-screen py-16">
@@ -204,14 +222,39 @@ export default function PlayPage() {
                   placeholder={t("one_liner_placeholder")}
                 />
               </label>
+
+              {/* Region — required for new startups */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-body text-sm font-semibold text-brand-navy">
+                    ¿Dónde está tu startup?{" "}
+                    <span className="text-red-500">*</span>
+                  </span>
+                </div>
+                <p className="font-body text-xs text-ink-secondary mb-2">
+                  Nos ayuda a destacarte en rankings regionales.
+                </p>
+                <RegionSelector
+                  value={region}
+                  onChange={setRegion}
+                  required={true}
+                  showLabels={false}
+                />
+              </div>
+
               <button
                 type="submit"
-                disabled={loading || !form.name.trim()}
+                disabled={loading || !form.name.trim() || !regionComplete}
                 className="mt-2 bg-brand-navy text-white font-semibold rounded-xl px-6 py-3 font-body flex items-center justify-center gap-2 hover:bg-brand-navy/90 transition-colors disabled:opacity-50"
               >
                 {loading ? t("saving") : t("next")}
                 <ChevronRight className="h-4 w-4" />
               </button>
+              {!regionComplete && form.name.trim() && (
+                <p className="font-body text-xs text-ink-secondary text-center -mt-2">
+                  Selecciona tu CA y provincia para continuar.
+                </p>
+              )}
             </form>
           )}
 

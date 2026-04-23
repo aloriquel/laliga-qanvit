@@ -91,6 +91,11 @@ export default async function DashboardHomePage() {
     : [];
 
   const hasLogo = !!(startup as unknown as { logo_url?: string | null }).logo_url;
+  const hasRegion = !!(startup as unknown as { region_ca?: string | null }).region_ca;
+
+  // Banner is more prominent (salmon) if startup is >7 days old without region
+  const createdAt = new Date((startup as unknown as { created_at: string }).created_at);
+  const regionBannerUrgent = !hasRegion && (Date.now() - createdAt.getTime()) > 7 * 24 * 60 * 60 * 1000;
 
   return (
     <div className="pb-20 md:pb-0">
@@ -105,6 +110,25 @@ export default async function DashboardHomePage() {
             className="flex-shrink-0 font-body text-sm font-semibold text-brand-navy bg-white border border-border-soft rounded-xl px-4 py-2 hover:bg-brand-lavender/60 transition-colors"
           >
             Subir logo →
+          </a>
+        </div>
+      )}
+
+      {/* ── Región onboarding banner ── */}
+      {!hasRegion && (
+        <div className={`mb-6 flex items-center justify-between gap-4 border rounded-2xl px-5 py-4 ${
+          regionBannerUrgent
+            ? "bg-brand-salmon/20 border-brand-salmon"
+            : "bg-brand-lavender border-border-soft"
+        }`}>
+          <p className="font-body text-sm text-brand-navy">
+            <span className="font-semibold">Añade tu región</span> para aparecer en rankings regionales y que el ecosistema te encuentre por Comunidad Autónoma.
+          </p>
+          <a
+            href="/dashboard/configuracion#region"
+            className="flex-shrink-0 font-body text-sm font-semibold text-brand-navy bg-white border border-border-soft rounded-xl px-4 py-2 hover:bg-brand-lavender/60 transition-colors"
+          >
+            Añadir región →
           </a>
         </div>
       )}

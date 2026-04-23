@@ -5,6 +5,8 @@ import PrivacyToggles from "./PrivacyToggles";
 import NotificationSettings from "./NotificationSettings";
 import DeleteAccountSection from "./DeleteAccountSection";
 import LogoSection from "./LogoSection";
+import RegionSection from "./RegionSection";
+import type { CaId } from "@/lib/spain-regions";
 
 export const metadata: Metadata = { title: "Configuración — Dashboard" };
 export const revalidate = 0;
@@ -15,9 +17,10 @@ export default async function ConfiguracionPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/play");
 
-  const { data: startup } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: startup } = await (supabase as any)
     .from("startups")
-    .select("id, name, logo_url, is_public, consent_public_profile, consent_public_deck, show_public_timeline, notification_email_enabled, notification_frequency")
+    .select("id, name, logo_url, is_public, consent_public_profile, consent_public_deck, show_public_timeline, notification_email_enabled, notification_frequency, region_ca, region_province")
     .eq("owner_id", user.id)
     .single();
 
@@ -36,6 +39,20 @@ export default async function ConfiguracionPage() {
         <LogoSection
           initialLogoUrl={startup.logo_url ?? null}
           startupName={startup.name ?? "Startup"}
+        />
+      </section>
+
+      <div className="border-t border-border-soft my-6" />
+
+      {/* Ubicación */}
+      <section className="mb-8" id="region">
+        <h2 className="font-sora font-semibold text-lg text-brand-navy mb-1">Ubicación</h2>
+        <p className="font-body text-sm text-ink-secondary mb-4">
+          Aparece en tu perfil público. Permite a futuro filtrar y destacar startups por región.
+        </p>
+        <RegionSection
+          initialCa={(startup.region_ca as CaId | null) ?? null}
+          initialProvince={(startup.region_province as string | null) ?? null}
         />
       </section>
 

@@ -4,10 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SPAIN_CA, getCaById, type CaId } from "@/lib/spain-regions";
 
 type FilterContextBarProps = {
   division: string | null;
   vertical: string | null;
+  ca: CaId | null;
   count: number;
 };
 
@@ -31,10 +33,14 @@ const VERTICALS = [
   { key: "cybersecurity",            label: "Cybersecurity" },
 ];
 
-function buildUrl(d: string | null, v: string | null) {
+// Sorted alphabetically by name
+const CAS = [...SPAIN_CA].sort((a, b) => a.name.localeCompare(b.name, "es"));
+
+function buildUrl(d: string | null, v: string | null, c: string | null) {
   const params = new URLSearchParams();
   if (d) params.set("division", d);
   if (v) params.set("vertical", v);
+  if (c) params.set("ca", c);
   const qs = params.toString();
   return qs ? `/liga?${qs}` : "/liga";
 }
@@ -71,7 +77,7 @@ function FilterDropdown({
         <ChevronDown size={11} className={cn("transition-transform duration-150", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-1.5 bg-white rounded-xl shadow-lg border border-border-soft py-1.5 min-w-[200px] z-30">
+        <div className="absolute left-0 top-full mt-1.5 bg-white rounded-xl shadow-lg border border-border-soft py-1.5 min-w-[200px] z-30 max-h-72 overflow-y-auto">
           {items.map((item) => (
             <Link
               key={item.key}
@@ -92,11 +98,12 @@ function FilterDropdown({
   );
 }
 
-export function FilterContextBar({ division, vertical, count }: FilterContextBarProps) {
-  if (!division && !vertical) return null;
+export function FilterContextBar({ division, vertical, ca, count }: FilterContextBarProps) {
+  if (!division && !vertical && !ca) return null;
 
-  const divItem = division ? DIVISIONS.find((d) => d.key === division) : null;
+  const divItem  = division ? DIVISIONS.find((d) => d.key === division) : null;
   const vertItem = vertical ? VERTICALS.find((v) => v.key === vertical) : null;
+  const caItem   = ca ? getCaById(ca) : null;
 
   return (
     <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs font-body text-brand-navy/60">
@@ -113,22 +120,29 @@ export function FilterContextBar({ division, vertical, count }: FilterContextBar
       <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
         <span>Ver también:</span>
 
-        {/* Switch division, keep current vertical */}
         <FilterDropdown
           label={divItem ? `${divItem.icon} ${divItem.label}` : "División"}
           items={DIVISIONS}
           currentKey={division}
-          buildHref={(key) => buildUrl(key, vertical)}
+          buildHref={(key) => buildUrl(key, vertical, ca)}
         />
 
         <span className="text-brand-navy/30 select-none">·</span>
 
-        {/* Switch vertical, keep current division */}
         <FilterDropdown
           label={vertItem ? vertItem.label : "Vertical"}
           items={VERTICALS}
           currentKey={vertical}
-          buildHref={(key) => buildUrl(division, key)}
+          buildHref={(key) => buildUrl(division, key, ca)}
+        />
+
+        <span className="text-brand-navy/30 select-none">·</span>
+
+        <FilterDropdown
+          label={caItem ? `🏛️ ${caItem.name}` : "Comunidad Autónoma"}
+          items={CAS.map((c) => ({ key: c.id, label: c.name }))}
+          currentKey={ca}
+          buildHref={(key) => buildUrl(division, vertical, key)}
         />
 
         <span className="text-brand-navy/30 select-none">·</span>

@@ -24,9 +24,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: "Upgrade to Pro to view startup details" }, { status: 403 });
   }
 
-  const { data: startup } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: startup } = await (supabase as any)
     .from("startups")
-    .select("id, name, logo_url, location_region, founded_year, website")
+    .select("id, name, logo_url, location_region, region_ca, region_province, founded_year, website")
     .eq("id", params.id)
     .maybeSingle();
 
@@ -58,6 +59,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     rank_national: standing?.rank_national ?? 0,
     rank_division: standing?.rank_division ?? 0,
     region: startup.location_region,
+    region_ca: startup.region_ca ?? null,
+    region_province: startup.region_province ?? null,
     founded_year: startup.founded_year,
     website: startup.website,
     feedback_summary: feedbackSummary,

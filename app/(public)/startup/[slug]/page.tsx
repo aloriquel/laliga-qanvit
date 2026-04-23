@@ -11,6 +11,8 @@ import PublicStrengthsHighlights from "@/components/public/PublicStrengthsHighli
 import PublicTopDimensions from "@/components/public/PublicTopDimensions";
 import DeckPreviewCarousel from "@/components/public/DeckPreviewCarousel";
 import { getPublicProfileData, getTopDimensions } from "@/lib/public/profile-helpers";
+import StartupRegionBadge from "@/components/ui/StartupRegionBadge";
+import type { CaId } from "@/lib/spain-regions";
 
 type Props = { params: { slug: string } };
 type EvaluationRow = Database["public"]["Tables"]["evaluations"]["Row"];
@@ -143,6 +145,17 @@ export default async function StartupPublicPage({ params }: Props) {
             interactive={false}
           />
         </div>
+
+        {/* Region badge */}
+        {startup.region_ca && (
+          <div className="flex justify-center mb-4 -mt-4">
+            <StartupRegionBadge
+              regionCa={startup.region_ca as CaId}
+              regionProvince={startup.region_province as string | null}
+              variant="full"
+            />
+          </div>
+        )}
 
         {/* One-liner */}
         {startup.one_liner && (

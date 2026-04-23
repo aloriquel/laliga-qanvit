@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { FilterContextBar } from "@/components/league/FilterContextBar";
 import LeaderboardRow from "@/components/league/LeaderboardRow";
+import { SPAIN_CA, getCaById, type CaId } from "@/lib/spain-regions";
+import Link from "next/link";
 
 export const revalidate = 60; // ISR per unique URL
 
@@ -26,7 +28,6 @@ const VERTICAL_FULL: Record<string, string> = {
   cybersecurity:            "Cybersecurity",
 };
 
-// Short labels used in the combined heading "Seed Robotics"
 const VERTICAL_SHORT: Record<string, string> = {
   deeptech_ai:              "Deeptech",
   robotics_automation:      "Robotics",
@@ -40,17 +41,18 @@ const VERTICAL_SHORT: Record<string, string> = {
   cybersecurity:            "Cyber",
 };
 
-
 type PageProps = {
-  searchParams: { division?: string; vertical?: string };
+  searchParams: { division?: string; vertical?: string; ca?: string };
 };
 
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const d = searchParams.division ?? null;
   const v = searchParams.vertical ?? null;
+  const c = searchParams.ca ?? null;
   const parts: string[] = [];
   if (d) parts.push(DIVISION_NAMES[d] ?? d);
   if (v) parts.push(VERTICAL_FULL[v] ?? v);
+  if (c) parts.push(getCaById(c as CaId)?.name ?? c);
   const title = parts.length ? `${parts.join(" · ")} — Leaderboard` : "Leaderboard";
   return {
     title,
@@ -63,12 +65,11 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
 
   const division = searchParams.division ?? null;
   const vertical = searchParams.vertical ?? null;
+  const ca       = searchParams.ca ?? null;
 
-  // Validate params to prevent injecting arbitrary values into DB queries
-  const safeDivision =
-    division && division in DIVISION_NAMES ? division : null;
-  const safeVertical =
-    vertical && vertical in VERTICAL_FULL ? vertical : null;
+  const safeDivision = division && division in DIVISION_NAMES ? division : null;
+  const safeVertical = vertical && vertical in VERTICAL_FULL   ? vertical : null;
+  const safeCa       = ca && SPAIN_CA.some((c) => c.id === ca) ? (ca as CaId) : null;
 
   let standings: Array<{
     startup_id: string | null;
@@ -76,6 +77,8 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
     slug: string;
     one_liner: string | null;
     logo_url: string | null;
+    region_ca: string | null;
+    region_province: string | null;
     current_division: string | null;
     current_vertical: string | null;
     current_score: number | null;
@@ -93,6 +96,7 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
 
     if (safeDivision) query = query.eq("current_division", safeDivision);
     if (safeVertical) query = query.eq("current_vertical", safeVertical);
+    if (safeCa)       query = query.eq("region_ca", safeCa);
 
     const { data } = await query;
     standings = data;
@@ -103,26 +107,29 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
   const hasData = standings != null && standings.length > 0;
   const count = standings?.length ?? 0;
 
-  // ── Contextual heading ──────────────────────────────────────────────────────
-  const divName = safeDivision ? DIVISION_NAMES[safeDivision] : null;
+  const divName  = safeDivision ? DIVISION_NAMES[safeDivision] : null;
   const vertFull = safeVertical ? VERTICAL_FULL[safeVertical] : null;
   const vertShort = safeVertical ? VERTICAL_SHORT[safeVertical] : null;
+  const caName   = safeCa ? getCaById(safeCa)?.name ?? safeCa : null;
 
   let headingTitle: string;
   let headingEyebrow: string;
 
-  if (!safeDivision && !safeVertical) {
-    headingTitle  = t("title");
+  if (!safeDivision && !safeVertical && !safeCa) {
+    headingTitle   = t("title");
     headingEyebrow = t("subtitle");
+  } else if (safeCa && !safeDivision && !safeVertical) {
+    headingTitle   = caName!;
+    headingEyebrow = "Ranking regional";
   } else if (safeDivision && !safeVertical) {
-    headingTitle  = `${divName} League`;
-    headingEyebrow = "Todas las verticales";
+    headingTitle   = `${divName} League`;
+    headingEyebrow = safeCa ? caName! : "Todas las verticales";
   } else if (!safeDivision && safeVertical) {
-    headingTitle  = vertFull!;
-    headingEyebrow = "Todas las divisiones";
+    headingTitle   = vertFull!;
+    headingEyebrow = safeCa ? caName! : "Todas las divisiones";
   } else {
-    headingTitle  = `${divName} ${vertShort}`;
-    headingEyebrow = "La celda oficial";
+    headingTitle   = `${divName} ${vertShort}`;
+    headingEyebrow = safeCa ? caName! : "La celda oficial";
   }
 
   return (
@@ -138,10 +145,10 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
           </h1>
           <p className="font-body text-ink-secondary mt-2">{headingEyebrow}</p>
 
-          {/* Contextual filter bar — only when filters are active */}
           <FilterContextBar
             division={safeDivision}
             vertical={safeVertical}
+            ca={safeCa}
             count={count}
           />
         </div>
@@ -160,9 +167,24 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
 
           {!hasData ? (
             <div className="py-20 text-center">
-              <p className="font-mono text-ink-secondary text-sm">
-                {t("empty")}
-              </p>
+              {safeCa ? (
+                <div className="flex flex-col items-center gap-3">
+                  <p className="font-sora font-bold text-brand-navy text-lg">
+                    Aún no hay startups en {caName}
+                  </p>
+                  <p className="font-body text-ink-secondary text-sm">
+                    ¡Sé la primera de tu Comunidad Autónoma!
+                  </p>
+                  <Link
+                    href="/play"
+                    className="mt-2 inline-block bg-brand-navy text-white font-semibold rounded-xl px-6 py-3 font-body text-sm hover:bg-brand-navy/90 transition-colors"
+                  >
+                    Ficha tu startup
+                  </Link>
+                </div>
+              ) : (
+                <p className="font-mono text-ink-secondary text-sm">{t("empty")}</p>
+              )}
             </div>
           ) : (
             standings!.map((row, idx) => (

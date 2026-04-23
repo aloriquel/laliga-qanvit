@@ -6,6 +6,8 @@ import type { Database } from "@/lib/supabase/types";
 import EcosystemMomentumBadge from "@/components/ecosystem/EcosystemMomentumBadge";
 import StartupVoteControl from "@/components/ecosystem/StartupVoteControl";
 import StartupAvatar from "@/components/ui/StartupAvatar";
+import StartupRegionBadge from "@/components/ui/StartupRegionBadge";
+import type { CaId } from "@/lib/spain-regions";
 
 type Tier = Database["public"]["Enums"]["ecosystem_tier"];
 
@@ -19,6 +21,8 @@ type StartupDetail = {
   rank_national: number;
   rank_division: number;
   region: string | null;
+  region_ca: string | null;
+  region_province: string | null;
   founded_year: number | null;
   website: string | null;
   feedback_summary: string | null;
@@ -99,10 +103,14 @@ export default function StartupDetailModal({ startupId, startupName, tier, curre
                   <span className="text-ink-secondary">División</span>
                   <span className="text-brand-navy capitalize font-medium">{detail.division}</span>
                 </div>
-                {detail.region && (
+                {detail.region_ca && (
                   <div className="flex justify-between border-b border-border-soft py-2">
                     <span className="text-ink-secondary">Región</span>
-                    <span className="text-brand-navy font-medium">{detail.region}</span>
+                    <StartupRegionBadge
+                      regionCa={detail.region_ca as CaId}
+                      regionProvince={detail.region_province}
+                      variant="compact"
+                    />
                   </div>
                 )}
                 {detail.founded_year && (
