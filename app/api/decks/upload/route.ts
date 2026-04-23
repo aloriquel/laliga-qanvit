@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { validateAndUploadDeck } from "@/lib/decks/upload-core";
-import { getActiveBatch } from "@/lib/batches";
+import { getActiveBatch, getNextUpcomingBatch } from "@/lib/batches";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -49,7 +49,10 @@ export async function POST(req: NextRequest) {
     const serviceClient = createServiceClient();
 
     // Fetch active batch (non-blocking for admins who skip the guard)
-    const activeBatch = await getActiveBatch();
+    const [activeBatch, nextBatch] = await Promise.all([
+      getActiveBatch(),
+      getNextUpcomingBatch(),
+    ]);
 
     const result = await validateAndUploadDeck({
       file,
@@ -58,6 +61,7 @@ export async function POST(req: NextRequest) {
       userClient: supabase,
       skipBatchGuard: isAdmin,
       activeBatch,
+      nextBatch,
     });
 
     if (!result.ok) {

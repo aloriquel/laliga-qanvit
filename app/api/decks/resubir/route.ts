@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { validateAndUploadDeck } from "@/lib/decks/upload-core";
-import { getActiveBatch, DECK_UPLOAD_LIMIT_PER_BATCH } from "@/lib/batches";
+import { getActiveBatch, getNextUpcomingBatch, DECK_UPLOAD_LIMIT_PER_BATCH } from "@/lib/batches";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -37,7 +37,10 @@ export async function POST(req: NextRequest) {
     const serviceClient = createServiceClient();
 
     // Batch-based rate limit: check submission count for this startup in active batch
-    const activeBatch = await getActiveBatch();
+    const [activeBatch, nextBatch] = await Promise.all([
+      getActiveBatch(),
+      getNextUpcomingBatch(),
+    ]);
     if (!activeBatch) {
       return NextResponse.json(
         { error: "No hay batch activo. Los decks solo pueden subirse durante un batch activo." },
@@ -54,9 +57,18 @@ export async function POST(req: NextRequest) {
 
     const deckCount = participation?.deck_uploads_count ?? 0;
     if (deckCount >= DECK_UPLOAD_LIMIT_PER_BATCH) {
+      const isPreLaunch = activeBatch.quarter === 'Q0_HISTORICO';
+      const nextStart = nextBatch
+        ? new Date(nextBatch.starts_at).toLocaleDateString('es-ES', {
+            day: 'numeric', month: 'long', year: 'numeric',
+          })
+        : null;
+      const errorMsg = isPreLaunch
+        ? `Has alcanzado el máximo de ${DECK_UPLOAD_LIMIT_PER_BATCH} subidas para el pre-lanzamiento. Podrás subir de nuevo el ${nextStart ?? '1 de julio de 2026'}, cuando arranque Q3.`
+        : `Has usado las ${DECK_UPLOAD_LIMIT_PER_BATCH} subidas de este batch (${activeBatch.slug}). ${nextBatch ? `Podrás subir cuando comience ${nextBatch.display_name}.` : 'Podrás subir de nuevo en el siguiente batch.'}`;
       return NextResponse.json(
         {
-          error: `Has usado las ${DECK_UPLOAD_LIMIT_PER_BATCH} subidas de este batch. Podrás re-subir en el siguiente.`,
+          error: errorMsg,
           limit_reached: true,
           deck_count: deckCount,
           limit: DECK_UPLOAD_LIMIT_PER_BATCH,

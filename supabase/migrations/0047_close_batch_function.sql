@@ -33,7 +33,7 @@ DECLARE
   batch_rec         RECORD;
   min_segment_count CONSTANT int := 5;
 BEGIN
-  SELECT id, slug, status INTO batch_rec
+  SELECT id, slug, status, quarter, winners_computed_at INTO batch_rec
   FROM batches WHERE id = target_batch_id;
 
   IF NOT FOUND THEN
@@ -42,6 +42,12 @@ BEGIN
 
   IF batch_rec.status NOT IN ('active', 'closed') THEN
     RAISE EXCEPTION 'Batch % has status %; expected active or closed', target_batch_id, batch_rec.status;
+  END IF;
+
+  -- Guard: pre-lanzamiento batches never compute winners — use rotate_batches() instead
+  IF batch_rec.quarter = 'Q0_HISTORICO'
+     AND batch_rec.winners_computed_at = '1970-01-01 00:00:00+00'::timestamptz THEN
+    RAISE EXCEPTION 'Batch % es pre-lanzamiento; usar rotate_batches() para migrarlo al siguiente batch oficial.', batch_rec.slug;
   END IF;
 
   -- ── 1. Calcular vote_bonus y final_score (fórmula 70/30) ────────────────

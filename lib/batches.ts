@@ -27,6 +27,13 @@ export function batchDisplayLabel(quarter: BatchQuarter, year: number): string {
   return `${quarter} ${year}`;
 }
 
+/** Returns true when the batch is the pre-launch warm-up period (never gets winners). */
+export function isPreLaunchBatch(batch: Batch): boolean {
+  if (batch.quarter !== 'Q0_HISTORICO') return false;
+  if (!batch.winners_computed_at) return false;
+  return new Date(batch.winners_computed_at).getFullYear() === 1970;
+}
+
 export function batchSlug(quarter: BatchQuarter, year: number): string {
   if (quarter === 'Q0_HISTORICO') return 'batch-0-historico';
   return `${quarter.toLowerCase()}-${year}`;
@@ -71,11 +78,36 @@ export async function getBatchBySlug(slug: string): Promise<Batch | null> {
   return data ? toBatch(data) : null;
 }
 
+/** Returns the next upcoming non-Q0_HISTORICO batch (i.e. the first official batch). */
+export async function getNextUpcomingBatch(): Promise<Batch | null> {
+  const service = createServiceClient();
+  const { data } = await service
+    .from("batches")
+    .select("*")
+    .eq("status", "upcoming")
+    .neq("quarter", "Q0_HISTORICO" as BatchQuarter)
+    .order("starts_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data ? toBatch(data) : null;
+}
+
 /** Returns the batch to display in the leaderboard.
- *  If slug is provided, returns that batch; otherwise returns the active batch. */
+ *  Priority: explicit slug → active batch → most recent closed non-Q0_HISTORICO → null. */
 export async function getBatchForLeaderboard(slug?: string | null): Promise<Batch | null> {
   if (slug) return getBatchBySlug(slug);
-  return getActiveBatch();
+  const active = await getActiveBatch();
+  if (active) return active;
+  const service = createServiceClient();
+  const { data } = await service
+    .from("batches")
+    .select("*")
+    .eq("status", "closed")
+    .neq("quarter", "Q0_HISTORICO" as BatchQuarter)
+    .order("ends_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data ? toBatch(data) : null;
 }
 
 /** Count non-archived decks a startup has uploaded within a given batch date range. */

@@ -5,7 +5,7 @@ import { FilterContextBar } from "@/components/league/FilterContextBar";
 import LeaderboardRow from "@/components/league/LeaderboardRow";
 import { SPAIN_CA, getCaById, type CaId } from "@/lib/spain-regions";
 import Link from "next/link";
-import { getBatchForLeaderboard } from "@/lib/batches";
+import { getBatchForLeaderboard, isPreLaunchBatch } from "@/lib/batches";
 
 export const revalidate = 60; // ISR per unique URL
 
@@ -140,7 +140,19 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
     <div className="bg-brand-lavender min-h-screen py-16">
       <div className="container-brand">
         {/* Batch context banner */}
-        {batch && batch.status !== "active" && (
+        {batch && isPreLaunchBatch(batch) && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-mono text-xs bg-amber-100 text-amber-700 font-semibold px-2.5 py-1 rounded-full">
+                Pre-Lanzamiento · Q3 2026 arranca el 1 de julio
+              </span>
+            </div>
+            <p className="font-body text-sm text-ink-secondary">
+              Ficha tu startup hoy para aparecer desde el primer día del primer batch oficial.
+            </p>
+          </div>
+        )}
+        {batch && batch.status !== "active" && !isPreLaunchBatch(batch) && (
           <div className="mb-6 bg-brand-navy/8 border border-brand-navy/15 rounded-xl px-5 py-3 flex items-center gap-3">
             <span className="font-mono text-xs text-brand-navy font-semibold uppercase tracking-wider">
               {batch.status === "closed" ? "Histórico" : batch.display_name}
@@ -153,7 +165,7 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
             </p>
           </div>
         )}
-        {batch && batch.status === "active" && (
+        {batch && batch.status === "active" && !isPreLaunchBatch(batch) && (
           <div className="mb-6 flex items-center gap-2">
             <span className="font-mono text-xs bg-green-100 text-green-700 font-semibold px-2.5 py-1 rounded-full">
               {batch.display_name} · en curso
@@ -181,6 +193,18 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
             count={count}
           />
         </div>
+
+        {/* Rankings no oficiales notice */}
+        {batch && isPreLaunchBatch(batch) && (
+          <div className="mb-3 flex items-center gap-2">
+            <span className="font-mono text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded">
+              Rankings no oficiales
+            </span>
+            <span className="font-body text-xs text-ink-secondary">
+              Los resultados se consolidan al inicio de Q3 2026
+            </span>
+          </div>
+        )}
 
         {/* Table */}
         <div className="bg-white rounded-card shadow-card border border-border-soft overflow-hidden">

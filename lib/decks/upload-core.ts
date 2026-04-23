@@ -14,7 +14,9 @@ type UploadInput = {
   /** Skip batch guard for admins or re-subir flows that check independently. */
   skipBatchGuard?: boolean;
   /** Required unless skipBatchGuard is true. */
-  activeBatch?: { id: string; slug: string; starts_at: string; ends_at: string } | null;
+  activeBatch?: { id: string; slug: string; quarter: string; starts_at: string; ends_at: string } | null;
+  /** Used in 429 messages to tell the user when the next batch starts. */
+  nextBatch?: { display_name: string; starts_at: string } | null;
 };
 
 type UploadResult =
@@ -22,7 +24,7 @@ type UploadResult =
   | { ok: false; error: string; status: number; limitReached?: true; deckCount?: number; limit?: number };
 
 export async function validateAndUploadDeck(input: UploadInput): Promise<UploadResult> {
-  const { file, startupId, serviceClient, skipBatchGuard, activeBatch } = input;
+  const { file, startupId, serviceClient, skipBatchGuard, activeBatch, nextBatch } = input;
 
   if (file.size > MAX_FILE_SIZE) {
     return { ok: false, error: "File exceeds 20 MB limit", status: 400 };
@@ -53,9 +55,18 @@ export async function validateAndUploadDeck(input: UploadInput): Promise<UploadR
 
     const deckCount = participation?.deck_uploads_count ?? 0;
     if (deckCount >= DECK_UPLOAD_LIMIT_PER_BATCH) {
+      const isPreLaunch = activeBatch.quarter === 'Q0_HISTORICO';
+      const nextStart = nextBatch
+        ? new Date(nextBatch.starts_at).toLocaleDateString('es-ES', {
+            day: 'numeric', month: 'long', year: 'numeric',
+          })
+        : null;
+      const error = isPreLaunch
+        ? `Has alcanzado el máximo de ${DECK_UPLOAD_LIMIT_PER_BATCH} subidas para el pre-lanzamiento. Podrás subir de nuevo el ${nextStart ?? '1 de julio de 2026'}, cuando arranque Q3.`
+        : `Has usado las ${DECK_UPLOAD_LIMIT_PER_BATCH} subidas de este batch (${activeBatch.slug}). ${nextBatch ? `Podrás subir cuando comience ${nextBatch.display_name}.` : 'Podrás subir de nuevo en el siguiente batch.'}`;
       return {
         ok: false,
-        error: `Has usado las ${DECK_UPLOAD_LIMIT_PER_BATCH} subidas de este batch (${activeBatch.slug}). Podrás subir de nuevo en el siguiente.`,
+        error,
         status: 429,
         limitReached: true,
         deckCount,

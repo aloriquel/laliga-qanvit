@@ -2,11 +2,13 @@ import { describe, it, expect } from "vitest";
 import {
   batchDisplayLabel,
   batchSlug,
+  isPreLaunchBatch,
   CURRENT_BATCH_STATUSES,
   DECK_UPLOAD_LIMIT_PER_BATCH,
   calculateNextBatchStart,
   type BatchStatus,
   type BatchQuarter,
+  type Batch,
 } from "../batches";
 
 describe("batchDisplayLabel", () => {
@@ -67,6 +69,39 @@ describe("CURRENT_BATCH_STATUSES", () => {
 describe("DECK_UPLOAD_LIMIT_PER_BATCH", () => {
   it("is 2", () => {
     expect(DECK_UPLOAD_LIMIT_PER_BATCH).toBe(2);
+  });
+});
+
+describe("isPreLaunchBatch", () => {
+  const base: Batch = {
+    id: "test-id",
+    slug: "pre-lanzamiento-2026",
+    quarter: "Q0_HISTORICO",
+    year: 2026,
+    display_name: "Pre-Lanzamiento",
+    starts_at: "2026-04-23T10:00:00+00:00",
+    ends_at: "2026-06-30T21:59:59+00:00",
+    status: "active",
+    closed_at: null,
+    winners_computed_at: "1970-01-01T00:00:00+00:00",
+  };
+
+  it("returns true for a Q0_HISTORICO batch with 1970 sentinel", () => {
+    expect(isPreLaunchBatch(base)).toBe(true);
+  });
+
+  it("returns false for a regular Q3 batch", () => {
+    const q3: Batch = { ...base, slug: "q3-2026", quarter: "Q3", winners_computed_at: null };
+    expect(isPreLaunchBatch(q3)).toBe(false);
+  });
+
+  it("returns false for Q0_HISTORICO with a real winners_computed_at", () => {
+    const legacy: Batch = { ...base, winners_computed_at: "2024-12-31T23:59:59+00:00" };
+    expect(isPreLaunchBatch(legacy)).toBe(false);
+  });
+
+  it("returns false when winners_computed_at is null", () => {
+    expect(isPreLaunchBatch({ ...base, winners_computed_at: null })).toBe(false);
   });
 });
 
