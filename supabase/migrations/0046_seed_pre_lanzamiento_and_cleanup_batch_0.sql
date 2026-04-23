@@ -17,7 +17,6 @@ BEGIN
     DELETE FROM batch_participations WHERE batch_id = batch0_id;
     DELETE FROM evaluations          WHERE batch_id = batch0_id;
     DELETE FROM startup_votes        WHERE batch_id = batch0_id;
-    DELETE FROM decks                WHERE batch_id = batch0_id;
     DELETE FROM batches              WHERE id       = batch0_id;
   END IF;
 END;
