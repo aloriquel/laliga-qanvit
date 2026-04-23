@@ -114,7 +114,12 @@
       "Bash(node -e \" const fs = require\\('fs'\\); const raw = fs.readFileSync\\('lib/supabase/types.ts'\\); let content = raw[0]===0xFF&&raw[1]===0xFE ? raw.slice\\(2\\).toString\\('utf16le'\\) : raw.toString\\('utf16le'\\); const lines = content.split\\('\\\\n'\\); // Find admin_evaluator_discrepancies Row let start = lines.findIndex\\(l => l.includes\\('admin_evaluator_discrepancies:'\\)\\); for \\(let i = start; i < Math.min\\(start+80, lines.length\\); i++\\) { console.log\\(i+1 + ': ' + lines[i]\\); if \\(i > start+5 && lines[i].trim\\(\\) === '}'\\) break; } \")",
       "Bash(git rm *)",
       "Bash(node -e \" const fs = require\\('fs'\\); const raw = fs.readFileSync\\('lib/supabase/types.ts'\\); let content = raw[0]===0xFF&&raw[1]===0xFE ? raw.slice\\(2\\).toString\\('utf16le'\\) : raw.toString\\('utf16le'\\); const lines = content.split\\('\\\\n'\\); // batch_participations Row let start = lines.findIndex\\(l => l.includes\\('batch_participations:'\\)\\); for \\(let i = start; i < Math.min\\(start+50, lines.length\\); i++\\) { console.log\\(i+1+':', lines[i]\\); if \\(i > start+5 && lines[i].trim\\(\\) === '}'\\) break; } \")",
-      "Bash(npx vitest *)"
+      "Bash(npx vitest *)",
+      "Bash(claude mcp *)",
+      "Bash(where.exe claude *)",
+      "Read(//mnt/c/Users/1t12d/AppData/Roaming/**)",
+      "Bash(npx @anthropic-ai/claude-code --version)",
+      "Bash(npx @anthropic-ai/claude-code mcp add --scope project --transport http supabase \"https://mcp.supabase.com/mcp?project_ref=ongwrbdypbusnwlclqjg\")"
     ]
   }
 }
