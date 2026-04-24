@@ -38,7 +38,7 @@ export default async function EcosystemDashboardLayout({ children }: { children:
 
   return (
     <EcosystemShell orgName={org.name} tier={tier} unreadAlerts={unreadAlerts ?? 0}>
-      <ConsentGateModal show={needsConsent} />
+      <ConsentGateModal show={needsConsent} variant="ecosystem" />
       {children}
     </EcosystemShell>
   );

@@ -10,7 +10,22 @@ import {
 } from "@/components/ui/dialog";
 import Link from "next/link";
 
-export function ConsentGateModal({ show }: { show: boolean }) {
+type Variant = "startup" | "ecosystem";
+
+const VARIANT_COPY: Record<Variant, string> = {
+  startup:
+    "Para usar La Liga Qanvit necesitas aceptar cómo tratamos tus datos. Procesamos tu deck con IA para generar feedback. Tu deck nunca es visible a terceros.",
+  ecosystem:
+    "Para usar La Liga Qanvit como organización del ecosistema necesitas aceptar cómo tratamos tus datos. Consulta los detalles en nuestra Política de privacidad y Términos de servicio.",
+};
+
+export function ConsentGateModal({
+  show,
+  variant = "startup",
+}: {
+  show: boolean;
+  variant?: Variant;
+}) {
   const [open, setOpen] = useState(show);
   const [checked, setChecked] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,9 +60,7 @@ export function ConsentGateModal({ show }: { show: boolean }) {
             Antes de entrar
           </DialogTitle>
           <DialogDescription className="text-ink-secondary text-sm leading-relaxed">
-            Para usar La Liga Qanvit necesitas aceptar cómo tratamos tus datos.
-            Procesamos tu deck con IA para generar feedback. Tu deck nunca es
-            visible a terceros.
+            {VARIANT_COPY[variant]}
           </DialogDescription>
         </DialogHeader>
 

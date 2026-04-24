@@ -45,7 +45,7 @@ export default function StartupSearch({ orgId, tier }: Props) {
   const [results, setResults] = useState<LeagueStanding[]>([]);
   const [loading, startSearch] = useTransition();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
 
   const [voteMap, setVoteMap] = useState<Record<string, VoteRecord | null>>({});
   const [momentumMap, setMomentumMap] = useState<Record<string, MomentumData | null>>({});
@@ -75,23 +75,30 @@ export default function StartupSearch({ orgId, tier }: Props) {
 
   async function search(reset = true) {
     startSearch(async () => {
+      const nextOffset = reset ? 0 : results.length;
       const params = new URLSearchParams({
         q: query,
         vertical,
         division,
-        offset: String(reset ? 0 : page * 20),
+        offset: String(nextOffset),
         limit: "20",
       });
       const res = await fetch(`/api/ecosystem/startups?${params}`);
       if (!res.ok) return;
       const data = await res.json();
+      const batch: LeagueStanding[] = data.results ?? [];
+      setHasMore(batch.length === 20);
       if (reset) {
-        setResults(data.results);
-        setPage(0);
-      } else {
-        setResults((prev) => [...prev, ...data.results]);
-        setPage((p) => p + 1);
+        setResults(batch);
+        return;
       }
+      setResults((prev) => {
+        const seen = new Set(prev.map((r) => r.startup_id));
+        const extras = batch.filter(
+          (r) => r.startup_id && !seen.has(r.startup_id)
+        );
+        return [...prev, ...extras];
+      });
     });
   }
 
@@ -234,15 +241,17 @@ export default function StartupSearch({ orgId, tier }: Props) {
               })}
             </tbody>
           </table>
-          <div className="px-4 py-3 border-t border-border-soft text-center">
-            <button
-              onClick={() => search(false)}
-              disabled={loading}
-              className="text-brand-salmon text-sm font-semibold font-body hover:underline disabled:opacity-50"
-            >
-              Cargar más
-            </button>
-          </div>
+          {hasMore && (
+            <div className="px-4 py-3 border-t border-border-soft text-center">
+              <button
+                onClick={() => search(false)}
+                disabled={loading}
+                className="text-brand-salmon text-sm font-semibold font-body hover:underline disabled:opacity-50"
+              >
+                Cargar más
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-border-soft p-12 text-center">
