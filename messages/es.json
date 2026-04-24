@@ -229,19 +229,6 @@
     "my_area": "Mi área",
     "sign_out": "Cerrar sesión"
   },
-  "ecosystem_landing": {
-    "hero_eyebrow": "{ ecosistema }",
-    "hero_title": "El ecosistema de La Liga Qanvit",
-    "hero_subtitle": "Parques, clusters y asociaciones: acceded a las mejores startups técnicas de España y ganad posiciones contribuyendo al ecosistema.",
-    "card1_title": "Cómo funciona",
-    "card1_body": "Solicitáis acceso y lo aprobamos en 24-48 h. Recibís un código de referral único y acceso al dashboard. Empezáis como Rookie y subís de tier cuanto más contribuís.",
-    "card2_title": "Sistema de puntos",
-    "card2_body": "Tres tiers: 🥉 Rookie, 🥈 Pro y 🥇 Elite. Cada tier desbloquea más filtros, más datos del evaluador y reportes exclusivos por vertical.",
-    "card3_title": "Vota startups, mejora tu scouting",
-    "card3_body": "Vota las startups que crees que van a subir. La Liga mide tu Scouting Eye: cuántas de tus apuestas aciertan. Los mejores scouts desbloquean datos exclusivos.",
-    "cta_apply": "Aplicar al ecosistema",
-    "cta_dashboard": "Ir a mi dashboard"
-  },
   "hub": {
     "greeting": "Hola, {name}",
     "subtitle": "Tu área en La Liga Qanvit",
