@@ -43,7 +43,7 @@ export default async function TransparenciaPage() {
 
       <h2>Quiénes somos</h2>
       <p>
-        Somos <strong>FQ Source Technologies, S.L.</strong> (Qanvit), una startup española con sede en Jaén, fundada por <strong>Arturo López Riquelme</strong> y equipo. Construimos agentes de IA para Corporate Venture e innovación abierta.
+        Somos <strong>FQ Source Technologies, S.L.</strong> (Qanvit), una startup española con sede en Jaén. Construimos agentes de IA para Corporate Venture e innovación abierta.
       </p>
       <p>
         La Liga Qanvit es nuestra plataforma pública de evaluación de startups. Es el primer producto de cara a la comunidad emprendedora española y sirve a la vez como fuente de datos estructurados para nuestros agentes.

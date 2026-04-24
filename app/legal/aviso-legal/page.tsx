@@ -22,9 +22,9 @@ export default function AvisoLegalPage() {
         </tbody>
       </table>
 
-      <h2>2. Director responsable</h2>
+      <h2>2. Responsabilidad editorial</h2>
       <p>
-        Arturo López Riquelme, en calidad de CEO y co-fundador de FQ Source Technologies, S.L., asume la responsabilidad editorial del contenido publicado en <strong>laliga.qanvit.com</strong>.
+        <strong>FQ Source Technologies, S.L.</strong> asume la responsabilidad editorial del contenido publicado en <strong>laliga.qanvit.com</strong>.
       </p>
 
       <h2>3. Objeto</h2>
