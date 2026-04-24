@@ -9,8 +9,6 @@ import {
   Search,
   FolderOpen,
   ListChecks,
-  Zap,
-  Trophy,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import type { Metadata } from "next";
@@ -249,65 +247,6 @@ export default async function EcosistemaLandingPage() {
         </div>
       </section>
 
-      {/* D. ¿Cuál es la diferencia? */}
-      <section className="bg-brand-lavender py-20 md:py-24">
-        <div className="container-brand max-w-5xl">
-          <h2 className="font-sora font-bold text-3xl md:text-4xl text-brand-navy leading-tight text-center mb-12">
-            ¿Cuál es la diferencia?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Qanvit */}
-            <div className="bg-white rounded-card shadow-card border border-border-soft p-8 flex flex-col gap-4">
-              <div className="h-11 w-11 rounded-xl bg-brand-salmon/20 flex items-center justify-center">
-                <Zap className="h-5 w-5 text-brand-salmon" />
-              </div>
-              <div>
-                <p className="font-sora text-brand-salmon text-[10px] font-semibold tracking-widest uppercase">
-                  El motor
-                </p>
-                <h3 className="font-sora font-bold text-2xl text-brand-navy">Qanvit</h3>
-              </div>
-              <ul className="flex flex-col gap-2 font-body text-sm text-ink-secondary">
-                <li>· BBDD propietaria de más de 16.000 startups y tech companies.</li>
-                <li>· 4 agentes IA end-to-end.</li>
-                <li>· Corporate venture real: de reto a piloto.</li>
-              </ul>
-              <a
-                href={QANVIT_WEBSITE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-auto inline-flex items-center gap-1 font-body font-semibold text-brand-navy hover:underline text-sm"
-              >
-                Descubre Qanvit <ArrowRight className="h-3.5 w-3.5" />
-              </a>
-            </div>
-
-            {/* La Liga */}
-            <div className="bg-white rounded-card shadow-card border border-border-soft p-8 flex flex-col gap-4">
-              <div className="h-11 w-11 rounded-xl bg-brand-navy/5 flex items-center justify-center">
-                <Trophy className="h-5 w-5 text-brand-navy" />
-              </div>
-              <div>
-                <p className="font-sora text-brand-navy/50 text-[10px] font-semibold tracking-widest uppercase">
-                  El escaparate
-                </p>
-                <h3 className="font-sora font-bold text-2xl text-brand-navy">La Liga Qanvit</h3>
-              </div>
-              <ul className="flex flex-col gap-2 font-body text-sm text-ink-secondary">
-                <li>· Ranking público de startups técnicas.</li>
-                <li>· Tu actividad en la Liga = descuento en Qanvit.</li>
-                <li>· Gratis para aplicar al ecosystem.</li>
-              </ul>
-              <Link
-                href="/ecosistema/aplicar"
-                className="mt-auto inline-flex items-center gap-1 font-body font-semibold text-brand-navy hover:underline text-sm"
-              >
-                Aplicar al ecosistema <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
