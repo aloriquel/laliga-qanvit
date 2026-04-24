@@ -100,10 +100,8 @@ export default async function StartupPublicPage({ params, searchParams }: Props)
       .select("momentum_score, up_count, down_count, distinct_voters, last_vote_at")
       .eq("startup_id", startup.id)
       .maybeSingle(),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (service as any).rpc("get_anon_vote_count", { p_startup_id: startup.id }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (service as any).rpc("get_follower_count", { p_startup_id: startup.id }),
+    service.rpc("get_anon_vote_count", { p_startup_id: startup.id }),
+    service.rpc("get_follower_count", { p_startup_id: startup.id }),
   ]);
 
   const voteCount = typeof anonVoteCount === "number" ? anonVoteCount : 0;

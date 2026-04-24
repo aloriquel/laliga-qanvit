@@ -22,9 +22,7 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
   }
   const email = (body.email as string).trim();
 
-  // Supabase types have not been regenerated for the new follower tables.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const service = createServiceClient() as any;
+  const service = createServiceClient();
 
   const { data: startup } = await service
     .from("startups")

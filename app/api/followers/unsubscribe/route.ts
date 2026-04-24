@@ -11,9 +11,7 @@ async function handle(req: NextRequest) {
     return NextResponse.redirect(`${appUrl}/legal/baja-exitosa`);
   }
 
-  // Supabase types have not been regenerated for the new follower tables.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const service = createServiceClient() as any;
+  const service = createServiceClient();
   await service
     .from("startup_followers")
     .update({ unsubscribed_at: new Date().toISOString() })

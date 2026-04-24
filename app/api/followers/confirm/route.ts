@@ -12,9 +12,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${appUrl}/legal/suscripcion-expirada`);
   }
 
-  // Supabase types have not been regenerated for the new follower tables.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const service = createServiceClient() as any;
+  const service = createServiceClient();
 
   const { data: follower } = await service
     .from("startup_followers")
