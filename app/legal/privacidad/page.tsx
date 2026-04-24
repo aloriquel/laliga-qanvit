@@ -31,6 +31,8 @@ export default function PrivacidadPage() {
         <li><strong>Datos de uso:</strong> eventos de analítica (PostHog) con tu consentimiento previo.</li>
         <li><strong>Cookie de idioma:</strong> <code>NEXT_LOCALE</code>, no personal.</li>
         <li><strong>Cookie de referral:</strong> <code>qvt_ref</code>, para atribuir quién te invitó.</li>
+        <li><strong>Email de seguimiento anónimo de startups:</strong> si optas por recibir novedades de una startup desde su perfil público, almacenamos tu email, la startup seguida, un token de confirmación (doble opt-in) y un token de baja (one-click).</li>
+        <li><strong>Hash HMAC de IP:</strong> para prevenir votos duplicados anónimos, derivamos un hash HMAC-SHA256 de tu IP con un secreto servidor. No es reversible ni permite identificarte individualmente.</li>
       </ul>
 
       <h2>3. Finalidad del tratamiento</h2>
@@ -39,6 +41,7 @@ export default function PrivacidadPage() {
         <li>Mostrar tu posición en el leaderboard (solo con tu consentimiento explícito).</li>
         <li>Mejorar el servicio mediante análisis de uso agregado.</li>
         <li>Alimentar el agente de Structuring de Qanvit con datos anonimizados (siempre sin PII salvo consentimiento explícito).</li>
+        <li>Enviar notificaciones por email sobre novedades de las startups que el usuario sigue explícitamente (nueva evaluación, subida de división, entrada en Top 3 vertical).</li>
       </ul>
 
       <h2>4. Base legal</h2>
@@ -46,11 +49,15 @@ export default function PrivacidadPage() {
         <li><strong>Consentimiento explícito</strong> para el tratamiento del deck y la aparición en el leaderboard público.</li>
         <li><strong>Ejecución de contrato</strong> para el acceso a la plataforma (alta de cuenta, evaluación).</li>
         <li><strong>Interés legítimo</strong> para el análisis de rendimiento técnico de la plataforma (sin PII).</li>
+        <li><strong>Consentimiento explícito</strong> (art. 6.1.a GDPR) para el email de seguimiento anónimo de startups, manifestado mediante checkbox activo y confirmado vía doble opt-in por email.</li>
       </ul>
 
       <h2>5. Plazo de conservación</h2>
       <p>
         Tus datos se conservan mientras mantengas la cuenta activa, más 2 años desde el cierre para cumplimiento legal. Puedes solicitar la eliminación anticipada en cualquier momento.
+      </p>
+      <p>
+        <strong>Email de seguimiento de startups:</strong> se conserva hasta que cancelas la suscripción mediante el link de baja presente en cada email, o tras 24 meses de inactividad (sin aperturas ni clics registrados).
       </p>
 
       <h2>6. Destinatarios y subencargados</h2>
@@ -85,6 +92,21 @@ export default function PrivacidadPage() {
       <p>
         Ver la <a href="/legal/cookies">política de cookies</a> para el detalle de cookies técnicas y analíticas.
       </p>
+
+      <h2>10. Cookies técnicas del voto anónimo</h2>
+      <ul>
+        <li><code>qanvit_voted_&lt;slug&gt;</code>: marca que ya has votado a una startup; caducidad 24h; propósito: evitar múltiples envíos del mismo navegador.</li>
+        <li><code>qanvit_follow_modal_shown_&lt;slug&gt;</code>: marca que se mostró el modal de suscripción tras el voto; caducidad 30 días; propósito: no abrir el modal repetidamente en visitas posteriores.</li>
+      </ul>
+
+      <h2>11. Seguidores anónimos: ejercicio de derechos</h2>
+      <p>
+        Si sigues startups por email sin tener cuenta de usuario, puedes ejercer tus derechos de la siguiente forma:
+      </p>
+      <ul>
+        <li><strong>Baja:</strong> enlace «Darme de baja» en cada email (GET one-click, RFC 8058). Surte efecto inmediato.</li>
+        <li><strong>Acceso / supresión completa:</strong> escribe a <a href="mailto:holaqanvit@gmail.com">holaqanvit@gmail.com</a> indicando tu email de suscripción.</li>
+      </ul>
 
       <div className="mt-10 border-t border-border-soft pt-6 text-xs text-ink-secondary">
         Última revisión: 22 de abril de 2026. Para dudas, escribe a{" "}

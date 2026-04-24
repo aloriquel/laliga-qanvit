@@ -17,8 +17,10 @@ import RaisingBadge from "@/components/ui/RaisingBadge";
 import type { CaId } from "@/lib/spain-regions";
 import ChampionBadge from "@/components/startup/ChampionBadge";
 import { getChampionBadgesForStartup } from "@/lib/batches";
+import AnonymousVoteButton from "@/components/startup-public/AnonymousVoteButton";
+import SubscribedToast from "@/components/startup-public/SubscribedToast";
 
-type Props = { params: { slug: string } };
+type Props = { params: { slug: string }; searchParams: { subscribed?: string } };
 type EvaluationRow = Database["public"]["Tables"]["evaluations"]["Row"];
 
 export const revalidate = 60;
@@ -63,10 +65,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function StartupPublicPage({ params }: Props) {
+export default async function StartupPublicPage({ params, searchParams }: Props) {
   const supabase = createClient();
   const service = createServiceClient();
   const t = await getTranslations("startup_profile");
+  const justSubscribed = searchParams?.subscribed === "1";
 
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -77,7 +80,13 @@ export default async function StartupPublicPage({ params }: Props) {
   const topDimensions = evaluation ? getTopDimensions(evaluation.dimensions) : [];
   const championBadges = await getChampionBadgesForStartup(startup.id);
 
-  const [{ data: standing }, { data: profile }, { data: momentumData }] = await Promise.all([
+  const [
+    { data: standing },
+    { data: profile },
+    { data: momentumData },
+    { data: anonVoteCount },
+    { data: followerCount },
+  ] = await Promise.all([
     supabase
       .from("league_standings")
       .select("rank_national, rank_division, rank_division_vertical")
@@ -91,7 +100,14 @@ export default async function StartupPublicPage({ params }: Props) {
       .select("momentum_score, up_count, down_count, distinct_voters, last_vote_at")
       .eq("startup_id", startup.id)
       .maybeSingle(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (service as any).rpc("get_anon_vote_count", { p_startup_id: startup.id }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (service as any).rpc("get_follower_count", { p_startup_id: startup.id }),
   ]);
+
+  const voteCount = typeof anonVoteCount === "number" ? anonVoteCount : 0;
+  const followersCount = typeof followerCount === "number" ? followerCount : 0;
 
   let evalTimeline: EvaluationRow[] = [];
   if (startup.show_public_timeline) {
@@ -175,6 +191,18 @@ export default async function StartupPublicPage({ params }: Props) {
             )}
           </div>
         )}
+
+        {/* Anonymous vote + follow (only if startup is publicly visible) */}
+        {startup.is_public && startup.consent_public_profile && (
+          <AnonymousVoteButton
+            slug={startup.slug as string}
+            startupName={startup.name as string}
+            initialVoteCount={voteCount}
+            initialFollowerCount={followersCount}
+          />
+        )}
+
+        {justSubscribed && <SubscribedToast />}
 
         {/* One-liner */}
         {startup.one_liner && (

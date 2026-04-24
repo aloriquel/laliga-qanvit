@@ -359,4 +359,119 @@ export function magicLinkEmail(params: { email: string; link: string }) {
   };
 }
 
+// ── Follower emails (PROMPT_13B) ─────────────────────────────────────────────
+
+function followerFooter(unsubscribeUrl: string): string {
+  return `
+    <p style="font-size:11px;color:#6b5b8a;margin-top:24px;line-height:1.5;">
+      Recibes este email porque te suscribiste a las novedades de esta startup
+      en La Liga Qanvit.<br/>
+      <a href="${unsubscribeUrl}" style="color:#6b5b8a;">Darme de baja</a>
+      &nbsp;·&nbsp;
+      <a href="${APP_URL}/legal/privacidad" style="color:#6b5b8a;">Privacidad</a>
+    </p>
+  `;
+}
+
+export function followerConfirmationEmail(params: {
+  startupName: string;
+  confirmationUrl: string;
+  unsubscribeUrl: string;
+}) {
+  return {
+    subject: `Confirma tu suscripción a ${params.startupName} · La Liga Qanvit`,
+    html: wrap(`
+      <p style="font-size:16px;font-weight:700;margin-top:0;">
+        Un último paso: confirma tu suscripción
+      </p>
+      <p style="color:#6b5b8a;font-size:14px;line-height:1.6;">
+        Pediste seguir a <strong>${params.startupName}</strong> en La Liga Qanvit.
+        Confirma tu email para empezar a recibir sus novedades.
+      </p>
+      <a href="${params.confirmationUrl}"
+         style="display:inline-block;background:#22183a;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;margin-top:8px;">
+        Confirmar suscripción →
+      </a>
+      <p style="color:#6b5b8a;font-size:12px;margin-top:16px;">
+        Si no confirmas en 7 días, la suscripción se elimina.
+      </p>
+      ${followerFooter(params.unsubscribeUrl)}
+    `),
+  };
+}
+
+export function followerNewDeckEmail(params: {
+  startupName: string;
+  startupSlug: string;
+  unsubscribeUrl: string;
+}) {
+  return {
+    subject: `${params.startupName} ha actualizado su deck en La Liga Qanvit`,
+    html: wrap(`
+      <p style="font-size:16px;font-weight:700;margin-top:0;">
+        📄 ${params.startupName} tiene una nueva evaluación
+      </p>
+      <p style="color:#6b5b8a;font-size:14px;line-height:1.6;">
+        Entra a ver su posición actualizada, feedback de IA y próximos pasos.
+      </p>
+      <a href="${APP_URL}/startup/${params.startupSlug}"
+         style="display:inline-block;background:#22183a;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;margin-top:8px;">
+        Ver la nueva evaluación →
+      </a>
+      ${followerFooter(params.unsubscribeUrl)}
+    `),
+  };
+}
+
+export function followerDivisionUpEmail(params: {
+  startupName: string;
+  startupSlug: string;
+  fromDivision: string;
+  toDivision: string;
+  unsubscribeUrl: string;
+}) {
+  return {
+    subject: `${params.startupName} sube a ${params.toDivision} · La Liga Qanvit`,
+    html: wrap(`
+      <p style="font-size:16px;font-weight:700;margin-top:0;">
+        📈 ${params.startupName} sube a ${params.toDivision}
+      </p>
+      <p style="color:#6b5b8a;font-size:14px;line-height:1.6;">
+        Promocionada desde ${params.fromDivision} a <strong>${params.toDivision}</strong>.
+        Descubre por qué y sigue su recorrido en La Liga.
+      </p>
+      <a href="${APP_URL}/startup/${params.startupSlug}"
+         style="display:inline-block;background:#22183a;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;margin-top:8px;">
+        Ver perfil →
+      </a>
+      ${followerFooter(params.unsubscribeUrl)}
+    `),
+  };
+}
+
+export function followerTop3VerticalEmail(params: {
+  startupName: string;
+  startupSlug: string;
+  vertical: string;
+  rank: number;
+  unsubscribeUrl: string;
+}) {
+  return {
+    subject: `${params.startupName} entra en el Top 3 de ${params.vertical}`,
+    html: wrap(`
+      <p style="font-size:16px;font-weight:700;margin-top:0;">
+        🥇 Top ${params.rank} en ${params.vertical}
+      </p>
+      <p style="color:#6b5b8a;font-size:14px;line-height:1.6;">
+        ${params.startupName} acaba de colarse en el Top 3 de su vertical.
+      </p>
+      <a href="${APP_URL}/startup/${params.startupSlug}"
+         style="display:inline-block;background:#22183a;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;margin-top:8px;">
+        Ver perfil →
+      </a>
+      ${followerFooter(params.unsubscribeUrl)}
+    `),
+  };
+}
+
 export { FROM };

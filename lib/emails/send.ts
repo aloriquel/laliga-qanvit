@@ -11,6 +11,10 @@ import {
   ecosystemApplicationEmail,
   ecosystemApplicationAdminEmail,
   batchWinnerEmail,
+  followerConfirmationEmail,
+  followerNewDeckEmail,
+  followerDivisionUpEmail,
+  followerTop3VerticalEmail,
   FROM,
 } from "./templates";
 
@@ -86,4 +90,51 @@ export async function sendEcosystemApplicationAdminEmail(to: string, params: Par
 export async function sendBatchWinnerEmail(to: string, params: Parameters<typeof batchWinnerEmail>[0]): Promise<SendResult> {
   const { subject, html } = batchWinnerEmail(params);
   return send(to, subject, html);
+}
+
+export async function sendFollowerConfirmationEmail(to: string, params: Parameters<typeof followerConfirmationEmail>[0]): Promise<SendResult> {
+  const { subject, html } = followerConfirmationEmail(params);
+  return send(to, subject, html);
+}
+
+export type FollowerAlertEvent = "new_deck" | "division_up" | "top3_vertical";
+
+export async function sendFollowerAlertEmail(
+  to: string,
+  event: FollowerAlertEvent,
+  params: {
+    startupName: string;
+    startupSlug: string;
+    unsubscribeUrl: string;
+    fromDivision?: string;
+    toDivision?: string;
+    vertical?: string;
+    rank?: number;
+  }
+): Promise<SendResult> {
+  let tpl: { subject: string; html: string };
+  if (event === "new_deck") {
+    tpl = followerNewDeckEmail({
+      startupName: params.startupName,
+      startupSlug: params.startupSlug,
+      unsubscribeUrl: params.unsubscribeUrl,
+    });
+  } else if (event === "division_up") {
+    tpl = followerDivisionUpEmail({
+      startupName: params.startupName,
+      startupSlug: params.startupSlug,
+      fromDivision: params.fromDivision ?? "",
+      toDivision: params.toDivision ?? "",
+      unsubscribeUrl: params.unsubscribeUrl,
+    });
+  } else {
+    tpl = followerTop3VerticalEmail({
+      startupName: params.startupName,
+      startupSlug: params.startupSlug,
+      vertical: params.vertical ?? "",
+      rank: params.rank ?? 0,
+      unsubscribeUrl: params.unsubscribeUrl,
+    });
+  }
+  return send(to, tpl.subject, tpl.html);
 }

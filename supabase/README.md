@@ -19,6 +19,22 @@ npx supabase db diff
 npx supabase db push
 ```
 
+## Settings en DB para `follower-notifier` (PROMPT_13B)
+
+Tras deployar la edge function `follower-notifier`, configura una vez por proyecto:
+
+```sql
+alter database postgres set app.settings.follower_notifier_url    = 'https://<project-ref>.functions.supabase.co/follower-notifier';
+alter database postgres set app.settings.follower_notifier_secret = '<FOLLOWER_NOTIFIER_FN_SECRET>';
+```
+
+El trigger `trg_follower_notifier_dispatch` en `follower_alerts` llama a
+esta URL vía `pg_net.http_post`. Si los settings no están configurados,
+el trigger hace no-op (permite correr migrations en local/preview).
+
+Secrets de edge function (`supabase secrets set`): `FOLLOWER_NOTIFIER_FN_SECRET`,
+`RESEND_API_KEY`, `APP_URL`.
+
 ## Estructura de migrations
 
 | Archivo | Qué hace |

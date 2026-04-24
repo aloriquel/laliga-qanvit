@@ -126,7 +126,8 @@
       "Bash(iconv -f UTF-16LE -t UTF-8 c:/Users/1t12d/github/laliga-qanvit/lib/supabase/types.ts)",
       "Bash(iconv -f UTF-16 -t UTF-8 c:/Users/1t12d/github/laliga-qanvit/lib/supabase/types.ts)",
       "PowerShell($c = Get-Content \"C:\\\\Users\\\\1t12d\\\\github\\\\laliga-qanvit\\\\lib\\\\supabase\\\\types.ts\" -Raw; Write-Host \"batch_celebrations: $\\(\\($c | Select-String -Pattern 'batch_celebrations' -AllMatches\\).Matches.Count\\)\"; Write-Host \"batch_winners: $\\(\\($c | Select-String -Pattern 'batch_winners' -AllMatches\\).Matches.Count\\)\"; Write-Host \"batches: $\\(\\($c | Select-String -Pattern '\\\\sbatches:' -AllMatches\\).Matches.Count\\)\")",
-      "mcp__supabase__execute_sql"
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__apply_migration"
     ]
   },
   "enableAllProjectMcpServers": true,
