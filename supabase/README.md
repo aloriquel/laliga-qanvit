@@ -144,23 +144,33 @@ Crear manualmente en el dashboard o vía script:
 | `alert-dispatcher` | DB trigger (startup_alerts insert, immediate) | Emails de alerta a startups |
 | `ecosystem-alert-dispatcher` | DB trigger (ecosystem_alerts insert) | Notificaciones a orgs del ecosistema |
 | `dataset-exporter` | HTTP (admin API route) | Exporta dataset a JSON en bucket `exports` |
-| `challenge-progress-updater` | pg_cron diario 00:15 | Actualiza `challenge_progress` con ranking actual |
-| `ecosystem-digest-sender` | pg_cron diario 08:00 + lunes | Digest diario/semanal a miembros del ecosistema |
+| `ecosystem-digest-sender` | pg_cron diario 08:03 + lunes 08:15 | Digest diario/semanal a miembros del ecosistema |
 | `exports-file-cleanup` | pg_cron diario 03:30 | Elimina archivos expirados del bucket `exports` |
+| `follower-notifier` | DB trigger (follower_alerts insert) | Emails 1:1 a followers anónimos de startups (PROMPT_13B) |
 
-### Deploy funciones nuevas (Prompt #6)
+### Deploy funciones nuevas
 
 ```bash
-npx supabase functions deploy challenge-progress-updater --project-ref ongwrbdypbusnwlclqjg --no-verify-jwt
 npx supabase functions deploy ecosystem-digest-sender --project-ref ongwrbdypbusnwlclqjg --no-verify-jwt
 npx supabase functions deploy exports-file-cleanup --project-ref ongwrbdypbusnwlclqjg --no-verify-jwt
+npx supabase functions deploy follower-notifier --project-ref ongwrbdypbusnwlclqjg --no-verify-jwt
 ```
 
-### Configurar app.settings para pg_cron (tras aplicar migration 0018)
+### Configuración cron + vault (patrón actual)
+
+Los cron jobs que invocan edge functions leen URL + bearer desde `vault.secrets`
+vía el helper `get_vault_setting(name text) returns text`. Secretos activos:
+
+- `evaluator_url`, `evaluator_secret` — pipeline de evaluación.
+- `ecosystem_digest_url` — edge function `ecosystem-digest-sender`.
+- `dataset_exporter_url` — edge function `dataset-exporter`.
+- `alert_dispatcher_url`, `ecosystem_alert_dispatcher_url` — dispatchers de alertas.
+- `exports_file_cleanup_cron_secret` — bearer para cron de `exports-file-cleanup`.
+- `deck_thumbnails_cron_secret` — bearer para cron de `deck-thumbnails-cleanup` (actualmente orfano, ver TODO).
+- `batch_winner_emails_cron_secret` — `x-cron-secret` header para Vercel `/api/cron/send-batch-winner-emails`.
+
+Para rotar un secreto:
 
 ```sql
-ALTER DATABASE postgres SET "app.settings.challenge_progress_updater_url" = 'https://ongwrbdypbusnwlclqjg.functions.supabase.co/challenge-progress-updater';
-ALTER DATABASE postgres SET "app.settings.ecosystem_digest_url" = 'https://ongwrbdypbusnwlclqjg.functions.supabase.co/ecosystem-digest-sender';
-ALTER DATABASE postgres SET "app.settings.exports_cleanup_url" = 'https://ongwrbdypbusnwlclqjg.functions.supabase.co/exports-file-cleanup';
-SELECT pg_reload_conf();
+UPDATE vault.secrets SET secret = '<nuevo_valor>' WHERE name = '<nombre>';
 ```
