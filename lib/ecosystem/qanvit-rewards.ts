@@ -17,6 +17,9 @@ export function qanvitDiscountCopy(tier: EcosystemTier): string {
 export const QANVIT_CLAIM_INSTRUCTIONS =
   `Escribe a ${QANVIT_CONTACT_EMAIL} indicando tu tier actual y aplicaremos el descuento manualmente.`;
 
+export const QANVIT_DISCOUNT_TERMS =
+  "Descuento aplicable al primer año de contrato Qanvit. Renovación a precio estándar.";
+
 export function buildQanvitUrl(
   path = "",
   params: Record<string, string> = {}
