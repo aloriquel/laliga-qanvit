@@ -72,17 +72,29 @@ export default function CategoryRow({ row }: Props) {
           className="flex gap-4 md:gap-5 lg:gap-6 overflow-x-auto snap-x snap-mandatory px-6 md:px-12 lg:px-16 pb-4 scrollbar-none"
           style={{ scrollbarWidth: "none" }}
         >
-          {row.items.map((item, idx) =>
-            item.kind === "startup" ? (
-              <StartupCompactCard
-                key={item.id}
-                startup={item}
-                categoryType={row.category_type}
-              />
-            ) : (
-              <EmptySlotCard key={`empty-${row.category_value}-${idx}`} slot={item} />
-            )
-          )}
+          {(() => {
+            const firstEmptyIdx = row.items.findIndex((i) => i.kind === "empty");
+            return row.items.map((item, idx) => {
+              if (item.kind === "startup") {
+                return (
+                  <StartupCompactCard
+                    key={item.id}
+                    startup={item}
+                    categoryType={row.category_type}
+                  />
+                );
+              }
+              return (
+                <EmptySlotCard
+                  key={`empty-${row.category_value}-${idx}`}
+                  categoryType={item.category_type}
+                  categoryValue={item.category_value}
+                  slotPosition={item.slot_position}
+                  variant={idx === firstEmptyIdx ? "full" : "ghost"}
+                />
+              );
+            });
+          })()}
         </div>
 
         {canPrev && (

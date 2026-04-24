@@ -39,6 +39,13 @@ export type CategoryRow = {
   items: CategoryItem[];
 };
 
+export type EmptyCategory = {
+  category_type: "division" | "vertical";
+  category_value: string;
+  label: string;
+  subtitle?: string;
+};
+
 const SLOTS = 5;
 
 type StandingRow = {
@@ -107,61 +114,72 @@ async function fetchAllStandings(): Promise<StandingRow[]> {
 }
 
 export async function getHomeCategoryRows(): Promise<{
-  divisionRows: CategoryRow[];
-  verticalRows: CategoryRow[];
+  activeDivisionRows: CategoryRow[];
+  activeVerticalRows: CategoryRow[];
+  emptyCategories: EmptyCategory[];
   totalStartups: number;
 }> {
   const standings = await fetchAllStandings();
 
-  const divisionRows: CategoryRow[] = DIVISIONS_IN_ORDER.map((d) => {
+  const activeDivisionRows: CategoryRow[] = [];
+  const emptyDivisions: EmptyCategory[] = [];
+
+  for (const d of DIVISIONS_IN_ORDER) {
     const top = standings
       .filter((r) => r.current_division === d)
       .slice(0, SLOTS)
       .map((r) => toRanked(r, "rank_division"))
       .filter((r): r is RankedStartup => r !== null);
-    return {
-      category_type: "division",
-      category_value: d,
-      title: DIVISION_LABELS[d as Division],
-      subtitle: DIVISION_SUBTITLES[d as Division],
-      items: fillWithEmptySlots(top, "division", d),
-    };
-  });
-
-  // Order verticals by population desc, fallback to enum order.
-  const verticalCounts = new Map<Vertical, number>(
-    VERTICALS_IN_ORDER.map((v) => [v, 0])
-  );
-  for (const r of standings) {
-    if (!r.current_vertical) continue;
-    const v = r.current_vertical as Vertical;
-    if (verticalCounts.has(v)) {
-      verticalCounts.set(v, (verticalCounts.get(v) ?? 0) + 1);
+    if (top.length > 0) {
+      activeDivisionRows.push({
+        category_type: "division",
+        category_value: d,
+        title: DIVISION_LABELS[d as Division],
+        subtitle: DIVISION_SUBTITLES[d as Division],
+        items: fillWithEmptySlots(top, "division", d),
+      });
+    } else {
+      emptyDivisions.push({
+        category_type: "division",
+        category_value: d,
+        label: DIVISION_LABELS[d as Division],
+        subtitle: DIVISION_SUBTITLES[d as Division],
+      });
     }
   }
-  const orderedVerticals = [...VERTICALS_IN_ORDER].sort((a, b) => {
-    const diff = (verticalCounts.get(b) ?? 0) - (verticalCounts.get(a) ?? 0);
-    if (diff !== 0) return diff;
-    return VERTICALS_IN_ORDER.indexOf(a) - VERTICALS_IN_ORDER.indexOf(b);
-  });
 
-  const verticalRows: CategoryRow[] = orderedVerticals.map((v) => {
+  const activeVerticalRows: CategoryRow[] = [];
+  const emptyVerticals: EmptyCategory[] = [];
+
+  for (const v of VERTICALS_IN_ORDER) {
     const top = standings
       .filter((r) => r.current_vertical === v)
       .slice(0, SLOTS)
       .map((r) => toRanked(r, "rank_division_vertical"))
       .filter((r): r is RankedStartup => r !== null);
-    return {
-      category_type: "vertical",
-      category_value: v,
-      title: VERTICAL_LABELS[v],
-      items: fillWithEmptySlots(top, "vertical", v),
-    };
-  });
+    if (top.length > 0) {
+      activeVerticalRows.push({
+        category_type: "vertical",
+        category_value: v,
+        title: VERTICAL_LABELS[v],
+        items: fillWithEmptySlots(top, "vertical", v),
+      });
+    } else {
+      emptyVerticals.push({
+        category_type: "vertical",
+        category_value: v,
+        label: VERTICAL_LABELS[v],
+      });
+    }
+  }
+
+  // Divisiones primero (orden lógico) y luego verticales (orden del enum).
+  const emptyCategories: EmptyCategory[] = [...emptyDivisions, ...emptyVerticals];
 
   return {
-    divisionRows,
-    verticalRows,
+    activeDivisionRows,
+    activeVerticalRows,
+    emptyCategories,
     totalStartups: standings.length,
   };
 }

@@ -108,10 +108,11 @@ export default async function LandingPage({
         </div>
       </section>
 
-      {/* Carruseles por división y vertical */}
+      {/* Carruseles por división y vertical + grid de categorías vacías */}
       <HomeLeaderboardSections
-        divisionRows={categoryData.divisionRows}
-        verticalRows={categoryData.verticalRows}
+        activeDivisionRows={categoryData.activeDivisionRows}
+        activeVerticalRows={categoryData.activeVerticalRows}
+        emptyCategories={categoryData.emptyCategories}
         totalStartups={categoryData.totalStartups}
       />
 
