@@ -6,6 +6,7 @@ import { pointsToNextTier, TIER_THRESHOLDS } from "@/lib/ecosystem/points-helper
 import { computeScoutingEye } from "@/lib/ecosystem/votes-helpers";
 import EcosystemBridgeBannerClient from "@/components/ecosystem/EcosystemBridgeBannerClient";
 import type { EcosystemOrgType } from "@/lib/ecosystem/owner";
+import type { EcosystemTier } from "@/lib/ecosystem/qanvit-rewards";
 
 const APP_QANVIT_URL = process.env.NEXT_PUBLIC_APP_QANVIT_URL ?? "https://app.qanvit.com";
 
@@ -215,11 +216,12 @@ export default async function EcosystemDashboardHome() {
           </div>
         </a>
 
-        {/* Ecosystem → Qanvit bridge (www.qanvit.com marketing landing) */}
+        {/* Ecosystem → Qanvit bridge: copy tier-aware con % descuento */}
         <EcosystemBridgeBannerClient
           orgType={org.org_type as EcosystemOrgType}
           orgName={org.name}
           variant="dashboard"
+          tier={tier as EcosystemTier}
         />
 
         {/* Últimos puntos */}

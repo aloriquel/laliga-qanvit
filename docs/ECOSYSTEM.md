@@ -2,6 +2,12 @@
 
 > Complementa `GAMIFICATION.md` (que define la mecánica de puntos y tiers) con la implementación concreta del dashboard, el export CSV, las alertas de verticales y el módulo de votos de startups.
 
+## Relación con Qanvit
+
+**Qanvit (`qanvit.com` / `app.qanvit.com`)** es el producto principal: plataforma de corporate venture con IA, BBDD propietaria de más de 16.000 startups y 4 agentes (Structuring, Discovering, Coordinating, Evaluating).
+
+**La Liga Qanvit** es el escaparate público y lead-magnet. Las orgs del ecosystem observan startups, votan y escalan de tier. Cada tier se traduce en un **descuento comunicativo en Qanvit** (10 / 20 / 30%, aplica vía `hola@qanvit.com`). Nunca posicionamos La Liga como producto autosuficiente en comunicación externa: Qanvit primero, Liga como funnel.
+
 ## 1. Principios del dashboard ecosistema
 
 1. **Privado pero social**. Cada org ve su posición vs media del ecosistema (percentil, tier, ranking anónimo). Nunca ve nombres de otras orgs competidoras. Evita dinámicas tóxicas entre parques/clusters mientras mantiene el pulso competitivo.

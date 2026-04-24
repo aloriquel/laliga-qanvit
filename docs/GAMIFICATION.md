@@ -56,11 +56,13 @@ Tres principios:
 | Badge "Elite Scouter" en perfil org | ❌ | ❌ | ✅ |
 | Dataset export mensual (snapshot completo) | ❌ | ❌ | 1/mes |
 | Solicitar sesión con equipo Qanvit | ❌ | ❌ | ✅ |
+| **Descuento en Qanvit (comunicativo, aplica `hola@qanvit.com`)** | **10%** | **20%** | **30%** |
 
 **Notas clave**:
 - El **deck completo nunca se expone** al ecosistema. Solo metadata, score, summary LLM y next actions.
 - **Elite ya no desbloquea contacto directo con founders**. Para gestionar relaciones con startups, el canal es app.qanvit.com.
 - El **peso del voto** (×1/×2/×3) afecta `startup_momentum` pero no da puntos al votante.
+- Los **descuentos en Qanvit** son hoy **comunicativos**: no hay integración Stripe ni sincronización automática. La org del ecosystem pide el descuento a `hola@qanvit.com` indicando su tier; se aplica manualmente tras verificar. Ver `lib/ecosystem/qanvit-rewards.ts` para los valores.
 
 ## 4. Cómo se calcula el tier
 

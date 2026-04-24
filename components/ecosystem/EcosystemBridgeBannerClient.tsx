@@ -5,7 +5,8 @@ import { Sparkles, X } from "lucide-react";
 import { useDismissibleBanner } from "@/lib/hooks/useDismissibleBanner";
 import { track } from "@/lib/analytics/posthog";
 import type { EcosystemOrgType } from "@/lib/ecosystem/owner";
-import { BRIDGE_COPY, buildBridgeCtaUrl } from "@/lib/ecosystem/bridge-copy";
+import { BRIDGE_COPY, buildBridgeCtaUrl, buildTierAwareCopy } from "@/lib/ecosystem/bridge-copy";
+import type { EcosystemTier } from "@/lib/ecosystem/qanvit-rewards";
 
 type Variant = "liga" | "dashboard";
 
@@ -14,6 +15,7 @@ type Props = {
   orgName: string;
   variant?: Variant;
   surface?: string;
+  tier?: EcosystemTier | null;
 };
 
 const DEFAULT_SURFACE: Record<Variant, string> = {
@@ -26,6 +28,7 @@ export default function EcosystemBridgeBannerClient({
   orgName,
   variant = "liga",
   surface,
+  tier = null,
 }: Props) {
   const bannerKey = surface ?? DEFAULT_SURFACE[variant];
   const { isDismissed, dismiss } = useDismissibleBanner(bannerKey);
@@ -40,8 +43,13 @@ export default function EcosystemBridgeBannerClient({
 
   if (isDismissed) return null;
 
-  const copy = BRIDGE_COPY[orgType] ?? BRIDGE_COPY.other;
-  const ctaUrl = buildBridgeCtaUrl(orgType);
+  // Dashboard variant uses tier-aware discount copy; public /liga stays generic.
+  const copy =
+    variant === "dashboard" && tier
+      ? buildTierAwareCopy(tier)
+      : BRIDGE_COPY[orgType] ?? BRIDGE_COPY.other;
+  const ctaUrl = buildBridgeCtaUrl(orgType, tier);
+  const ctaLabel = variant === "dashboard" && tier ? "Conocer Qanvit →" : "Explorar Qanvit →";
 
   const handleCtaClick = () => {
     track({
@@ -91,7 +99,7 @@ export default function EcosystemBridgeBannerClient({
           aria-label="Explorar Qanvit en qanvit.com"
           className="mt-4 inline-flex items-center justify-center bg-brand-navy text-white font-semibold rounded-xl px-4 py-2 text-sm font-body hover:bg-brand-navy/90 transition-colors"
         >
-          Explorar Qanvit →
+          {ctaLabel}
         </a>
       </aside>
     );
@@ -123,7 +131,7 @@ export default function EcosystemBridgeBannerClient({
           aria-label="Explorar Qanvit en qanvit.com"
           className="shrink-0 inline-flex items-center justify-center bg-brand-navy text-white font-semibold rounded-xl px-5 py-2.5 text-sm font-body hover:bg-brand-navy/90 transition-colors w-full md:w-auto"
         >
-          Explorar Qanvit →
+          {ctaLabel}
         </a>
       </div>
       <button

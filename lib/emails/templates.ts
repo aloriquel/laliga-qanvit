@@ -160,6 +160,15 @@ export function ecosystemApprovedEmail(params: { orgName: string }) {
          style="display:inline-block;background:#22183a;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;margin-top:8px;">
         Ir al dashboard →
       </a>
+      <p style="color:#6b5b8a;font-size:13px;line-height:1.6;margin-top:24px;padding-top:16px;border-top:1px solid rgba(34,24,58,0.08);">
+        <strong style="color:#22183a;">Y además, Qanvit con descuento.</strong><br/>
+        Qanvit es nuestra plataforma de corporate venture con IA: BBDD propietaria de
+        más de 16.000 startups españolas y 4 agentes que convierten un reto en un piloto.
+        Tu tier inicial es Rookie y te da un <strong>10% de descuento</strong>.
+        Escribe a <a href="mailto:hola@qanvit.com" style="color:#22183a;">hola@qanvit.com</a>
+        cuando quieras aplicarlo, o descubre Qanvit en
+        <a href="https://qanvit.com" style="color:#22183a;">qanvit.com</a>.
+      </p>
     `),
   };
 }

@@ -107,6 +107,14 @@ Las llaves curly son el sello de Qanvit. En La Liga se usan así:
 - "Contactar founder" / "Contacto directo" / "Lanza tu reto" (→ redirigir a app.qanvit.com)
 - "Colabora con startups" (sin contexto) / "pipeline" en contexto ecosistema
 
+## 4.x Separación La Liga vs Qanvit (comunicación externa)
+
+- **Qanvit es el producto de valor comercial**: corporate venture con IA, BBDD de 16.000 startups, 4 agentes.
+- **La Liga es free, público, gamificado** y actúa como funnel hacia Qanvit.
+- **Nunca posicionar La Liga como producto autosuficiente** en landing / emails / bridges / copy comercial. Cuando se menciona Qanvit, asociarlo al verbo real ("convierte retos en pilotos", "descubre startups"), no adjetivos vacíos.
+- Orgs del ecosystem son **leads cualificados de Qanvit**. Sus tiers de Liga se traducen en % de descuento al contratar Qanvit (10/20/30%, comunicativo, se aplica manualmente desde `hola@qanvit.com`).
+- **No inventar features de Qanvit** en copy: solo usar las 4 capacidades de los agentes + la BBDD de 16.000.
+
 ## 5. Layout y espaciado
 
 ### 5.1 Grid

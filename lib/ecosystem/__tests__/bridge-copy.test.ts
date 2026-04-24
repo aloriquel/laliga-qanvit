@@ -19,14 +19,19 @@ describe("BRIDGE_COPY", () => {
 });
 
 describe("buildBridgeCtaUrl", () => {
-  it("points to www.qanvit.com with the expected UTM campaign and the orgType as utm_term", () => {
+  it("points to qanvit.com with the expected UTM campaign and the orgType as utm_term", () => {
     const url = buildBridgeCtaUrl("science_park");
     const parsed = new URL(url);
-    expect(parsed.origin + parsed.pathname).toBe("https://www.qanvit.com/");
+    expect(parsed.origin + parsed.pathname).toBe("https://qanvit.com/");
     expect(parsed.searchParams.get("utm_source")).toBe("laliga");
     expect(parsed.searchParams.get("utm_medium")).toBe("banner");
     expect(parsed.searchParams.get("utm_campaign")).toBe("ecosystem_bridge");
     expect(parsed.searchParams.get("utm_term")).toBe("science_park");
+  });
+
+  it("includes tier query param when provided", () => {
+    const url = buildBridgeCtaUrl("cluster", "pro");
+    expect(new URL(url).searchParams.get("tier")).toBe("pro");
   });
 
   it("changes utm_term per org_type so analytics can segment by surface audience", () => {
