@@ -7,7 +7,7 @@ type Props = {
   emptyCategories: EmptyCategory[];
 };
 
-const VERTICAL_TINT = "#e8e0f0"; // lavender-ish default for verticals
+const VERTICAL_TINT = "#e8e0f0";
 
 function tintFor(c: EmptyCategory): string {
   if (c.category_type === "division") {
@@ -16,42 +16,47 @@ function tintFor(c: EmptyCategory): string {
   return VERTICAL_TINT;
 }
 
+function initialFor(c: EmptyCategory): string {
+  return c.label.charAt(0).toUpperCase();
+}
+
 function PromoCategoryCard({ category }: { category: EmptyCategory }) {
   const href = `/play?${category.category_type}=${encodeURIComponent(category.category_value)}`;
   const tint = tintFor(category);
   const typeBadge = category.category_type === "division" ? "DIVISIÓN" : "VERTICAL";
+  const ariaTail = category.category_type === "division" ? "esta división" : "este vertical";
 
   return (
     <Link
       href={href}
-      aria-label={`Sé la primera startup en ${category.label}`}
-      className="group relative block rounded-[20px] overflow-hidden border border-brand-navy/10 bg-white hover:border-brand-navy/30 hover:shadow-card transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-salmon"
-      style={{ aspectRatio: "4 / 3" }}
+      aria-label={`Ficha tu startup en ${category.label}. Sé la primera en ${ariaTail}.`}
+      className="group flex items-center gap-4 rounded-2xl border border-border-soft bg-white p-4 md:p-5 transition-colors duration-150 hover:border-brand-navy/30 hover:bg-brand-lavender/30 focus:outline-none focus:ring-2 focus:ring-brand-salmon"
     >
       <div
-        className="absolute inset-0 opacity-50 group-hover:opacity-70 transition-opacity"
-        style={{
-          background: `linear-gradient(135deg, ${tint}55 0%, transparent 70%)`,
-        }}
-      />
-      <div className="relative h-full w-full flex flex-col justify-between p-5">
-        <p className="font-sora text-[10px] font-semibold tracking-widest uppercase text-brand-navy/50">
+        className="shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-sora font-semibold text-brand-navy text-base"
+        style={{ backgroundColor: `${tint}55` }}
+      >
+        {initialFor(category)}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="font-sora text-[10px] md:text-xs font-semibold uppercase text-brand-navy/50 tracking-[0.18em]">
           {typeBadge}
         </p>
-        <div>
-          <h3 className="font-sora font-bold text-brand-navy text-lg md:text-xl leading-tight">
-            {category.label}
-          </h3>
-          {category.subtitle && (
-            <p className="font-body text-ink-secondary text-xs md:text-sm mt-1 line-clamp-1">
-              {category.subtitle}
-            </p>
-          )}
-        </div>
-        <span className="inline-flex items-center gap-1 font-body font-semibold text-brand-salmon text-sm">
-          Sé la primera <ArrowRight size={14} />
-        </span>
+        <h3 className="font-sora font-semibold text-base md:text-lg text-brand-navy leading-tight truncate">
+          {category.label}
+        </h3>
+        {category.subtitle && (
+          <p className="font-body text-xs md:text-sm text-ink-secondary/70 mt-0.5 line-clamp-1 md:line-clamp-2">
+            {category.subtitle}
+          </p>
+        )}
       </div>
+
+      <ArrowRight
+        size={20}
+        className="shrink-0 text-brand-navy/40 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-150"
+      />
     </Link>
   );
 }
@@ -73,7 +78,7 @@ export default function CategoryPromoGrid({ emptyCategories }: Props) {
         <p className="font-body text-ink-secondary mt-1 max-w-xl">{subtitle}</p>
       </div>
       <div className="px-6 md:px-12 lg:px-16">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-5">
           {emptyCategories.map((c) => (
             <PromoCategoryCard key={`${c.category_type}-${c.category_value}`} category={c} />
           ))}
