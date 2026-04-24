@@ -4,6 +4,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight, Upload, Star, Trophy } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
+import HomeLeaderboardSections from "@/components/home/HomeLeaderboardSections";
+import FullLeaderboardCTA from "@/components/home/FullLeaderboardCTA";
+import { getHomeCategoryRows } from "@/lib/home/top-by-category";
+
+export const revalidate = 60;
 
 export default async function LandingPage({
   searchParams,
@@ -17,10 +22,11 @@ export default async function LandingPage({
     redirect(`/auth/callback?code=${searchParams.code}${next}`);
   }
 
-  const [t, tl, tc] = await Promise.all([
+  const [t, , tc, categoryData] = await Promise.all([
     getTranslations("landing"),
     getTranslations("leaderboard"),
     getTranslations("common"),
+    getHomeCategoryRows(),
   ]);
 
   const HOW_IT_WORKS = [
@@ -102,54 +108,15 @@ export default async function LandingPage({
         </div>
       </section>
 
-      {/* Leaderboard en vivo — skeleton */}
-      <section className="bg-white py-20 md:py-28">
-        <div className="container-brand">
-          <div className="flex items-center justify-between mb-10">
-            <h2 className="font-sora font-bold text-4xl text-brand-navy">
-              {t("leaderboard_live")}
-            </h2>
-            <Link
-              href="/liga"
-              className={cn(
-                buttonVariants({ variant: "ghost" }),
-                "text-ink-secondary"
-              )}
-            >
-              {t("see_all")}
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </div>
+      {/* Carruseles por división y vertical */}
+      <HomeLeaderboardSections
+        divisionRows={categoryData.divisionRows}
+        verticalRows={categoryData.verticalRows}
+        totalStartups={categoryData.totalStartups}
+      />
 
-          {/* Skeleton — replaced by real data in prompt #3 */}
-          <div className="border border-border-soft rounded-card overflow-hidden shadow-card">
-            <div className="bg-brand-navy/5 px-6 py-3 grid grid-cols-[2rem_1fr_auto_auto] gap-4 text-xs font-semibold text-ink-secondary uppercase tracking-wider">
-              <span>#</span>
-              <span>Startup</span>
-              <span className="hidden md:block">División · Vertical</span>
-              <span>Score</span>
-            </div>
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="px-6 py-4 grid grid-cols-[2rem_1fr_auto_auto] gap-4 items-center border-t border-border-soft animate-pulse"
-              >
-                <div className="h-4 w-5 bg-brand-lavender rounded" />
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-brand-lavender" />
-                  <div className="h-4 w-32 bg-brand-lavender rounded" />
-                </div>
-                <div className="hidden md:block h-4 w-28 bg-brand-lavender rounded" />
-                <div className="h-6 w-10 bg-brand-lavender rounded" />
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-6 text-center font-mono text-sm text-ink-secondary">
-            {tl("empty")}
-          </p>
-        </div>
-      </section>
+      {/* CTA al ranking completo */}
+      <FullLeaderboardCTA />
     </div>
   );
 }
