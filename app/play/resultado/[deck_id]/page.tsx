@@ -79,12 +79,14 @@ export default async function ResultadoPage({ params }: Props) {
       <div className="container-brand max-w-3xl">
 
         {/* ── Classification card hero ── */}
-        <div className="flex justify-center mb-6">
-          <ClassificationCard
-            startup={startup}
-            ranking={standing}
-            size="lg"
-          />
+        <div className="-mx-4 md:mx-0 overflow-x-auto pb-2 scrollbar-hide [mask-image:linear-gradient(to_right,black_92%,transparent)] md:[mask-image:none] mb-6">
+          <div className="px-4 md:px-0 min-w-max flex justify-center">
+            <ClassificationCard
+              startup={startup}
+              ranking={standing}
+              size="lg"
+            />
+          </div>
         </div>
 
         {/* ── Share + Dashboard CTAs ── */}

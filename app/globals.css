@@ -53,4 +53,12 @@
     @apply mx-auto w-full px-4 md:px-8 xl:px-12;
     max-width: 1280px;
   }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

@@ -148,10 +148,10 @@ export default async function EcosistemaLandingPage() {
           <p className="font-sora text-brand-salmon text-sm font-semibold tracking-widest uppercase">
             QANVIT
           </p>
-          <h1 className="font-sora font-bold text-4xl md:text-6xl leading-tight">
+          <h1 className="font-sora font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.1] md:leading-tight">
             Matchmakers de innovación corporativa, para parques, clusters y asociaciones
           </h1>
-          <p className="font-body text-lg text-white/70 max-w-2xl leading-relaxed">
+          <p className="font-body text-base md:text-lg text-white/70 max-w-2xl leading-relaxed">
             Qanvit convierte un reto de innovación abierta en un piloto ejecutándose.
             Un framework de cinco pasos con agentes de IA, base de datos propietaria
             y pipeline trazable. Ayudamos a definir retos mejor, descubrir oportunidades
@@ -190,7 +190,7 @@ export default async function EcosistemaLandingPage() {
           <h2 className="font-sora font-bold text-3xl md:text-5xl leading-tight max-w-3xl">
             La innovación abierta falla por falta de proceso, no de intención
           </h2>
-          <p className="font-body text-white/70 text-lg mt-4 max-w-2xl">
+          <p className="font-body text-white/70 text-base md:text-lg mt-4 max-w-2xl">
             Los responsables no quieren elegir. Quieren acertar.
           </p>
 
@@ -313,7 +313,7 @@ export default async function EcosistemaLandingPage() {
                 </div>
                 <p
                   className={cn(
-                    "font-mono text-[11px] uppercase tracking-widest",
+                    "font-mono text-[12px] uppercase tracking-wide",
                     c.winner ? "text-brand-salmon/80" : "text-white/50"
                   )}
                 >

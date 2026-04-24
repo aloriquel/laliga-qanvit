@@ -54,11 +54,11 @@ export default async function EcosystemDashboardHome() {
 
       {/* Puntos hero — Tile 1 */}
       <div className="bg-brand-navy rounded-2xl p-6 text-white">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
           <div>
             <p className="font-body text-white/60 text-sm uppercase tracking-wide">Puntos totales</p>
             <p className="font-sora text-5xl font-bold mt-1">{totalPoints.toLocaleString("es-ES")}</p>
-            <div className="flex items-center gap-2 mt-3">
+            <div className="flex flex-wrap items-center gap-2 mt-3">
               <span className="bg-brand-salmon/20 text-brand-salmon text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full">
                 {tier}
               </span>
@@ -70,7 +70,7 @@ export default async function EcosystemDashboardHome() {
             </div>
           </div>
           {decile !== null && (
-            <div className="text-right">
+            <div className="text-left md:text-right">
               <p className="font-body text-white/60 text-xs uppercase tracking-wide">Percentil</p>
               <p className="font-sora text-3xl font-bold text-brand-salmon">
                 {Math.round((1 - (percentile ?? 0)) * 100)}

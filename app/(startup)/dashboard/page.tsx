@@ -139,8 +139,10 @@ export default async function DashboardHomePage() {
       <section className="mb-8">
         {latestEval ? (
           <div className="flex flex-col items-center gap-4">
-            <div className="w-full overflow-x-auto flex justify-center">
-              <ClassificationCard startup={startup} ranking={standing} size="lg" />
+            <div className="w-full -mx-4 md:mx-0 overflow-x-auto pb-2 scrollbar-hide [mask-image:linear-gradient(to_right,black_92%,transparent)] md:[mask-image:none]">
+              <div className="px-4 md:px-0 min-w-max flex justify-center">
+                <ClassificationCard startup={startup} ranking={standing} size="lg" />
+              </div>
             </div>
 
             {/* Delta */}

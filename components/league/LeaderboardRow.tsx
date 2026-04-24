@@ -71,6 +71,18 @@ export default function LeaderboardRow({ row }: Props) {
               {row.one_liner}
             </p>
           )}
+          {/* Mobile-only division · vertical (hidden on md+, where columns show them) */}
+          {(row.current_division || row.current_vertical) && (
+            <p className="truncate text-[11px] uppercase tracking-wider text-ink-secondary/70 md:hidden mt-0.5">
+              {row.current_division
+                ? (DIVISION_LABELS[row.current_division] ?? row.current_division)
+                : "—"}
+              {" · "}
+              {row.current_vertical
+                ? (VERTICAL_TABLE[row.current_vertical] ?? row.current_vertical)
+                : "—"}
+            </p>
+          )}
           {row.region_ca && (
             <StartupRegionBadge
               regionCa={row.region_ca as CaId}

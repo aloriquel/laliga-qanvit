@@ -155,13 +155,15 @@ export default async function StartupPublicPage({ params, searchParams }: Props)
         )}
 
         {/* Hero */}
-        <div className="flex justify-center mb-8">
-          <ClassificationCard
-            startup={startup as any}
-            ranking={standing}
-            size="lg"
-            interactive={false}
-          />
+        <div className="-mx-4 md:mx-0 overflow-x-auto pb-2 scrollbar-hide [mask-image:linear-gradient(to_right,black_92%,transparent)] md:[mask-image:none] mb-8">
+          <div className="px-4 md:px-0 min-w-max flex justify-center">
+            <ClassificationCard
+              startup={startup as any}
+              ranking={standing}
+              size="lg"
+              interactive={false}
+            />
+          </div>
         </div>
 
         {/* Champion badges */}

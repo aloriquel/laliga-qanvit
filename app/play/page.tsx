@@ -188,7 +188,7 @@ export default function PlayPage() {
           ))}
         </div>
 
-        <div className="bg-white rounded-hero shadow-card border border-border-soft p-8">
+        <div className="bg-white rounded-hero shadow-card border border-border-soft p-5 md:p-8">
           {error && (
             <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
@@ -303,7 +303,7 @@ export default function PlayPage() {
 
               <div
                 className={cn(
-                  "border-2 border-dashed rounded-hero p-10 flex flex-col items-center gap-3 cursor-pointer transition-colors",
+                  "border-2 border-dashed rounded-hero p-6 md:p-10 flex flex-col items-center gap-3 cursor-pointer transition-colors",
                   dragging ? "border-brand-salmon bg-brand-salmon/5" : "border-border-soft hover:border-brand-navy/30",
                   file ? "bg-green-50 border-green-400" : ""
                 )}
