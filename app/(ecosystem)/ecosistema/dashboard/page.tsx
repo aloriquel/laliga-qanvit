@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ArrowRight, Bell, Link2, Star, Target, ExternalLink, ThumbsUp } from "lucide-react";
 import { pointsToNextTier, TIER_THRESHOLDS } from "@/lib/ecosystem/points-helpers";
 import { computeScoutingEye } from "@/lib/ecosystem/votes-helpers";
+import EcosystemBridgeBannerClient from "@/components/ecosystem/EcosystemBridgeBannerClient";
+import type { EcosystemOrgType } from "@/lib/ecosystem/owner";
 
 const APP_QANVIT_URL = process.env.NEXT_PUBLIC_APP_QANVIT_URL ?? "https://app.qanvit.com";
 
@@ -15,7 +17,7 @@ export default async function EcosystemDashboardHome() {
 
   const { data: org } = await supabase
     .from("ecosystem_organizations")
-    .select("id, name, referral_code")
+    .select("id, name, referral_code, org_type")
     .eq("owner_id", user.id)
     .single();
 
@@ -212,6 +214,13 @@ export default async function EcosystemDashboardHome() {
             <ExternalLink size={20} className="text-brand-navy/50 shrink-0 ml-4" />
           </div>
         </a>
+
+        {/* Ecosystem → Qanvit bridge (www.qanvit.com marketing landing) */}
+        <EcosystemBridgeBannerClient
+          orgType={org.org_type as EcosystemOrgType}
+          orgName={org.name}
+          variant="dashboard"
+        />
 
         {/* Últimos puntos */}
         <div className="bg-white rounded-2xl border border-border-soft p-5">

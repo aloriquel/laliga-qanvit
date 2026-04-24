@@ -13,6 +13,7 @@ import {
 } from "@/lib/batches";
 import BatchHeader from "@/components/batches/BatchHeader";
 import LigaTabs from "@/components/batches/LigaTabs";
+import EcosystemBridgeBannerLoader from "@/components/ecosystem/EcosystemBridgeBannerLoader";
 
 export const revalidate = 60; // ISR per unique URL
 
@@ -153,6 +154,10 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
 
         {/* Batch header */}
         {batch && <BatchHeader batch={batch} nextBatch={nextBatch} />}
+
+        {/* Ecosystem → Qanvit bridge (only rendered for logged-in ecosystem org owners).
+            Uses a client loader so /liga stays statically generated / ISR. */}
+        <EcosystemBridgeBannerLoader variant="liga" />
 
         {/* Heading */}
         <div className="mb-10">

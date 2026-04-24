@@ -48,7 +48,10 @@ export type AnalyticsEvent =
   | { event: "ecosystem_tier_unlocked"; props: { tier: number } }
   | { event: "startup_vote_cast"; props: { startup_id: string; vote_type: "up" | "down"; tier: string } }
   | { event: "feedback_validated"; props: { startup_id: string; positive: boolean } }
-  | { event: "admin_action"; props: { action_type: string; target_type: string } };
+  | { event: "admin_action"; props: { action_type: string; target_type: string } }
+  | { event: "viewed_qanvit_bridge"; props: { orgType: string; surface: string } }
+  | { event: "clicked_qanvit_bridge"; props: { orgType: string; surface: string } }
+  | { event: "dismissed_qanvit_bridge"; props: { orgType: string; surface: string } };
 
 export function track(e: AnalyticsEvent) {
   if (typeof window === "undefined" || !initialized) return;
