@@ -110,6 +110,13 @@ export function NavMenu({ labels, divisions, verticals }: NavMenuProps) {
         </div>
 
         <Link
+          href="/premios"
+          className="font-body text-sm text-white/70 hover:text-white transition-colors"
+        >
+          Premios
+        </Link>
+
+        <Link
           href="/ecosistema"
           className="font-body text-sm text-white/70 hover:text-white transition-colors"
         >
@@ -208,6 +215,14 @@ export function NavMenu({ labels, divisions, verticals }: NavMenuProps) {
                 </div>
               )}
             </div>
+
+            <Link
+              href="/premios"
+              onClick={closeMobile}
+              className="px-6 py-3.5 font-body text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              Premios
+            </Link>
 
             <Link
               href="/ecosistema"

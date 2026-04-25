@@ -20,6 +20,8 @@ import { getChampionBadgesForStartup } from "@/lib/batches";
 import AnonymousVoteButton from "@/components/startup-public/AnonymousVoteButton";
 import SubscribedToast from "@/components/startup-public/SubscribedToast";
 import ProfileViewTracker from "@/components/startup-public/ProfileViewTracker";
+import { getStartupAwards } from "@/lib/awards/queries";
+import StartupAwardsSection, { StartupAwardsBadge } from "@/components/awards/StartupAwardsSection";
 
 type Props = { params: { slug: string }; searchParams: { subscribed?: string } };
 type EvaluationRow = Database["public"]["Tables"]["evaluations"]["Row"];
@@ -80,6 +82,7 @@ export default async function StartupPublicPage({ params, searchParams }: Props)
   const { startup, evaluation, highlights } = profileData;
   const topDimensions = evaluation ? getTopDimensions(evaluation.dimensions) : [];
   const championBadges = await getChampionBadgesForStartup(startup.id);
+  const startupAwards = await getStartupAwards(startup.id);
 
   const [
     { data: standing },
@@ -177,6 +180,13 @@ export default async function StartupPublicPage({ params, searchParams }: Props)
           </div>
         )}
 
+        {/* Awards badge — Hall of Fame */}
+        {startupAwards.length > 0 && (
+          <div className="flex justify-center mb-6 -mt-2">
+            <StartupAwardsBadge awards={startupAwards} />
+          </div>
+        )}
+
         {/* Region + funding badges */}
         {(startup.region_ca || startup.funding_stage || startup.is_raising) && (
           <div className="flex flex-wrap justify-center gap-2 mb-4 -mt-4">
@@ -231,6 +241,9 @@ export default async function StartupPublicPage({ params, searchParams }: Props)
         )}
 
         {/* Strengths highlights */}
+        {/* Historial de premios (Hall of Fame) */}
+        <StartupAwardsSection awards={startupAwards} />
+
         <PublicStrengthsHighlights highlights={highlights} />
 
         {/* Top scoring dimensions */}

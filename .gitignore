@@ -45,3 +45,4 @@ next-env.d.ts
 
 # Research / scrapers — kept out of the main app repo (PROMPT_EMPRENDEXXI)
 /research/
+_import_tmp/
