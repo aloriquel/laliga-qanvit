@@ -85,6 +85,27 @@ export default async function RecipientPage({ params }: Props) {
           )}
         </p>
 
+        {r.source_type === "archive" && (
+          <div className="mt-12 border-l-2 border-amber-300/30 pl-4 py-3 text-sm text-white/60">
+            <strong className="text-amber-200/80">Origen: archivo histórico.</strong>{" "}
+            Datos extraídos de snapshots públicos del premio. Algunos campos
+            como país, verticales o descripción pueden estar incompletos.
+            {r.award.website_url && (
+              <>
+                {" "}
+                <a
+                  href={r.award.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-white/80"
+                >
+                  Ver fuente oficial →
+                </a>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Sobre la edición */}
         <div className="mt-12 rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:p-7">
           <h2

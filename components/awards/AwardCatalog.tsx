@@ -19,12 +19,15 @@ export type CatalogRecipient = {
   current_status: "active" | "acquired" | "closed" | "pivoted" | "unknown";
   is_spanish_ecosystem?: boolean;
   company_country?: string | null;
+  source_type?: string | null;
 };
 
 export type AwardCatalogProps = {
   recipients: CatalogRecipient[];
   /** True when the award has scope='global'; surfaces the international toggle. */
   awardIsGlobal?: boolean;
+  /** True when the dataset includes at least one archive-sourced record. */
+  hasArchiveRecords?: boolean;
 };
 
 type SortKey = "year_desc" | "year_asc" | "name_asc" | "name_desc";
@@ -58,6 +61,7 @@ function serializeList(values: string[]): string | null {
 export default function AwardCatalog({
   recipients,
   awardIsGlobal = false,
+  hasArchiveRecords = false,
 }: AwardCatalogProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -239,20 +243,27 @@ export default function AwardCatalog({
         </FilterRow>
 
         {awardIsGlobal && (
-          <FilterRow label="Alcance" aria="Filtro por origen geográfico">
-            <Chip
-              active={!showIntl}
-              onClick={() => { setShowIntl(false); updateUrl({ intl: false }); }}
-            >
-              Solo ES/PT
-            </Chip>
-            <Chip
-              active={showIntl}
-              onClick={() => { setShowIntl(true); updateUrl({ intl: true }); }}
-            >
-              + Internacionales
-            </Chip>
-          </FilterRow>
+          <>
+            <FilterRow label="Alcance" aria="Filtro por origen geográfico">
+              <Chip
+                active={!showIntl}
+                onClick={() => { setShowIntl(false); updateUrl({ intl: false }); }}
+              >
+                Solo ES/PT
+              </Chip>
+              <Chip
+                active={showIntl}
+                onClick={() => { setShowIntl(true); updateUrl({ intl: true }); }}
+              >
+                + Internacionales
+              </Chip>
+            </FilterRow>
+            {hasArchiveRecords && (
+              <p className="font-mono text-[10px] text-white/45 italic ml-24 -mt-1 mb-2">
+                * Los registros pre-2018 tienen la marca de ecosistema español inferida por defecto y pueden requerir verificación.
+              </p>
+            )}
+          </>
         )}
 
         <div className="flex items-center justify-between mt-2 px-1">
@@ -411,7 +422,12 @@ function DesktopRow({ r }: { r: CatalogRecipient }) {
       <td className="py-3 px-3 font-mono text-sm text-white/70">{r.edition_year}</td>
       <td className="py-3 px-3 font-body text-xs text-white/65">{r.category_value}</td>
       <td className="py-3 px-3"><ResultBadge result={r.result} /></td>
-      <td className="py-3 px-3"><StatusBadge status={r.current_status} /></td>
+      <td className="py-3 px-3">
+        <div className="flex items-center gap-2">
+          <StatusBadge status={r.current_status} />
+          {r.source_type === "archive" && <ArchiveTag />}
+        </div>
+      </td>
       <td className="py-3 px-3 text-right">
         <Link
           href={`/premios/recipient/${r.id}`}
@@ -440,8 +456,22 @@ function MobileCard({ r }: { r: CatalogRecipient }) {
       <p className="font-mono text-[11px] uppercase tracking-widest text-white/50 mt-1.5">
         {r.category_value} · {r.edition_year}
       </p>
-      <div className="mt-3"><StatusBadge status={r.current_status} /></div>
+      <div className="mt-3 flex items-center gap-2">
+        <StatusBadge status={r.current_status} />
+        {r.source_type === "archive" && <ArchiveTag />}
+      </div>
     </Link>
+  );
+}
+
+function ArchiveTag() {
+  return (
+    <span
+      title="Registro extraído de archivos históricos. Algunos campos pueden estar incompletos."
+      className="inline-flex items-center font-mono text-[10px] text-white/40"
+    >
+      ⌖ Archivo
+    </span>
   );
 }
 

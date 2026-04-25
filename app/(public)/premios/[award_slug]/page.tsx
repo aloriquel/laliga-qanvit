@@ -36,6 +36,7 @@ function toCatalog(rows: RecipientWithEdition[]): CatalogRecipient[] {
     is_spanish_ecosystem: (r as any).is_spanish_ecosystem,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     company_country: (r as any).company_country ?? null,
+    source_type: r.source_type,
   }));
 }
 
@@ -51,11 +52,14 @@ export default async function AwardPage({ params }: Props) {
   const minYear = years.length ? Math.min(...years) : null;
   const maxYear = years.length ? Math.max(...years) : null;
 
-  // Orphan years: editions known to have run (start_year → current year) but for
-  // which we don't yet have a single recipient documented.
+  // Orphan years: editions known to have run (start_year → endYear) but for
+  // which we don't yet have a single recipient documented. endYear caps at
+  // the most recent edition with data — we don't claim future editions are
+  // "missing" if they simply haven't happened yet.
   const presentYears = new Set(years);
   const startYear = award.start_year ?? minYear;
-  const endYear = new Date().getUTCFullYear();
+  const currentYear = new Date().getUTCFullYear();
+  const endYear = Math.max(maxYear ?? currentYear - 1, currentYear - 1);
   const orphanYears: number[] = [];
   if (startYear) {
     for (let y = startYear; y <= endYear; y++) {
@@ -129,7 +133,11 @@ export default async function AwardPage({ params }: Props) {
       </section>
 
       <section className="container-brand py-10 md:py-14 max-w-5xl">
-        <AwardCatalog recipients={catalog} awardIsGlobal={award.scope === "global"} />
+        <AwardCatalog
+          recipients={catalog}
+          awardIsGlobal={award.scope === "global"}
+          hasArchiveRecords={catalog.some((r) => r.source_type === "archive")}
+        />
 
         {orphanYears.length > 0 && (
           <div className="mt-16 rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:p-7">
