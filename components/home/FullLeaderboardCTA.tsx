@@ -1,7 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { track } from "@/lib/analytics/posthog";
+import { EVENTS } from "@/lib/analytics/events";
 
 export default function FullLeaderboardCTA() {
+  function handleClick() {
+    track(EVENTS.LIGA_FULL_RANKING_CLICKED, { source: "home_cta" });
+  }
+
   return (
     <section className="bg-brand-lavender py-20 md:py-24">
       <div className="container-brand">
@@ -17,6 +25,7 @@ export default function FullLeaderboardCTA() {
           </p>
           <Link
             href="/liga"
+            onClick={handleClick}
             className="mt-8 inline-flex items-center gap-2 bg-brand-navy text-white font-body font-semibold rounded-xl px-8 py-3.5 hover:bg-brand-navy/90 transition-colors"
           >
             Ver ranking completo <ArrowRight size={16} />

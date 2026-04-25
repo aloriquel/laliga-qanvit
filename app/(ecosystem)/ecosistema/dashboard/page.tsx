@@ -5,6 +5,7 @@ import { ArrowRight, Bell, Link2, Star, Target, ExternalLink, ThumbsUp } from "l
 import { pointsToNextTier, TIER_THRESHOLDS } from "@/lib/ecosystem/points-helpers";
 import { computeScoutingEye } from "@/lib/ecosystem/votes-helpers";
 import EcosystemBridgeBannerClient from "@/components/ecosystem/EcosystemBridgeBannerClient";
+import EcosystemDashboardViewTracker from "@/components/ecosystem/EcosystemDashboardViewTracker";
 import type { EcosystemOrgType } from "@/lib/ecosystem/owner";
 import type { EcosystemTier } from "@/lib/ecosystem/qanvit-rewards";
 

@@ -25,14 +25,22 @@ function initialFor(c: EmptyCategory): string {
 }
 
 function PromoCategoryCard({ category }: { category: EmptyCategory }) {
-  const href = `/play?${category.category_type}=${encodeURIComponent(category.category_value)}`;
+  const href = `/play?${category.category_type}=${encodeURIComponent(category.category_value)}&source=promo_card`;
   const tint = tintFor(category);
   const typeBadge = category.category_type === "division" ? "DIVISIÓN" : "VERTICAL";
   const ariaTail = category.category_type === "division" ? "esta división" : "este vertical";
 
+  function handleClick() {
+    track(EVENTS.HOME_PROMO_CARD_CLICKED, {
+      category_type: category.category_type,
+      category_value: category.category_value,
+    });
+  }
+
   return (
     <Link
       href={href}
+      onClick={handleClick}
       aria-label={`Ficha tu startup en ${category.label}. Sé la primera en ${ariaTail}.`}
       className="group flex items-center gap-4 rounded-2xl border border-border-soft bg-white p-4 md:p-5 transition-colors duration-150 hover:border-brand-navy/30 hover:bg-brand-lavender/30 focus:outline-none focus:ring-2 focus:ring-brand-salmon"
     >
