@@ -103,13 +103,13 @@ export default async function PremiosHubPage() {
         </section>
       )}
 
-      <section className="container-brand pb-24 max-w-4xl">
-        <div className="grid grid-cols-1 gap-5">
+      <section className="container-brand pb-24 max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {awardCards.filter((a): a is NonNullable<typeof a> => !!a).map((a) => (
             <Link
               key={a.id}
               href={`/premios/${a.slug}`}
-              className="group block rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/25 transition-colors p-7 md:p-8"
+              className="group block rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/25 transition-colors p-6 md:p-7"
             >
               <p className="font-mono text-xs uppercase tracking-widest text-white/50">
                 {a.organizer}

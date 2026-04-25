@@ -41,6 +41,8 @@ export type AwardRecipient = {
   source_url: string | null;
   source_type: string | null;
   external_id: string | null;
+  is_spanish_ecosystem: boolean;
+  company_country: string | null;
 };
 
 export type AwardWithCounts = Award & {

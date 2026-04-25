@@ -17,6 +17,14 @@ export type CatalogRecipient = {
   category_value: string;
   result: "winner" | "finalist";
   current_status: "active" | "acquired" | "closed" | "pivoted" | "unknown";
+  is_spanish_ecosystem?: boolean;
+  company_country?: string | null;
+};
+
+export type AwardCatalogProps = {
+  recipients: CatalogRecipient[];
+  /** True when the award has scope='global'; surfaces the international toggle. */
+  awardIsGlobal?: boolean;
 };
 
 type SortKey = "year_desc" | "year_asc" | "name_asc" | "name_desc";
@@ -47,10 +55,16 @@ function serializeList(values: string[]): string | null {
   return values.join(",");
 }
 
-export default function AwardCatalog({ recipients }: { recipients: CatalogRecipient[] }) {
+export default function AwardCatalog({
+  recipients,
+  awardIsGlobal = false,
+}: AwardCatalogProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  // For global awards, default to Spanish-only. The toggle lets the user
+  // include the international cohort. URL key: ?intl=1.
+  const [showIntl, setShowIntl] = useState<boolean>(false);
 
   // ── Catalog meta ─────────────────────────────────────────────────
   const allYears = useMemo(
@@ -76,6 +90,7 @@ export default function AwardCatalog({ recipients }: { recipients: CatalogRecipi
     setCats(parseList(searchParams?.get("cat") ?? null));
     setResults(parseList(searchParams?.get("result") ?? null));
     setStatuses(parseList(searchParams?.get("status") ?? null));
+    setShowIntl(searchParams?.get("intl") === "1");
     const s = searchParams?.get("sort");
     if (s === "year_asc" || s === "name_asc" || s === "name_desc" || s === "year_desc") {
       setSort(s);
@@ -83,7 +98,7 @@ export default function AwardCatalog({ recipients }: { recipients: CatalogRecipi
   }, [searchParams]);
 
   const updateUrl = useCallback(
-    (next: { years?: string[]; cats?: string[]; results?: string[]; statuses?: string[]; sort?: SortKey }) => {
+    (next: { years?: string[]; cats?: string[]; results?: string[]; statuses?: string[]; sort?: SortKey; intl?: boolean }) => {
       const params = new URLSearchParams(searchParams?.toString() ?? "");
       const set = (k: string, v: string | null) => {
         if (v == null) params.delete(k);
@@ -94,6 +109,7 @@ export default function AwardCatalog({ recipients }: { recipients: CatalogRecipi
       if (next.results !== undefined) set("result", serializeList(next.results));
       if (next.statuses !== undefined) set("status", serializeList(next.statuses));
       if (next.sort !== undefined) set("sort", next.sort === "year_desc" ? null : next.sort);
+      if (next.intl !== undefined) set("intl", next.intl ? "1" : null);
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
@@ -112,13 +128,16 @@ export default function AwardCatalog({ recipients }: { recipients: CatalogRecipi
   // ── Filter + sort ────────────────────────────────────────────────
   const filtered = useMemo(() => {
     return recipients.filter((r) => {
+      if (awardIsGlobal && !showIntl && r.is_spanish_ecosystem === false) {
+        return false;
+      }
       if (years.length && !years.includes(String(r.edition_year))) return false;
       if (cats.length && !cats.includes(r.category_type)) return false;
       if (results.length && !results.includes(r.result)) return false;
       if (statuses.length && !statuses.includes(r.current_status)) return false;
       return true;
     });
-  }, [recipients, years, cats, results, statuses]);
+  }, [recipients, years, cats, results, statuses, awardIsGlobal, showIntl]);
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
@@ -218,6 +237,23 @@ export default function AwardCatalog({ recipients }: { recipients: CatalogRecipi
             </Chip>
           ))}
         </FilterRow>
+
+        {awardIsGlobal && (
+          <FilterRow label="Alcance" aria="Filtro por origen geográfico">
+            <Chip
+              active={!showIntl}
+              onClick={() => { setShowIntl(false); updateUrl({ intl: false }); }}
+            >
+              Solo ES/PT
+            </Chip>
+            <Chip
+              active={showIntl}
+              onClick={() => { setShowIntl(true); updateUrl({ intl: true }); }}
+            >
+              + Internacionales
+            </Chip>
+          </FilterRow>
+        )}
 
         <div className="flex items-center justify-between mt-2 px-1">
           <p className="font-mono text-xs text-white/55">

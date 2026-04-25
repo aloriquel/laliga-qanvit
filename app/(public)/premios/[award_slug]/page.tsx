@@ -32,6 +32,10 @@ function toCatalog(rows: RecipientWithEdition[]): CatalogRecipient[] {
     category_value: r.edition.category_value,
     result: r.result,
     current_status: r.current_status,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    is_spanish_ecosystem: (r as any).is_spanish_ecosystem,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    company_country: (r as any).company_country ?? null,
   }));
 }
 
@@ -104,7 +108,7 @@ export default async function AwardPage({ params }: Props) {
       </section>
 
       <section className="container-brand py-10 md:py-14 max-w-5xl">
-        <AwardCatalog recipients={catalog} />
+        <AwardCatalog recipients={catalog} awardIsGlobal={award.scope === "global"} />
 
         <p className="mt-16 max-w-3xl text-xs font-mono text-white/40 leading-relaxed">
           Premio organizado por {award.organizer}.{" "}

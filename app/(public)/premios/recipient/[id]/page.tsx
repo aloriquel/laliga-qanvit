@@ -63,6 +63,13 @@ export default async function RecipientPage({ params }: Props) {
           <StatusBadge
             status={r.current_status as "active" | "acquired" | "closed" | "pivoted" | "unknown"}
           />
+          {r.is_spanish_ecosystem === false && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-sora font-semibold uppercase tracking-widest border border-white/30 text-white/80"
+            >
+              🌍 Internacional
+            </span>
+          )}
         </div>
 
         <h1
@@ -73,6 +80,9 @@ export default async function RecipientPage({ params }: Props) {
         </h1>
         <p className="font-mono text-sm uppercase tracking-widest mt-3 text-white/65">
           {r.edition.category_value} · {r.edition.edition_year}
+          {r.company_country && (
+            <> · <span className="text-white/50">{r.company_country}</span></>
+          )}
         </p>
 
         {/* Sobre la edición */}
