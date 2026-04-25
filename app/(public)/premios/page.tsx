@@ -2,19 +2,32 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
-import { getAwards, getGlobalStats, getAwardWithCounts } from "@/lib/awards/queries";
+import {
+  getAwards,
+  getGlobalStats,
+  getAwardWithCounts,
+  getSpotlightRecipients,
+} from "@/lib/awards/queries";
+import StatusBadge from "@/components/awards/StatusBadge";
 
 export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Hall of Fame · La Liga Qanvit",
   description:
-    "Catálogo histórico de startups premiadas por las iniciativas más relevantes del ecosistema español. Selección curada año a año.",
+    "Hall of Fame de La Liga Qanvit. 329 startups premiadas en más de una década del ecosistema técnico español.",
 };
 
 export default async function PremiosHubPage() {
-  const [awards, stats] = await Promise.all([getAwards(), getGlobalStats()]);
+  const [awards, stats, spotlight] = await Promise.all([
+    getAwards(),
+    getGlobalStats(),
+    getSpotlightRecipients(5),
+  ]);
   const awardCards = await Promise.all(awards.map((a) => getAwardWithCounts(a.slug)));
+  const editionsTotal = awardCards
+    .filter((a): a is NonNullable<typeof a> => !!a)
+    .reduce((sum, a) => sum + a.editions_total, 0);
 
   return (
     <div
@@ -43,11 +56,52 @@ export default async function PremiosHubPage() {
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl">
             <Stat label="Premiadas" value={stats.total} />
             <Stat label="Activas" value={stats.active} />
-            <Stat label="Adquiridas" value={stats.acquired} />
-            <Stat label="Cerradas" value={stats.closed} />
+            <Stat label="Sin verificar" value={stats.unknown} />
+            <Stat label="Ediciones" value={editionsTotal} />
           </div>
         )}
       </section>
+
+      {/* Spotlight */}
+      {spotlight.length > 0 && (
+        <section className="container-brand pb-12 md:pb-16 max-w-5xl">
+          <p
+            className="font-mono text-xs uppercase tracking-widest mb-3"
+            style={{ color: "#c9a96e" }}
+          >
+            Empresas destacadas
+          </p>
+          <div className="-mx-4 md:mx-0 px-4 md:px-0 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex md:grid md:grid-cols-5 gap-3 min-w-max md:min-w-0">
+              {spotlight.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/premios/recipient/${s.id}`}
+                  className="group flex-shrink-0 w-[220px] md:w-auto rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/25 transition-colors p-4"
+                >
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-white/45">
+                    {s.edition_year}
+                  </p>
+                  <h3
+                    className="font-sora font-bold text-base mt-1 leading-snug line-clamp-2"
+                    style={{ color: "#e8d9b8" }}
+                  >
+                    {s.company_name}
+                  </h3>
+                  <p className="font-body text-[11px] text-white/55 mt-1 line-clamp-1">
+                    {s.category_value}
+                  </p>
+                  <div className="mt-3">
+                    <StatusBadge
+                      status={s.current_status as "active" | "acquired" | "closed" | "pivoted" | "unknown"}
+                    />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="container-brand pb-24 max-w-4xl">
         <div className="grid grid-cols-1 gap-5">

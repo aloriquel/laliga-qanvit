@@ -171,3 +171,76 @@ export async function getStartupAwards(startupId: string): Promise<StartupAward[
   const { data } = await sb.rpc("get_startup_awards", { p_startup_id: startupId });
   return (data ?? []) as StartupAward[];
 }
+
+export type SpotlightRecipient = {
+  id: string;
+  company_name: string;
+  company_description_short: string | null;
+  edition_year: number;
+  category_value: string;
+  result: "winner" | "finalist";
+  current_status: string;
+  award_slug: string;
+  award_name: string;
+};
+
+export async function getSpotlightRecipients(limit = 5): Promise<SpotlightRecipient[]> {
+  const sb = getClient();
+
+  const { data: matched } = await sb
+    .from("award_recipients")
+    .select(
+      "id, company_name, company_description_short, result, current_status, edition:award_editions!inner(edition_year, category_value, award:awards!inner(slug, name))"
+    )
+    .not("startup_id", "is", null)
+    .limit(limit);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const matchedRows = ((matched ?? []) as any[]).map(toSpotlight);
+  if (matchedRows.length >= limit) return matchedRows.slice(0, limit);
+
+  const { data: actives } = await sb
+    .from("award_recipients")
+    .select(
+      "id, company_name, company_description_short, result, current_status, edition:award_editions!inner(edition_year, category_value, award:awards!inner(slug, name))"
+    )
+    .eq("current_status", "active")
+    .not("company_website", "is", null)
+    .order("edition(edition_year)", { ascending: false })
+    .limit(limit * 4);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const candidates = ((actives ?? []) as any[]).map(toSpotlight);
+
+  const seen = new Set<number>();
+  const mixed: SpotlightRecipient[] = [];
+  const fallback: SpotlightRecipient[] = [];
+  for (const r of candidates) {
+    if (!seen.has(r.edition_year)) {
+      seen.add(r.edition_year);
+      mixed.push(r);
+    } else {
+      fallback.push(r);
+    }
+    if (mixed.length >= limit) break;
+  }
+  while (mixed.length < limit && fallback.length) {
+    const next = fallback.shift();
+    if (next) mixed.push(next);
+  }
+
+  return [...matchedRows, ...mixed].slice(0, limit);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toSpotlight(r: any): SpotlightRecipient {
+  return {
+    id: r.id,
+    company_name: r.company_name,
+    company_description_short: r.company_description_short,
+    edition_year: r.edition?.edition_year ?? 0,
+    category_value: r.edition?.category_value ?? "",
+    result: r.result,
+    current_status: r.current_status,
+    award_slug: r.edition?.award?.slug ?? "",
+    award_name: r.edition?.award?.name ?? "",
+  };
+}
