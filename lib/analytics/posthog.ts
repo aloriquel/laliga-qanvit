@@ -31,7 +31,6 @@ export function initPostHog(): boolean {
     ip: false, // anonymize IP
     respect_dnt: true,
     opt_out_capturing_by_default: true,
-    // @ts-expect-error — runtime option added ~1.83, type stubs lag behind
     advanced_disable_decide: true,
     // @ts-expect-error — runtime option, not in type stubs yet
     disable_remote_config: true,
