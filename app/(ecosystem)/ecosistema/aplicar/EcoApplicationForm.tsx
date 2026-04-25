@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { track } from "@/lib/analytics/posthog";
+import { EVENTS } from "@/lib/analytics/events";
 import {
   Select,
   SelectContent,
@@ -33,6 +35,10 @@ export default function EcoApplicationForm({ userEmail }: { userEmail: string })
     about:    "",
     region:   "",
   });
+
+  useEffect(() => {
+    track(EVENTS.ECOSYSTEM_APPLICATION_STARTED, {});
+  }, []);
 
   const isValid =
     form.name.trim().length >= 2 &&
@@ -65,6 +71,9 @@ export default function EcoApplicationForm({ userEmail }: { userEmail: string })
         return;
       }
 
+      track(EVENTS.ECOSYSTEM_APPLICATION_SUBMITTED, {
+        org_type: String(form.org_type),
+      });
       setSubmitted(true);
     } catch {
       setError("No pudimos conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.");

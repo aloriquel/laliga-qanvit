@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import type { Database } from "@/lib/supabase/types";
+import { track } from "@/lib/analytics/posthog";
+import { EVENTS, type Tier as AnalyticsTier } from "@/lib/analytics/events";
 
 type Tier = Database["public"]["Enums"]["ecosystem_tier"];
 
@@ -63,6 +65,11 @@ export default function StartupVoteControl({
       }
       setCasted(voteType);
       const momentumScore = data.momentum?.momentum_score ?? 0;
+      track(EVENTS.ECOSYSTEM_VOTE_CAST, {
+        startup_id: startupId,
+        vote_type: voteType,
+        tier: currentOrgTier as AnalyticsTier,
+      });
       onVoteCast?.(voteType, momentumScore);
     } catch {
       setError("Error de red. Inténtalo de nuevo.");

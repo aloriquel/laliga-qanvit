@@ -2,8 +2,12 @@
 
 import { Suspense, useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import posthog from "posthog-js";
 
 import { initPostHog, trackPageview } from "@/lib/analytics/posthog";
+import { hasConsent } from "@/lib/analytics/consent";
+
+const NO_RECORDING_PREFIXES = ["/ecosistema/dashboard"];
 
 function PageviewTracker() {
   const pathname = usePathname();
@@ -15,6 +19,26 @@ function PageviewTracker() {
     const url = qs ? `${pathname}?${qs}` : pathname;
     trackPageview(url);
   }, [pathname, searchParams]);
+
+  return null;
+}
+
+function RecordingGuard() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!pathname || !hasConsent()) return;
+    const isRestricted = NO_RECORDING_PREFIXES.some((p) => pathname.startsWith(p));
+    try {
+      if (isRestricted) {
+        posthog.stopSessionRecording();
+      } else {
+        posthog.startSessionRecording();
+      }
+    } catch {
+      /* PostHog may not be initialized yet; the next pathname change retries. */
+    }
+  }, [pathname]);
 
   return null;
 }
@@ -35,6 +59,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     <>
       <Suspense fallback={null}>
         <PageviewTracker />
+        <RecordingGuard />
       </Suspense>
       {children}
     </>

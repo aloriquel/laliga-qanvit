@@ -120,9 +120,9 @@ serve(async (req) => {
 
   const { data: follower } = await supabase
     .from("startup_followers")
-    .select("email, email_verified_at, unsubscribed_at, unsubscribe_token")
+    .select("email, email_verified_at, unsubscribed_at, unsubscribe_token, created_at")
     .eq("id", alert.follower_id)
-    .single<FollowerRow>();
+    .single<FollowerRow & { created_at: string | null }>();
   if (!follower) {
     await supabase.from("follower_alerts")
       .update({ email_sent: true, email_error: "follower_missing" })
@@ -146,7 +146,21 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Startup not found" }), { status: 404 });
   }
 
-  const unsubscribeUrl = `${APP_URL}/api/followers/unsubscribe?token=${encodeURIComponent(follower.unsubscribe_token)}`;
+  // Days the follower has been subscribed (verified) at the moment we send
+  // the email. Threaded through the unsubscribe URL so the success-page
+  // analytics tracker can emit it without a server lookup.
+  let daysSubscribed = 0;
+  const verifiedAt = (follower as unknown as { email_verified_at: string | null }).email_verified_at;
+  if (verifiedAt) {
+    const ms = Date.now() - new Date(verifiedAt).getTime();
+    if (Number.isFinite(ms) && ms > 0) daysSubscribed = Math.floor(ms / 86_400_000);
+  }
+  const unsubQs = new URLSearchParams({
+    token: follower.unsubscribe_token,
+    from_slug: startup.slug,
+    days: String(daysSubscribed),
+  });
+  const unsubscribeUrl = `${APP_URL}/api/followers/unsubscribe?${unsubQs.toString()}`;
   const { subject, html } = buildHtml(alert.event_type, startup.name, startup.slug, alert.payload ?? {}, unsubscribeUrl);
 
   if (!RESEND_API_KEY) {

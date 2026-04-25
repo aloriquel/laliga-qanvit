@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { LocaleSwitcher } from "./LocaleSwitcher";
+import { AnalyticsConsentLink } from "@/components/analytics/AnalyticsConsentLink";
 
 export async function Footer() {
   const [t, nav, legal] = await Promise.all([
@@ -44,6 +45,7 @@ export async function Footer() {
           <Link href="/legal/cookies" className="hover:text-white transition-colors">
             {legal("cookies")}
           </Link>
+          <AnalyticsConsentLink label="Cookies y analítica" />
           <Link href="/legal/transparencia" className="hover:text-white transition-colors">
             {legal("transparency")}
           </Link>

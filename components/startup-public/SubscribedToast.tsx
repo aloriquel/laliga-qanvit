@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { track } from "@/lib/analytics/posthog";
 import { EVENTS } from "@/lib/analytics/events";
@@ -9,20 +10,21 @@ type Props = { startupSlug?: string };
 
 export default function SubscribedToast({ startupSlug }: Props = {}) {
   const [visible, setVisible] = useState(true);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (startupSlug) {
+      const hoursParam = searchParams?.get("hours");
+      const hoursToConfirm =
+        hoursParam && /^\d+$/.test(hoursParam) ? Number(hoursParam) : 0;
       track(EVENTS.FOLLOW_CONFIRMATION_CLICKED, {
         startup_slug: startupSlug,
-        // Backend would need to thread the actual delta; client cannot know
-        // when the email was sent. Conservative default keeps the funnel
-        // queryable; a future iteration can pass it as URL param.
-        hours_to_confirm: 0,
+        hours_to_confirm: hoursToConfirm,
       });
     }
     const t = setTimeout(() => setVisible(false), 5000);
     return () => clearTimeout(t);
-  }, [startupSlug]);
+  }, [startupSlug, searchParams]);
 
   if (!visible) return null;
 

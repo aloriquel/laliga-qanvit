@@ -34,10 +34,7 @@ export function CookieConsentBanner() {
           experiencia. Capturamos eventos sin identificar tu IP y, si lo aceptas,
           también grabaciones de sesión (sin contenido de formularios). Puedes
           cambiar tu decisión en cualquier momento desde el footer.{" "}
-          <Link
-            href="/legal/privacidad#cookies"
-            className="text-brand-salmon hover:underline"
-          >
+          <Link href="/legal/cookies" className="text-brand-salmon hover:underline">
             Más detalles
           </Link>
           .

@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   const { data: follower } = await service
     .from("startup_followers")
-    .select("id, startup_id, confirmation_expires_at")
+    .select("id, startup_id, confirmation_expires_at, created_at")
     .eq("confirmation_token", token)
     .maybeSingle();
 
@@ -51,6 +51,22 @@ export async function GET(req: NextRequest) {
     targetSlug = startup?.slug ?? null;
   }
 
-  const target = targetSlug ? `${appUrl}/startup/${targetSlug}?subscribed=1` : `${appUrl}/liga`;
+  // Hours between when the follower row was created (sign-up) and the
+  // moment they clicked the confirmation link. Used by the analytics
+  // tracker on the redirect target.
+  let hoursToConfirm = 0;
+  if (follower.created_at) {
+    const createdAtMs = new Date(follower.created_at).getTime();
+    if (Number.isFinite(createdAtMs)) {
+      hoursToConfirm = Math.max(
+        0,
+        Math.round((Date.now() - createdAtMs) / 3_600_000)
+      );
+    }
+  }
+
+  const target = targetSlug
+    ? `${appUrl}/startup/${targetSlug}?subscribed=1&hours=${hoursToConfirm}`
+    : `${appUrl}/liga`;
   return NextResponse.redirect(target);
 }

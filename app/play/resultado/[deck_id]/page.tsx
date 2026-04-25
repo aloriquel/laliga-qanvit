@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import type { Database } from "@/lib/supabase/types";
 import ClassificationCard from "@/components/league/ClassificationCard";
 import ShareButton from "./ShareButton";
+import StartupPublishedTracker from "./StartupPublishedTracker";
 
 type Props = { params: { deck_id: string } };
 
@@ -76,6 +77,12 @@ export default async function ResultadoPage({ params }: Props) {
 
   return (
     <div className="bg-brand-lavender min-h-screen py-16">
+      <StartupPublishedTracker
+        startupId={startup.id}
+        hasDeck={true}
+        vertical={(startup.current_vertical as string) ?? "unknown"}
+        division={(startup.current_division as string) ?? "unknown"}
+      />
       <div className="container-brand max-w-3xl">
 
         {/* ── Classification card hero ── */}

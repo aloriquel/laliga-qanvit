@@ -151,6 +151,7 @@ export default function PlayPage() {
         }
       }
 
+      track(EVENTS.PLAY_STEP_COMPLETED, { step_name: "basics", step_number: 0 });
       setStep(1);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("error_send_link"));
@@ -179,6 +180,10 @@ export default function PlayPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? t("upload_hint"));
 
+      track(EVENTS.PLAY_STEP_COMPLETED, { step_name: "deck_upload", step_number: 1 });
+      // Mark as published-flow-completed so the unmount cleanup does NOT
+      // emit play_abandoned when the router navigates away.
+      publishedRef.current = true;
       router.push(`/play/evaluando/${json.deck_id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("error_send_link"));
