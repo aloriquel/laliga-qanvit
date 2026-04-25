@@ -93,13 +93,30 @@ export default function PrivacidadPage() {
         Ver la <a href="/legal/cookies">política de cookies</a> para el detalle de cookies técnicas y analíticas.
       </p>
 
-      <h2>10. Cookies técnicas del voto anónimo</h2>
+      <h2 id="cookies">10. Cookies técnicas y analítica</h2>
       <ul>
         <li><code>qanvit_voted_&lt;slug&gt;</code>: marca que ya has votado a una startup; caducidad 24h; propósito: evitar múltiples envíos del mismo navegador.</li>
         <li><code>qanvit_follow_modal_shown_&lt;slug&gt;</code>: marca que se mostró el modal de suscripción tras el voto; caducidad 30 días; propósito: no abrir el modal repetidamente en visitas posteriores.</li>
+        <li><code>qanvit_analytics_consent</code>: registra tu decisión sobre analítica (<em>accepted</em> / <em>rejected</em>); caducidad 13 meses; propósito: no volver a mostrar el banner mientras la decisión sea válida.</li>
+        <li><code>ph_*</code> y <code>ph_session_*</code>: cookies puestas por <strong>PostHog</strong> (instancia EU) cuando aceptas analítica. Anonimizamos tu IP en origen y enmascaramos el contenido de los formularios en las grabaciones de sesión.</li>
+      </ul>
+      <p>
+        Puedes cambiar tu decisión en cualquier momento desde el enlace «Cookies y analítica» del pie de página. Si rechazas, no se inicializa PostHog y no se envía ningún evento.
+      </p>
+
+      <h2 id="analytics">11. Analítica de uso (PostHog)</h2>
+      <p>
+        Usamos <strong>PostHog</strong> (Hog, Inc.) en su instancia europea para entender cómo se usa el producto. La base legal es tu consentimiento explícito vía el banner. Configuración aplicada:
+      </p>
+      <ul>
+        <li>IP anonimizada en origen (<code>ip: false</code> en el cliente).</li>
+        <li>Honra el header <code>Do Not Track</code>.</li>
+        <li>Inicializa <em>opt-out por defecto</em>; sólo arranca tras tu aceptación.</li>
+        <li>Grabaciones de sesión con masking de inputs (no se captura el contenido que tecleas en formularios) y sin grabar iframes externos.</li>
+        <li>Datos procesados en EU (Frankfurt). PostHog Inc. tiene firmados DPA + SCCs.</li>
       </ul>
 
-      <h2>11. Seguidores anónimos: ejercicio de derechos</h2>
+      <h2>12. Seguidores anónimos: ejercicio de derechos</h2>
       <p>
         Si sigues startups por email sin tener cuenta de usuario, puedes ejercer tus derechos de la siguiente forma:
       </p>
