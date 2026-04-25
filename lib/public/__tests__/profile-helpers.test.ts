@@ -63,8 +63,11 @@ describe("selectHighlights", () => {
     expect(result.length).toBeLessThanOrEqual(3);
   });
 
-  it("truncates strings longer than 80 chars at word boundary", () => {
-    const longStr = "Este es un texto muy largo que supera claramente el límite de ochenta caracteres del sistema";
+  it("truncates strings longer than the cap at word boundary", () => {
+    // 240 chars: por encima del cap actual (200) y suficientemente largo
+    // para garantizar truncado independientemente del cap exacto.
+    const longStr =
+      "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis";
     const dims: Dimension[] = [
       dim("problem", 90, [longStr]),
       dim("market", 80, []),
@@ -76,8 +79,9 @@ describe("selectHighlights", () => {
     ];
     const result = selectHighlights(dims);
     expect(result.length).toBe(1);
-    expect(result[0].length).toBeLessThanOrEqual(80);
-    // Should end at a word boundary: next char in original is space or string ends
+    // Cap actual es 200; el resultado debe quedar por debajo y respetar boundary.
+    expect(result[0].length).toBeLessThanOrEqual(200);
+    expect(result[0].length).toBeLessThan(longStr.length);
     const r = result[0];
     const nextChar = longStr[r.length];
     expect(nextChar === " " || nextChar === undefined || longStr === r).toBe(true);

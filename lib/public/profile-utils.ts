@@ -42,7 +42,10 @@ export type PublicProfile = {
 };
 
 const SEMANTIC_DEDUP_LEN = 15;
-const MAX_HIGHLIGHT_CHARS = 80;
+// 200 chars caben holgado en la card grid 1/3-cols a text-sm Sora-semibold
+// (~5-7 líneas en mobile, 4-5 en desktop). El antiguo 80 cortaba "fortalezas"
+// descriptivas a media frase.
+const MAX_HIGHLIGHT_CHARS = 200;
 
 function trimToWordBoundary(text: string, max: number): string {
   if (text.length <= max) return text;
