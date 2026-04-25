@@ -445,6 +445,28 @@ function MobileCard({ r }: { r: CatalogRecipient }) {
   );
 }
 
+function CoverageBadge({ count }: { count: number }) {
+  if (count >= 10) return null;
+  const isPartial = count >= 5;
+  const label = isPartial ? "ⓘ Cobertura parcial" : "⚠ Solo winners";
+  const title = isPartial
+    ? "Esta edición tiene cobertura parcial: faltan algunos finalistas en las fuentes públicas."
+    : "Solo se han documentado las empresas ganadoras de esta edición; los finalistas no están disponibles en las fuentes públicas.";
+  return (
+    <span
+      title={title}
+      className="shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest"
+      style={
+        isPartial
+          ? { borderColor: "rgba(201,169,110,0.5)", color: "#c9a96e" }
+          : { borderColor: "rgba(244,169,170,0.55)", color: "#f4a9aa" }
+      }
+    >
+      {label}
+    </span>
+  );
+}
+
 function YearSeparator({ year, count }: { year: number; count: number }) {
   return (
     <div
@@ -456,6 +478,7 @@ function YearSeparator({ year, count }: { year: number; count: number }) {
         {year}
       </span>
       <span aria-hidden className="h-px flex-1" style={{ background: "rgba(201,169,110,0.4)" }} />
+      <CoverageBadge count={count} />
       <span className="font-mono text-[10px] uppercase tracking-widest text-white/45 shrink-0">
         {count}
       </span>

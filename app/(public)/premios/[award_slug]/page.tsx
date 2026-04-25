@@ -51,6 +51,18 @@ export default async function AwardPage({ params }: Props) {
   const minYear = years.length ? Math.min(...years) : null;
   const maxYear = years.length ? Math.max(...years) : null;
 
+  // Orphan years: editions known to have run (start_year → current year) but for
+  // which we don't yet have a single recipient documented.
+  const presentYears = new Set(years);
+  const startYear = award.start_year ?? minYear;
+  const endYear = new Date().getUTCFullYear();
+  const orphanYears: number[] = [];
+  if (startYear) {
+    for (let y = startYear; y <= endYear; y++) {
+      if (!presentYears.has(y)) orphanYears.push(y);
+    }
+  }
+
   return (
     <div className="min-h-screen text-white" style={{ background: "#1a1f3a" }}>
       {/* Hero */}
@@ -86,10 +98,19 @@ export default async function AwardPage({ params }: Props) {
             value={String(activeCount)}
             tooltip="Empresas con web pública que respondió OK al verificar."
           />
-          <Stat label="Ediciones" value={String(award.editions_total)} />
           <Stat
-            label="Años cubiertos"
-            value={minYear && maxYear ? `${minYear}–${maxYear}` : "—"}
+            label="Ediciones cubiertas"
+            value={
+              minYear && maxYear
+                ? `${presentYears.size} (${minYear}–${maxYear})`
+                : String(presentYears.size)
+            }
+            tooltip="Número de ediciones anuales con al menos una empresa documentada."
+          />
+          <Stat
+            label="Por documentar"
+            value={String(orphanYears.length)}
+            tooltip="Ediciones que sabemos que ocurrieron pero para las que aún no hay datos públicos."
           />
         </div>
 
@@ -109,6 +130,42 @@ export default async function AwardPage({ params }: Props) {
 
       <section className="container-brand py-10 md:py-14 max-w-5xl">
         <AwardCatalog recipients={catalog} awardIsGlobal={award.scope === "global"} />
+
+        {orphanYears.length > 0 && (
+          <div className="mt-16 rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:p-7">
+            <h2
+              className="font-sora font-bold text-xs uppercase tracking-widest"
+              style={{ color: "#c9a96e" }}
+            >
+              Ediciones no disponibles
+            </h2>
+            <p className="font-body text-sm text-white/75 mt-3 leading-relaxed">
+              Sabemos que {award.name} se celebró estos años, pero aún no hemos
+              localizado fuentes públicas con la lista completa de premiadas y finalistas:
+            </p>
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {orphanYears.map((y) => (
+                <li
+                  key={y}
+                  className="font-mono text-sm rounded-md border border-white/15 px-3 py-1 text-white/70"
+                >
+                  {y}
+                </li>
+              ))}
+            </ul>
+            <p className="font-body text-xs text-white/55 mt-5 leading-relaxed">
+              Si tienes información oficial sobre alguna de estas ediciones, escríbenos a{" "}
+              <a
+                href="mailto:hola@qanvit.com"
+                className="hover:underline"
+                style={{ color: "#c9a96e" }}
+              >
+                hola@qanvit.com
+              </a>{" "}
+              y la incorporaremos al catálogo.
+            </p>
+          </div>
+        )}
 
         <p className="mt-16 max-w-3xl text-xs font-mono text-white/40 leading-relaxed">
           Premio organizado por {award.organizer}.{" "}

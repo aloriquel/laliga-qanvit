@@ -15,7 +15,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Hall of Fame · La Liga Qanvit",
   description:
-    "Hall of Fame de La Liga Qanvit. 329 startups premiadas en más de una década del ecosistema técnico español.",
+    "Hall of Fame de La Liga Qanvit. Catálogo histórico de startups premiadas en el ecosistema técnico español.",
 };
 
 export default async function PremiosHubPage() {

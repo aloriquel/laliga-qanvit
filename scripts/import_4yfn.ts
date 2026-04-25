@@ -65,7 +65,7 @@ async function main() {
   const datasetPath = path.resolve(
     __dirname,
     "..",
-    "research/scrapers/4yfn/output/4yfn_dataset_v1.json"
+    "research/scrapers/4yfn/output/4yfn_dataset_v2.json"
   );
   if (!existsSync(datasetPath)) {
     console.error(
@@ -175,15 +175,26 @@ async function main() {
     };
   });
 
-  // Upsert recipients in chunks of 100.
+  // Clean slate for 4yfn: delete existing recipients for this award before insert.
+  // (Partial unique index on external_id WHERE NOT NULL doesn't match supabase-js onConflict.)
+  const editionIds = [...editionMap.values()];
+  const { error: delError, count: delCount } = await sb
+    .from("award_recipients")
+    .delete({ count: "exact" })
+    .in("edition_id", editionIds);
+  if (delError) {
+    console.error("delete error:", delError.message);
+    process.exit(3);
+  }
+  console.log(`Deleted ${delCount ?? 0} prior 4yfn recipients (clean slate)`);
+
   let inserted = 0;
-  let skipped = 0;
   let errored = 0;
   for (let i = 0; i < recipientRows.length; i += 100) {
     const slice = recipientRows.slice(i, i + 100);
     const { data: result, error } = await sb
       .from("award_recipients")
-      .upsert(slice, { onConflict: "external_id", ignoreDuplicates: true })
+      .insert(slice)
       .select("id");
     if (error) {
       console.error("recipients chunk error:", error.message);
@@ -191,8 +202,8 @@ async function main() {
       continue;
     }
     inserted += result?.length ?? 0;
-    skipped += slice.length - (result?.length ?? 0);
   }
+  const skipped = 0;
 
   console.log(
     `Editions upserted: ${editionsInserted} · Recipients inserted: ${inserted} · skipped(dup): ${skipped} · errored: ${errored}`
