@@ -64,7 +64,11 @@ export default function StartupAwardsSection({ awards }: Props) {
               <p className="font-body text-xs text-ink-secondary mt-0.5">
                 {a.category_value} ·{" "}
                 <span className="font-semibold uppercase tracking-wider">
-                  {a.result === "winner" ? "Ganadora" : "Finalista"}
+                  {a.result === "winner"
+                    ? "Ganadora"
+                    : a.result === "beneficiary"
+                    ? "Beneficiaria"
+                    : "Finalista"}
                 </span>
               </p>
             </div>

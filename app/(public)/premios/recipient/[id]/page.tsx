@@ -18,8 +18,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${r.company_name} · ${r.award.name} ${r.edition.edition_year} · La Liga Qanvit`,
     description:
       r.company_description_short ??
-      `${r.company_name} fue ${r.result === "winner" ? "ganadora" : "finalista"} en ${r.award.name} ${r.edition.edition_year}.`,
+      `${r.company_name} fue ${
+        r.result === "winner"
+          ? "ganadora"
+          : r.result === "beneficiary"
+          ? "beneficiaria"
+          : "finalista"
+      } en ${r.award.name} ${r.edition.edition_year}.`,
   };
+}
+
+function formatEur(amount: number): string {
+  return amount.toLocaleString("es-ES").replace(/\./g, "\u00A0") + " €";
 }
 
 export default async function RecipientPage({ params }: Props) {
@@ -84,6 +94,34 @@ export default async function RecipientPage({ params }: Props) {
             <> · <span className="text-white/50">{r.company_country}</span></>
           )}
         </p>
+
+        {r.award_amount_eur != null && (
+          <div
+            className="mt-10 rounded-2xl border p-6 md:p-7"
+            style={{
+              borderColor: "rgba(155,181,214,0.35)",
+              background: "rgba(0,63,127,0.10)",
+            }}
+          >
+            <p
+              className="font-mono text-xs uppercase tracking-widest"
+              style={{ color: "#9bb5d6" }}
+            >
+              Ayuda concedida
+            </p>
+            <p
+              className="font-sora font-bold text-3xl md:text-4xl mt-2 leading-none"
+              style={{ color: "#e8d9b8" }}
+            >
+              {formatEur(r.award_amount_eur)}
+            </p>
+            {r.company_cif && (
+              <p className="font-mono text-xs text-white/50 mt-3">
+                CIF: {r.company_cif}
+              </p>
+            )}
+          </div>
+        )}
 
         {r.source_type === "archive" && (
           <div className="mt-12 border-l-2 border-amber-300/30 pl-4 py-3 text-sm text-white/60">

@@ -37,6 +37,7 @@ function toCatalog(rows: RecipientWithEdition[]): CatalogRecipient[] {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     company_country: (r as any).company_country ?? null,
     source_type: r.source_type,
+    award_amount_eur: r.award_amount_eur ?? null,
   }));
 }
 

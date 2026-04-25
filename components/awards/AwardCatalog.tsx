@@ -15,12 +15,17 @@ export type CatalogRecipient = {
   edition_year: number;
   category_type: string;
   category_value: string;
-  result: "winner" | "finalist";
+  result: "winner" | "finalist" | "beneficiary";
   current_status: "active" | "acquired" | "closed" | "pivoted" | "unknown";
   is_spanish_ecosystem?: boolean;
   company_country?: string | null;
   source_type?: string | null;
+  award_amount_eur?: number | null;
 };
+
+function formatEur(amount: number): string {
+  return amount.toLocaleString("es-ES").replace(/\./g, "\u00A0") + " €";
+}
 
 export type AwardCatalogProps = {
   recipients: CatalogRecipient[];
@@ -420,7 +425,17 @@ function DesktopRow({ r }: { r: CatalogRecipient }) {
         )}
       </td>
       <td className="py-3 px-3 font-mono text-sm text-white/70">{r.edition_year}</td>
-      <td className="py-3 px-3 font-body text-xs text-white/65">{r.category_value}</td>
+      <td className="py-3 px-3 font-body text-xs text-white/65">
+        {r.category_value}
+        {r.award_amount_eur != null && (
+          <span
+            className="block font-mono text-[10px] mt-0.5"
+            style={{ color: "rgba(232,217,184,0.7)" }}
+          >
+            {formatEur(r.award_amount_eur)}
+          </span>
+        )}
+      </td>
       <td className="py-3 px-3"><ResultBadge result={r.result} /></td>
       <td className="py-3 px-3">
         <div className="flex items-center gap-2">
@@ -456,6 +471,14 @@ function MobileCard({ r }: { r: CatalogRecipient }) {
       <p className="font-mono text-[11px] uppercase tracking-widest text-white/50 mt-1.5">
         {r.category_value} · {r.edition_year}
       </p>
+      {r.award_amount_eur != null && (
+        <p
+          className="font-mono text-[11px] mt-0.5"
+          style={{ color: "rgba(232,217,184,0.7)" }}
+        >
+          {formatEur(r.award_amount_eur)}
+        </p>
+      )}
       <div className="mt-3 flex items-center gap-2">
         <StatusBadge status={r.current_status} />
         {r.source_type === "archive" && <ArchiveTag />}

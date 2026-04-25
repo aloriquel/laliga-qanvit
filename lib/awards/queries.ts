@@ -28,7 +28,7 @@ export type AwardEdition = {
 export type AwardRecipient = {
   id: string;
   edition_id: string;
-  result: "winner" | "finalist";
+  result: "winner" | "finalist" | "beneficiary";
   company_name: string;
   company_name_normalized: string;
   company_website: string | null;
@@ -43,6 +43,8 @@ export type AwardRecipient = {
   external_id: string | null;
   is_spanish_ecosystem: boolean;
   company_country: string | null;
+  award_amount_eur: number | null;
+  company_cif: string | null;
 };
 
 export type AwardWithCounts = Award & {
@@ -165,7 +167,7 @@ export type StartupAward = {
   edition_number: number | null;
   category_type: string;
   category_value: string;
-  result: "winner" | "finalist";
+  result: "winner" | "finalist" | "beneficiary";
 };
 
 export async function getStartupAwards(startupId: string): Promise<StartupAward[]> {
@@ -180,7 +182,7 @@ export type SpotlightRecipient = {
   company_description_short: string | null;
   edition_year: number;
   category_value: string;
-  result: "winner" | "finalist";
+  result: "winner" | "finalist" | "beneficiary";
   current_status: string;
   award_slug: string;
   award_name: string;
