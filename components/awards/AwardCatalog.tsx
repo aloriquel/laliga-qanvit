@@ -260,7 +260,7 @@ export default function AwardCatalog({
             </FilterRow>
             {hasArchiveRecords && (
               <p className="font-mono text-[10px] text-white/45 italic ml-24 -mt-1 mb-2">
-                * Los registros pre-2018 tienen la marca de ecosistema español inferida por defecto y pueden requerir verificación.
+                * Cuando la fuente original no expone el país (logos sin texto), la marca de ecosistema español se infiere por defecto y puede requerir verificación.
               </p>
             )}
           </>
