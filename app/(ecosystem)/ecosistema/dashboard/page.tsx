@@ -47,6 +47,7 @@ export default async function EcosystemDashboardHome() {
 
   return (
     <div className="space-y-8">
+      <EcosystemDashboardViewTracker tier={tier} />
       {/* Header */}
       <div>
         <h1 className="font-sora text-2xl font-bold text-brand-navy">Dashboard</h1>

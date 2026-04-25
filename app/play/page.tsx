@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { track } from "@/lib/analytics/posthog";
+import { EVENTS } from "@/lib/analytics/events";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Upload, ChevronRight, AlertCircle } from "lucide-react";
@@ -21,11 +23,40 @@ type StartupFormData = {
 
 type RegionValue = { ca: CaId | null; province: string | null };
 
+type PlaySource = "home_cta" | "empty_slot" | "promo_card" | "direct" | "other";
+
+function parseSource(raw: string | null): PlaySource {
+  if (raw === "home_cta" || raw === "empty_slot" || raw === "promo_card" || raw === "direct" || raw === "other") {
+    return raw;
+  }
+  return raw ? "other" : "direct";
+}
+
 export default function PlayPage() {
   const t = useTranslations("play");
   const ta = useTranslations("auth.login");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const startedAt = useRef<number>(Date.now());
+  const publishedRef = useRef<boolean>(false);
   const [step, setStep] = useState<Step>(0);
+
+  useEffect(() => {
+    const source = parseSource(searchParams?.get("source") ?? null);
+    track(EVENTS.PLAY_STARTED, { source });
+  }, [searchParams]);
+
+  useEffect(() => {
+    return () => {
+      if (publishedRef.current) return;
+      const elapsed = Math.round((Date.now() - startedAt.current) / 1000);
+      track(EVENTS.PLAY_ABANDONED, {
+        last_step: `step_${step}`,
+        time_spent_seconds: elapsed,
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [startupId, setStartupId] = useState<string | null>(null);
   const [isNewStartup, setIsNewStartup] = useState(false);
   const [form, setForm] = useState<StartupFormData>({ name: "", website: "", oneLiner: "" });
