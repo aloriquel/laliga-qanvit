@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import UnsubscribeTracker from "./UnsubscribeTracker";
 
 export const metadata: Metadata = {
   title: "Baja realizada",
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 export default function BajaExitosaPage() {
   return (
     <>
+      <UnsubscribeTracker />
       <h1>Baja realizada</h1>
       <p>
         Te hemos dado de baja de las novedades por email de esta startup.

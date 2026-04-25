@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { DIVISION_TINT, type Division } from "@/lib/home/categories";
 import type { EmptyCategory } from "@/lib/home/top-by-category";
+import { track } from "@/lib/analytics/posthog";
+import { EVENTS } from "@/lib/analytics/events";
 
 type Props = {
   emptyCategories: EmptyCategory[];

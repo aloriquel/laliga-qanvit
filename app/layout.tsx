@@ -5,8 +5,9 @@ import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { Header } from "@/components/branding/Header";
 import { Footer } from "@/components/branding/Footer";
-import { CookieBanner } from "@/components/branding/CookieBanner";
+import { CookieConsentBanner } from "@/components/analytics/CookieConsentBanner";
 import { PostHogProvider } from "@/components/analytics/PostHogProvider";
+import { AnalyticsIdentifier } from "@/components/analytics/AnalyticsIdentifier";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -84,12 +85,13 @@ export default async function RootLayout({
       <body className="min-h-screen flex flex-col bg-background text-foreground font-body antialiased">
         <NextIntlClientProvider messages={messages}>
           <PostHogProvider>
+          <AnalyticsIdentifier />
           <TooltipProvider>
             <Header />
             <main className="flex-1">{children}</main>
             <Footer />
             <Toaster richColors position="bottom-right" />
-            <CookieBanner />
+            <CookieConsentBanner />
           </TooltipProvider>
           </PostHogProvider>
         </NextIntlClientProvider>

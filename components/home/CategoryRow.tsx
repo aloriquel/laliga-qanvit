@@ -5,6 +5,12 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import StartupCompactCard from "./StartupCompactCard";
 import EmptySlotCard from "./EmptySlotCard";
 import type { CategoryRow as CategoryRowData } from "@/lib/home/top-by-category";
+import { track } from "@/lib/analytics/posthog";
+import { EVENTS } from "@/lib/analytics/events";
+
+// Module-scoped guard: each row sends `home_category_row_scrolled` at most
+// once per session.
+const _scrolledRows = new Set<string>();
 
 type Props = {
   row: CategoryRowData;
@@ -22,7 +28,15 @@ export default function CategoryRow({ row }: Props) {
     if (!el) return;
     setCanPrev(el.scrollLeft > 4);
     setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  }, []);
+    const rowKey = `${row.category_type}:${row.category_value}`;
+    if (el.scrollLeft > 100 && !_scrolledRows.has(rowKey)) {
+      _scrolledRows.add(rowKey);
+      track(EVENTS.HOME_CATEGORY_ROW_SCROLLED, {
+        category_type: row.category_type,
+        category_value: row.category_value,
+      });
+    }
+  }, [row.category_type, row.category_value]);
 
   useEffect(() => {
     updateArrows();

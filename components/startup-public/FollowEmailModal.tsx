@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
+import { track } from "@/lib/analytics/posthog";
+import { EVENTS } from "@/lib/analytics/events";
 
 type Props = {
   slug: string;
@@ -26,6 +28,7 @@ export default function FollowEmailModal({ slug, startupName, open, onClose }: P
     if (!consent || !email) return;
     setStatus("submitting");
     setErrorMsg(null);
+    track(EVENTS.FOLLOW_EMAIL_SUBMITTED, { startup_slug: slug });
     try {
       const res = await fetch(`/api/startups/${encodeURIComponent(slug)}/follow`, {
         method: "POST",

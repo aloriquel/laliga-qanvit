@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import FollowEmailModal from "./FollowEmailModal";
+import { track } from "@/lib/analytics/posthog";
+import { EVENTS } from "@/lib/analytics/events";
 
 type Props = {
   slug: string;
@@ -57,12 +59,21 @@ export default function AnonymousVoteButton({
       }
       const data: { voted?: boolean; already?: boolean; count?: number } = await res.json().catch(() => ({}));
       if (data.voted) {
-        if (typeof data.count === "number") setVoteCount(data.count);
+        const newCount = typeof data.count === "number" ? data.count : voteCount + 1;
+        setVoteCount(newCount);
         setVoted(true);
         setCookie(votedKey, "1", 1);
+        track(EVENTS.ANONYMOUS_VOTE_CLICKED, {
+          startup_slug: slug,
+          vote_count_after: newCount,
+        });
         if (!readCookie(followModalKey)) {
           setModalOpen(true);
           setCookie(followModalKey, "1", 30);
+          track(EVENTS.FOLLOW_MODAL_OPENED, {
+            startup_slug: slug,
+            trigger: "after_vote",
+          });
         }
       }
     } finally {

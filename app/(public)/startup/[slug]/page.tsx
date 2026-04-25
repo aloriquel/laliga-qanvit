@@ -19,6 +19,7 @@ import ChampionBadge from "@/components/startup/ChampionBadge";
 import { getChampionBadgesForStartup } from "@/lib/batches";
 import AnonymousVoteButton from "@/components/startup-public/AnonymousVoteButton";
 import SubscribedToast from "@/components/startup-public/SubscribedToast";
+import ProfileViewTracker from "@/components/startup-public/ProfileViewTracker";
 
 type Props = { params: { slug: string }; searchParams: { subscribed?: string } };
 type EvaluationRow = Database["public"]["Tables"]["evaluations"]["Row"];
@@ -142,6 +143,7 @@ export default async function StartupPublicPage({ params, searchParams }: Props)
 
   return (
     <div className="bg-brand-lavender min-h-screen py-12">
+      <ProfileViewTracker slug={startup.slug as string} />
       <div className="container-brand max-w-3xl">
 
         {/* Owner banner */}
@@ -202,7 +204,7 @@ export default async function StartupPublicPage({ params, searchParams }: Props)
           />
         )}
 
-        {justSubscribed && <SubscribedToast />}
+        {justSubscribed && <SubscribedToast startupSlug={startup.slug as string} />}
 
         {/* One-liner */}
         {startup.one_liner && (

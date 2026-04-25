@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Plus, ArrowRight } from "lucide-react";
 import {
@@ -6,6 +8,8 @@ import {
   type Division,
   type Vertical,
 } from "@/lib/home/categories";
+import { track } from "@/lib/analytics/posthog";
+import { EVENTS } from "@/lib/analytics/events";
 
 type Props = {
   categoryType: "division" | "vertical";
@@ -25,12 +29,21 @@ export default function EmptySlotCard({
       ? DIVISION_LABELS[categoryValue as Division] ?? categoryValue
       : VERTICAL_LABELS[categoryValue as Vertical] ?? categoryValue;
 
-  const ctaHref = `/play?${categoryType}=${encodeURIComponent(categoryValue)}`;
+  const ctaHref = `/play?${categoryType}=${encodeURIComponent(categoryValue)}&source=empty_slot`;
+
+  function handleClick() {
+    track(EVENTS.HOME_EMPTY_SLOT_CLICKED, {
+      category_type: categoryType,
+      category_value: categoryValue,
+      slot_position: slotPosition ?? 0,
+    });
+  }
 
   if (variant === "ghost") {
     return (
       <Link
         href={ctaHref}
+        onClick={handleClick}
         aria-label={`Plaza libre en ${label}. Regístrate tu startup.`}
         className="snap-start shrink-0 w-[200px] h-[280px] md:w-[240px] md:h-[320px] lg:w-[280px] lg:h-[360px] rounded-[20px] relative group focus:outline-none focus:ring-2 focus:ring-brand-salmon transition-all duration-200 border border-dashed border-brand-navy/15 bg-brand-navy/[0.03] hover:border-brand-navy/40 hover:bg-brand-navy/[0.06]"
       >
@@ -48,6 +61,7 @@ export default function EmptySlotCard({
   return (
     <Link
       href={ctaHref}
+      onClick={handleClick}
       aria-label={`Sé la primera en ${label}. Ocupar puesto${slotPosition ? ` #${slotPosition}` : ""}.`}
       className="snap-start shrink-0 w-[200px] h-[280px] md:w-[240px] md:h-[320px] lg:w-[280px] lg:h-[360px] rounded-[20px] relative group focus:outline-none focus:ring-2 focus:ring-brand-salmon transition-all duration-200 border-2 border-dashed border-brand-navy/20 hover:border-solid hover:border-brand-salmon hover:bg-brand-salmon/5"
     >

@@ -1,73 +1,112 @@
 import posthog from "posthog-js";
 
+import { hasConsent } from "./consent";
+import type { EventName, EventProperties } from "./events";
+
 let initialized = false;
 
-export function initPostHog() {
-  if (initialized || typeof window === "undefined") return;
-  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-  if (!key) return;
+const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+const POSTHOG_HOST =
+  process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com";
+const UI_HOST = "https://eu.posthog.com";
 
-  posthog.init(key, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com",
-    capture_pageview: true,
+/**
+ * Initialize PostHog. Idempotent. Only runs in the browser AND only when the
+ * user has given explicit consent. Returns true if PostHog was initialized
+ * (now or earlier).
+ */
+export function initPostHog(): boolean {
+  if (typeof window === "undefined") return false;
+  if (initialized) return true;
+  if (!POSTHOG_KEY) return false;
+  if (!hasConsent()) return false;
+
+  posthog.init(POSTHOG_KEY, {
+    api_host: POSTHOG_HOST,
+    ui_host: UI_HOST,
+    capture_pageview: false, // we send $pageview manually on Next.js navigation
     capture_pageleave: true,
+    autocapture: false,
     persistence: "localStorage+cookie",
-    // Stops POST /flags (401) and GET array/{key}/config (404) on invalid/deleted projects.
+    ip: false, // anonymize IP
+    respect_dnt: true,
+    opt_out_capturing_by_default: true,
+    // @ts-expect-error — runtime option added ~1.83, type stubs lag behind
     advanced_disable_decide: true,
-    // @ts-expect-error — runtime option added ~1.83, not yet reflected in type stubs
+    // @ts-expect-error — runtime option, not in type stubs yet
     disable_remote_config: true,
+    loaded: (ph) => {
+      ph.opt_in_capturing();
+      if (process.env.NODE_ENV === "development") ph.debug();
+    },
+    session_recording: {
+      maskAllInputs: true,
+      maskTextSelector: "[data-private]",
+      recordCrossOriginIframes: false,
+    },
+    enable_recording_console_log: false,
+    disable_session_recording: false,
   });
 
   initialized = true;
+  return true;
 }
 
-export function enablePostHogAnalytics() {
-  if (!initialized) {
-    initPostHog();
-  } else {
-    posthog.opt_in_capturing();
+/** Stop tracking and forget the user. Used on logout / consent revocation. */
+export function disablePostHog(): void {
+  if (typeof window === "undefined") return;
+  if (!initialized) return;
+  try {
+    posthog.opt_out_capturing();
+    posthog.reset();
+  } catch {
+    /* noop */
   }
 }
 
-export function disablePostHogAnalytics() {
-  if (initialized) posthog.opt_out_capturing();
-}
-
-// Typed event catalog
-export type AnalyticsEvent =
-  | { event: "landing_view" }
-  | { event: "play_start" }
-  | { event: "deck_uploaded"; props: { startup_name: string; file_size_mb: number } }
-  | { event: "evaluation_completed"; props: { score: number; division: string; vertical: string } }
-  | { event: "evaluation_error"; props: { error_type: string } }
-  | { event: "leaderboard_view"; props?: { filter_division?: string; filter_vertical?: string } }
-  | { event: "startup_profile_view"; props: { slug: string; division?: string; vertical?: string } }
-  | { event: "share_card_click"; props: { slug: string } }
-  | { event: "share_card_download"; props: { slug: string } }
-  | { event: "ecosystem_application_submit" }
-  | { event: "ecosystem_tier_unlocked"; props: { tier: number } }
-  | { event: "startup_vote_cast"; props: { startup_id: string; vote_type: "up" | "down"; tier: string } }
-  | { event: "feedback_validated"; props: { startup_id: string; positive: boolean } }
-  | { event: "admin_action"; props: { action_type: string; target_type: string } }
-  | { event: "viewed_qanvit_bridge"; props: { orgType: string; surface: string } }
-  | { event: "clicked_qanvit_bridge"; props: { orgType: string; surface: string } }
-  | { event: "dismissed_qanvit_bridge"; props: { orgType: string; surface: string } };
-
-export function track(e: AnalyticsEvent) {
+/** Strongly-typed capture. Compile-time enforces property shape per event. */
+export function track<E extends EventName>(
+  event: E,
+  properties: EventProperties[E]
+): void {
   if (typeof window === "undefined" || !initialized) return;
-  if ("props" in e) {
-    posthog.capture(e.event, e.props);
-  } else {
-    posthog.capture(e.event);
+  if (!hasConsent()) return;
+  try {
+    posthog.capture(event, properties as Record<string, unknown>);
+  } catch {
+    /* noop */
   }
 }
 
-export function identify(userId: string, traits?: Record<string, unknown>) {
+/** Send a manual $pageview event. Used by the provider on route changes. */
+export function trackPageview(url: string): void {
   if (typeof window === "undefined" || !initialized) return;
-  posthog.identify(userId, traits);
+  if (!hasConsent()) return;
+  try {
+    posthog.capture("$pageview", { $current_url: url });
+  } catch {
+    /* noop */
+  }
 }
 
-export function reset() {
+export function identify(
+  distinctId: string,
+  properties?: Record<string, unknown>
+): void {
   if (typeof window === "undefined" || !initialized) return;
-  posthog.reset();
+  if (!hasConsent()) return;
+  try {
+    posthog.identify(distinctId, properties);
+  } catch {
+    /* noop */
+  }
+}
+
+export function resetUser(): void {
+  if (typeof window === "undefined" || !initialized) return;
+  try {
+    posthog.reset();
+  } catch {
+    /* noop */
+  }
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
 import { Sparkles, X } from "lucide-react";
 import { useDismissibleBanner } from "@/lib/hooks/useDismissibleBanner";
 import { track } from "@/lib/analytics/posthog";
+import { EVENTS } from "@/lib/analytics/events";
 import type { EcosystemOrgType } from "@/lib/ecosystem/owner";
 import { BRIDGE_COPY, buildBridgeCtaUrl, buildTierAwareCopy } from "@/lib/ecosystem/bridge-copy";
 import type { EcosystemTier } from "@/lib/ecosystem/qanvit-rewards";
@@ -33,13 +33,8 @@ export default function EcosystemBridgeBannerClient({
   const bannerKey = surface ?? DEFAULT_SURFACE[variant];
   const { isDismissed, dismiss } = useDismissibleBanner(bannerKey);
 
-  useEffect(() => {
-    if (isDismissed) return;
-    track({
-      event: "viewed_qanvit_bridge",
-      props: { orgType, surface: bannerKey },
-    });
-  }, [isDismissed, orgType, bannerKey]);
+  // Bridge view is implicit in the dashboard pageview event; no dedicated event.
+  // (Previous viewed_qanvit_bridge event removed in PROMPT_POSTHOG event-catalog cleanup.)
 
   if (isDismissed) return null;
 
@@ -52,17 +47,16 @@ export default function EcosystemBridgeBannerClient({
   const ctaLabel = variant === "dashboard" && tier ? "Conocer Qanvit →" : "Explorar Qanvit →";
 
   const handleCtaClick = () => {
-    track({
-      event: "clicked_qanvit_bridge",
-      props: { orgType, surface: bannerKey },
-    });
+    if (tier) {
+      track(EVENTS.ECOSYSTEM_QANVIT_CTA_CLICKED, {
+        tier,
+        cta_location: variant === "dashboard" ? "tile" : "banner",
+      });
+    }
   };
 
   const handleDismiss = () => {
-    track({
-      event: "dismissed_qanvit_bridge",
-      props: { orgType, surface: bannerKey },
-    });
+    // Dismissal does not have a dedicated event in the V1 catalog.
     dismiss();
   };
 
